@@ -1,11 +1,8 @@
-package com.github.kotlintelegrambot.echo
-
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.dispatcher.pollAnswer
 import com.github.kotlintelegrambot.entities.polls.PollType
-
 
 fun main() {
     bot {
@@ -21,16 +18,16 @@ fun main() {
                 WorkSpace.launchMockTest(this)
             }
 
-            command("quizPoll") {
-                bot.sendPoll(
-                    chatId = message.chat.id,
-                    type = PollType.QUIZ,
-                    question = "Java or Kotlin?",
-                    options = listOf("Java", "Kotlin"),
-                    correctOptionId = 1,
-                    isAnonymous = false
-                )
-            }
+//            command("mockTest") {
+//                bot.sendPoll(
+//                    chatId = message.chat.id,
+//                    type = PollType.QUIZ,
+//                    question = "Java or Kotlin?",
+//                    options = listOf("Java", "Kotlin"),
+//                    correctOptionId = 1,
+//                    isAnonymous = false
+//                )
+//            }
 
             command("closedPoll") {
                 bot.sendPoll(

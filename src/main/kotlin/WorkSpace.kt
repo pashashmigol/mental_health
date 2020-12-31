@@ -1,5 +1,3 @@
-package com.github.kotlintelegrambot.echo
-
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnvironment
 

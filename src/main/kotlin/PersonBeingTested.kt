@@ -1,5 +1,3 @@
-package com.github.kotlintelegrambot.echo
-
 data class PersonBeingTested(val id: Long) {
 
     private var ongoingTest: MockTest? = null

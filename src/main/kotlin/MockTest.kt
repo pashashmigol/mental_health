@@ -1,5 +1,3 @@
-package com.github.kotlintelegrambot.echo
-
 class MockTest {
     private val options = listOf("yes", "no", "whoy wnos")
     val questions: List<Question> = listOf(
