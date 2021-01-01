@@ -10,6 +10,9 @@ data class PersonBeingTested(val id: Long) {
 
     fun postAnswer(answer: Int): Question {
         currentQuestion++
+        if(currentQuestion >= ongoingTest!!.questions.size){
+            currentQuestion = 0
+        }
         return ongoingTest!!.questions[currentQuestion]
     }
 }
