@@ -31,6 +31,7 @@ dependencies {
     implementation("org.danilopianini:gson-extras:0.2.2")
     implementation("com.google.firebase:firebase-admin:7.0.0")
     implementation("io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram:6.0.1")
+    implementation("org.junit.jupiter:junit-jupiter:5.4.2")
 }
 
 appengine {
