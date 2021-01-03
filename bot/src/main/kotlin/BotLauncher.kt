@@ -11,10 +11,12 @@ object MyBotConfig {
     const val SERVER_HOSTNAME = "mental-health-300314.oa.r.appspot.com"
 }
 
-fun launchBot(testingMode: Boolean, token: String) : Bot {
+enum class LaunchMode { LOCAL, APP_ENGINE }
+
+fun launchBot(mode: LaunchMode, token: String): Bot {
     return bot {
         this.token = token
-        if (!testingMode) {
+        if (mode == LaunchMode.APP_ENGINE) {
             webhook {
                 url = "${SERVER_HOSTNAME}/$token"
                 maxConnections = 50
@@ -29,14 +31,18 @@ fun launchBot(testingMode: Boolean, token: String) : Bot {
                 WorkSpace.onAnswer(this)
             }
             command("mockTest") {
+                println("mockTest")
                 WorkSpace.launchMockTest(this)
+            }
+            command("reloadQuestions") {
+                println("reloadQuestions")
+                CurrentQuestionsProvider.reloadQuestions()
             }
         }
     }.apply {
-        if(testingMode) {
-            startPolling()
-        } else {
-            startWebhook()
+        when (mode) {
+            LaunchMode.LOCAL -> startPolling()
+            LaunchMode.APP_ENGINE -> startWebhook()
         }
     }
 }

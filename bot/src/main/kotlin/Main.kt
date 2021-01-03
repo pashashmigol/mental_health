@@ -5,13 +5,10 @@ import io.ktor.response.*
 import io.ktor.routing.*
 
 private const val TOKEN = "1466693925:AAGkgMILgAg4gvs4Ct6UFlPM5T9VJx0BoIY"
-//
-//private val serviceAccount = FileInputStream(CREDENTIALS_FILE_NAME)
-//val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
 
 fun Application.main() {
     CurrentQuestionsProvider.initGoogleSheetsProvider(rootPath = "")
-    val bot = launchBot(testingMode = false, token = TOKEN)
+    val bot = launchBot(mode = LaunchMode.APP_ENGINE, token = TOKEN)
 
     routing {
         get("/status") {

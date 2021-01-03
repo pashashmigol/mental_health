@@ -11,6 +11,7 @@ import java.io.FileInputStream
 
 interface QuestionsProvider {
     val mockTestQuestions: Array<Question>
+    fun reloadQuestions()
 }
 
 object CurrentQuestionsProvider : QuestionsProvider {
@@ -22,6 +23,10 @@ object CurrentQuestionsProvider : QuestionsProvider {
 
     override val mockTestQuestions
         get() = internalProvider?.mockTestQuestions ?: emptyArray()
+
+    override fun reloadQuestions() {
+        internalProvider?.reloadQuestions()
+    }
 }
 
 class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
@@ -39,10 +44,10 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
         get() = _allQuestions
 
     init {
-        loadQuestions()
+        reloadQuestions()
     }
 
-    fun loadQuestions() {
+    override fun reloadQuestions() {
         val transport = GoogleNetHttpTransport.newTrustedTransport()
         val jacksonFactory = JacksonFactory.getDefaultInstance()
         val scopes = listOf(SheetsScopes.SPREADSHEETS_READONLY)
