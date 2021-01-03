@@ -39,7 +39,7 @@ fun startBot() : Bot {
         webhook {
             url = "${SERVER_HOSTNAME}/$API_TOKEN"
             maxConnections = 50
-            allowedUpdates = listOf("message")
+            allowedUpdates = listOf("message", "poll_answer")
         }
         dispatch {
             pollAnswer {
