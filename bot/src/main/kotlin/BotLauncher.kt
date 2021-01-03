@@ -11,7 +11,7 @@ object MyBotConfig {
     const val SERVER_HOSTNAME = "mental-health-300314.oa.r.appspot.com"
 }
 
-fun launchBot(testingMode: Boolean, token: String, projectRootPath: String) : Bot {
+fun launchBot(testingMode: Boolean, token: String) : Bot {
     return bot {
         this.token = token
         if (!testingMode) {

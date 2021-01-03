@@ -5,18 +5,44 @@ import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.http.HttpCredentialsAdapter
+import com.google.auth.oauth2.GoogleCredentials
+import java.io.FileInputStream
 
 
-interface QuestionProvider {
-    fun obtainNewQuestion(gameId: String, index: Int): Question
+interface QuestionsProvider {
+    val mockTestQuestions: Array<Question>
 }
 
-class GoogleSheetsQuestionsProvider : QuestionProvider {
+object CurrentQuestionsProvider : QuestionsProvider {
+    private var internalProvider: QuestionsProvider? = null
 
-    val allQuestions: List<Question>
-    private val answerOptions: List<String>
+    fun initGoogleSheetsProvider(rootPath: String) {
+        internalProvider = GoogleSheetsQuestionsProvider(rootPath)
+    }
+
+    override val mockTestQuestions
+        get() = internalProvider?.mockTestQuestions ?: emptyArray()
+}
+
+class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
+    companion object {
+        private const val CREDENTIALS_FILE_NAME = "mental-health-300314-1be17f2cdb6f.json"
+    }
+
+    private val serviceAccount = FileInputStream("$projectRoot/$CREDENTIALS_FILE_NAME")
+    private val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
+
+    private var _allQuestions: Array<Question> = emptyArray()
+    private var answerOptions: Array<String> = emptyArray()
+
+    override val mockTestQuestions: Array<Question>
+        get() = _allQuestions
 
     init {
+        loadQuestions()
+    }
+
+    fun loadQuestions() {
         val transport = GoogleNetHttpTransport.newTrustedTransport()
         val jacksonFactory = JacksonFactory.getDefaultInstance()
         val scopes = listOf(SheetsScopes.SPREADSHEETS_READONLY)
@@ -32,22 +58,18 @@ class GoogleSheetsQuestionsProvider : QuestionProvider {
         answerOptions = answerOptionsRequest.execute().getValues()
             .toRawEntries()
             .map { it["answer"] as String }
+            .toTypedArray()
 
         val allSheetsRequest = sheets.spreadsheets()
-            .values().get(QUESTIONS_FILE_ID_GOOGLE_DOC, "'questons'")
-        allQuestions = allSheetsRequest.execute().getValues()
+            .values().get(QUESTIONS_FILE_ID_GOOGLE_DOC, "'questions'")
+        _allQuestions = allSheetsRequest.execute().getValues()
             .toRawEntries()
             .map { it.toQuestion(answerOptions) }
-
-        println("GoogleSheetsQuestionsProvider.init(); loaded ${allQuestions.size} questions")
-    }
-
-    override fun obtainNewQuestion(gameId: String, index: Int): Question {
-        return allQuestions[index]
+            .toTypedArray()
     }
 }
 
-private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = Question(
+private fun Map<String, Any>.toQuestion(answerOptions: Array<String>) = Question(
     text = stringFor("question"),
     options = answerOptions
 )

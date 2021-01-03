@@ -19,5 +19,20 @@ data class PersonBeingTested(val id: Long) {
 
 data class Question(
     val text: String,
-    val options: List<String>
-)
+    val options: Array<String>
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Question
+
+        if (text != other.text) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return text.hashCode()
+    }
+}

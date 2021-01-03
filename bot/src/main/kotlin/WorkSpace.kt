@@ -22,7 +22,7 @@ object WorkSpace {
         handler.bot.sendPoll(
             chatId = handler.message.chat.id,
             question = firstQuestion.text,
-            options = firstQuestion.options,
+            options = firstQuestion.options.toList(),
             isAnonymous = false
         )
     }
@@ -37,7 +37,7 @@ object WorkSpace {
         handler.bot.sendPoll(
             chatId = handler.pollAnswer.user.id,
             question = nextQuestion.text,
-            options = nextQuestion.options,
+            options = nextQuestion.options.toList(),
             isAnonymous = false
         )
     }
