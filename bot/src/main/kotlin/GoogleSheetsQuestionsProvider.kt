@@ -1,4 +1,3 @@
-import Settings.QUESTIONS_FILE_COLUMNS
 import Settings.QUESTIONS_FILE_ID_GOOGLE_DOC
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpRequestInitializer
@@ -8,7 +7,6 @@ import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.http.HttpCredentialsAdapter
 
 
-
 interface QuestionProvider {
     fun obtainNewQuestion(gameId: String, index: Int): Question
 }
@@ -16,7 +14,7 @@ interface QuestionProvider {
 class GoogleSheetsQuestionsProvider : QuestionProvider {
 
     val allQuestions: List<Question>
-    val answerOptions: List<String>
+    private val answerOptions: List<String>
 
     init {
         val transport = GoogleNetHttpTransport.newTrustedTransport()
@@ -29,18 +27,17 @@ class GoogleSheetsQuestionsProvider : QuestionProvider {
         val sheets = Sheets.Builder(transport, jacksonFactory, local).build()
 
         val answerOptionsRequest = sheets.spreadsheets()
-            .values().get(QUESTIONS_FILE_ID_GOOGLE_DOC, QUESTIONS_FILE_COLUMNS)
+            .values().get(QUESTIONS_FILE_ID_GOOGLE_DOC, "'answer_options'")
 
         answerOptions = answerOptionsRequest.execute().getValues()
             .toRawEntries()
             .map { it["answer"] as String }
 
         val allSheetsRequest = sheets.spreadsheets()
-            .values().get(QUESTIONS_FILE_ID_GOOGLE_DOC, QUESTIONS_FILE_COLUMNS)
+            .values().get(QUESTIONS_FILE_ID_GOOGLE_DOC, "'questons'")
         allQuestions = allSheetsRequest.execute().getValues()
             .toRawEntries()
             .map { it.toQuestion(answerOptions) }
-
 
         println("GoogleSheetsQuestionsProvider.init(); loaded ${allQuestions.size} questions")
     }
