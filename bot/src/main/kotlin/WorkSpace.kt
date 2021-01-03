@@ -5,6 +5,7 @@ object WorkSpace {
 
     private val people = mutableMapOf<Long, PersonBeingTested>()
 
+
     fun launchMockTest(handler: CommandHandlerEnvironment) {
         val personId = handler.message.from?.id ?: return
 
