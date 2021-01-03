@@ -29,7 +29,7 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
         private const val CREDENTIALS_FILE_NAME = "mental-health-300314-1be17f2cdb6f.json"
     }
 
-    private val serviceAccount = FileInputStream("$projectRoot/$CREDENTIALS_FILE_NAME")
+    private val serviceAccount = FileInputStream("$projectRoot$CREDENTIALS_FILE_NAME")
     private val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
 
     private var _allQuestions: Array<Question> = emptyArray()

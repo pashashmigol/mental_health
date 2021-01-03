@@ -1,6 +1,6 @@
-import java.io.File
+private const val TOKEN = "1466693925:AAGkgMILgAg4gvs4Ct6UFlPM5T9VJx0BoIY"
 
 fun main() {
-    CurrentQuestionsProvider.initGoogleSheetsProvider(rootPath = "bot/src/main/webapp")
-    launchBot(testingMode = true, token = "1417030770:AAEI89UL2hYjEuuiX55_6HLtjs6pUSeaNMI")
+    CurrentQuestionsProvider.initGoogleSheetsProvider(rootPath = "bot/src/main/webapp/")
+    launchBot(testingMode = true, token = TOKEN)
 }
