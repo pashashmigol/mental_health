@@ -1,3 +1,5 @@
+import mmpi.MmpiTest
+
 data class Person(val id: Long) {
     companion object {
         const val TAG = "Person"
