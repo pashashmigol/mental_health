@@ -30,9 +30,9 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
 
                 WorkSpace.onAnswer(this)
             }
-            command("mockTest") {
-                println("mockTest")
-                WorkSpace.launchMockTest(this)
+            command("mmpiTest") {
+                println("mmpiTest")
+                WorkSpace.launchMmpiTest(this)
             }
             command("reloadQuestions") {
                 println("reloadQuestions")

@@ -10,7 +10,7 @@ import java.io.FileInputStream
 
 
 interface QuestionsProvider {
-    val mockTestQuestions: Array<Question>
+    val mockTestQuestions: List<MmpiTest.Question>
     fun reloadQuestions()
 }
 
@@ -22,7 +22,7 @@ object CurrentQuestionsProvider : QuestionsProvider {
     }
 
     override val mockTestQuestions
-        get() = internalProvider?.mockTestQuestions ?: emptyArray()
+        get() = internalProvider?.mockTestQuestions ?: emptyList()
 
     override fun reloadQuestions() {
         internalProvider?.reloadQuestions()
@@ -37,10 +37,10 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
     private val serviceAccount = FileInputStream("$projectRoot$CREDENTIALS_FILE_NAME")
     private val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
 
-    private var _allQuestions: Array<Question> = emptyArray()
-    private var answerOptions: Array<String> = emptyArray()
+    private var _allQuestions: List<MmpiTest.Question> = emptyList()
+    private var answerOptions: List<String> = emptyList()
 
-    override val mockTestQuestions: Array<Question>
+    override val mockTestQuestions: List<MmpiTest.Question>
         get() = _allQuestions
 
     init {
@@ -63,18 +63,16 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
         answerOptions = answerOptionsRequest.execute().getValues()
             .toRawEntries()
             .map { it["answer"] as String }
-            .toTypedArray()
 
         val allSheetsRequest = sheets.spreadsheets()
             .values().get(QUESTIONS_FILE_ID_GOOGLE_DOC, "'questions'")
         _allQuestions = allSheetsRequest.execute().getValues()
             .toRawEntries()
             .map { it.toQuestion(answerOptions) }
-            .toTypedArray()
     }
 }
 
-private fun Map<String, Any>.toQuestion(answerOptions: Array<String>) = Question(
+private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = MmpiTest.Question(
     text = stringFor("question"),
     options = answerOptions
 )

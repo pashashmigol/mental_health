@@ -1,43 +1,70 @@
+import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnvironment
 
 object WorkSpace {
+    const val TAG = "WorkSpace"
+    private val people = mutableMapOf<Long, Person>()
 
-    private val people = mutableMapOf<Long, PersonBeingTested>()
+    fun launchMmpiTest(handler: CommandHandlerEnvironment) {
+        println("$TAG: launchMmpiTest();")
 
-
-    fun launchMockTest(handler: CommandHandlerEnvironment) {
         val personId = handler.message.from?.id ?: return
+        val person: Person
 
-        val personBeingTested: PersonBeingTested
         if (people.containsKey(personId)) {
-            personBeingTested = people[personId]!!
+            person = people[personId]!!
         } else {
-            people[personId] = PersonBeingTested(id = personId)
-            personBeingTested = people[personId]!!
+            people[personId] = Person(id = personId)
+            person = people[personId]!!
         }
 
-        val firstQuestion = personBeingTested.startMockTest()
+        val question = (person.requestFirstQuestion()
+                as Person.Response.NextQuestion)
 
-        handler.bot.sendPoll(
-            chatId = handler.message.chat.id,
-            question = firstQuestion.text,
-            options = firstQuestion.options.toList(),
-            isAnonymous = false
-        )
+        answerWithQuestion(handler.bot, personId, question)
     }
 
     fun onAnswer(handler: PollAnswerHandlerEnvironment) {
+        println("$TAG: onAnswer();")
+
         val personId = handler.pollAnswer.user.id
-        val personBeingTested = people[personId]!!
+        val person = people[personId]!!
 
         val answerIndex: Int = handler.pollAnswer.optionIds.first()
-        val nextQuestion = personBeingTested.postAnswer(answerIndex)
 
-        handler.bot.sendPoll(
-            chatId = handler.pollAnswer.user.id,
-            question = nextQuestion.text,
-            options = nextQuestion.options.toList(),
+        when (val response = person.submitAnswer(answerIndex)) {
+            is Person.Response.NextQuestion -> {
+                answerWithQuestion(handler.bot, personId, response)
+            }
+            is Person.Response.TestResult -> {
+                answerWithResult(handler.bot, personId, response)
+            }
+        }
+    }
+
+    private fun answerWithResult(
+        bot: Bot,
+        userId: Long,
+        result: Person.Response.TestResult
+    ) {
+        println("$TAG: answerWithResult();")
+        bot.sendMessage(
+            chatId = userId,
+            text = result.description
+        )
+    }
+
+    private fun answerWithQuestion(
+        bot: Bot,
+        userId: Long,
+        question: Person.Response.NextQuestion
+    ) {
+        println("$TAG: answerWithQuestion();")
+        bot.sendPoll(
+            chatId = userId,
+            question = question.question.text,
+            options = question.question.options.toList(),
             isAnonymous = false
         )
     }
