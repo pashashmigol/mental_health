@@ -6,6 +6,7 @@ class MmpiTest {
     companion object {
         const val TAG = "mmpi.MmpiTest"
     }
+
     private var _questions = CurrentQuestionsProvider.mockTestQuestions
     private val _answers = arrayOfNulls<Answer>(_questions.size)
 
@@ -33,7 +34,14 @@ class MmpiTest {
     }
 
     class Result(val description: String)
-    class Answer(val option: Int)
+
+    enum class Answer(val option: Int) {
+        Agree(0),
+        PartiallyAgree(1),
+        NotSure(2),
+        PartiallyDisagree(3),
+        Disagree(4)
+    }
 
     data class Question(
         val text: String,

@@ -40,3 +40,7 @@ appengine {
         projectId = "GCLOUD_CONFIG"
     }
 }
+
+tasks.test {
+    useJUnitPlatform()
+}
