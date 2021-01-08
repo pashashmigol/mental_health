@@ -6,12 +6,12 @@ import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
-import mmpi.MmpiTest
+import mmpi.Mmpi566
 import java.io.FileInputStream
 
 
 interface QuestionsProvider {
-    val mockTestQuestions: List<MmpiTest.Question>
+    val mock566Questions: List<Mmpi566.Question>
     fun reloadQuestions()
 }
 
@@ -22,8 +22,8 @@ object CurrentQuestionsProvider : QuestionsProvider {
         internalProvider = GoogleSheetsQuestionsProvider(rootPath)
     }
 
-    override val mockTestQuestions
-        get() = internalProvider?.mockTestQuestions ?: emptyList()
+    override val mock566Questions
+        get() = internalProvider?.mock566Questions ?: emptyList()
 
     override fun reloadQuestions() {
         internalProvider?.reloadQuestions()
@@ -38,10 +38,10 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
     private val serviceAccount = FileInputStream("$projectRoot$CREDENTIALS_FILE_NAME")
     private val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
 
-    private var _allQuestions: List<MmpiTest.Question> = emptyList()
+    private var _allQuestions: List<Mmpi566.Question> = emptyList()
     private var answerOptions: List<String> = emptyList()
 
-    override val mockTestQuestions: List<MmpiTest.Question>
+    override val mock566Questions: List<Mmpi566.Question>
         get() = _allQuestions
 
     init {
@@ -73,7 +73,7 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
     }
 }
 
-private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = MmpiTest.Question(
+private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = Mmpi566.Question(
     text = stringFor("question"),
     options = answerOptions
 )
