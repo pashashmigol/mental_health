@@ -1,6 +1,7 @@
 package mmpi
 
 object CorrectionScaleK : Scale(//30
+    name = "Шкала коррекции",
     yes = listOf(96),
     no = listOf(
         30, 39, 71, 89, 124, 129, 134, 138, 142, 148, 160, 170, 171, 180, 183, 217,
@@ -14,6 +15,7 @@ object CorrectionScaleK : Scale(//30
 )
 
 object LiesScaleL : Scale(//15
+    name = "Шкала лжи",
     yes = emptyList(),
     no = listOf(15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 195, 225, 255, 285),
     costOfZero = 37,
@@ -24,6 +26,7 @@ object LiesScaleL : Scale(//15
 )
 
 object CredibilityScaleF : Scale(//64
+    name = "Шкала достоверности",
     yes = listOf(
         14, 23, 27, 31, 34, 35, 40, 42, 48, 49, 50, 53, 56, 66, 85, 121, 123, 139,
         146, 151, 156, 168, 184, 197, 200, 202, 205, 206, 209, 210, 211, 215, 218,
@@ -41,6 +44,7 @@ object CredibilityScaleF : Scale(//64
 )
 
 object IntroversionScale0 : Scale(//70
+    name = "Шкала интроверсии",
     yes = listOf(
         32, 67, 82, 111, 117, 124, 138, 147, 171, 172, 180, 201, 236, 267,
         278, 292, 304, 316, 321, 332, 336, 342, 357, 377, 383, 398, 411, 427,
@@ -59,6 +63,7 @@ object IntroversionScale0 : Scale(//70
 )
 
 object OverControlScale1 : Scale(//33
+    name = "Шкала гиперконтроля",
     yes = listOf(23, 29, 43, 62, 72, 108, 114, 125, 161, 189, 273),
     no = listOf(
         2, 3, 7, 9, 18, 51, 55, 63, 68, 103, 130, 153, 155, 163, 175, 188, 190, 192,
@@ -72,6 +77,7 @@ object OverControlScale1 : Scale(//33
 )
 
 object PassivityScale2 : Scale( //60
+    name = "Шкала пассивности",
     yes = listOf(
         5, 13, 23, 32, 41, 43, 52, 67, 86, 104, 130, 138, 142, 158, 159, 182, 189,
         193, 236, 259
@@ -89,6 +95,7 @@ object PassivityScale2 : Scale( //60
 )
 
 object LabilityScale3 : Scale(//60
+    name = "Шкала эмоциональной подвижности",
     yes = listOf(
         10, 23, 32, 43, 44, 47, 76, 114, 179, 186, 189, 238, 253
     ),
@@ -105,6 +112,7 @@ object LabilityScale3 : Scale(//60
 )
 
 object ImpulsivenessScale4 : Scale(//50
+    name = "Шкала импульсивности",
     yes = listOf(
         16, 21, 24, 32, 33, 35, 38, 42, 61, 67, 84, 94, 102, 106, 110, 118, 127,
         215, 216, 224, 239, 244, 245, 284
@@ -121,6 +129,7 @@ object ImpulsivenessScale4 : Scale(//50
 )
 
 object MasculinityScale5M : Scale(//60
+    name = "Шкала мужественности",
     yes = listOf(
         4, 25, 69, 70, 74, 77, 78, 87, 92, 126, 132, 134, 140, 149, 179, 187, 203,
         204, 217, 226, 231, 239, 261, 278, 282, 295, 297, 299
@@ -137,6 +146,7 @@ object MasculinityScale5M : Scale(//60
 )
 
 object FemininityScale5F : Scale(//60
+    name = "Шкала женственности",
     yes = listOf(
         4, 25, 70, 74, 77, 78, 87, 92, 126, 132, 133, 134, 140, 149, 187, 203, 204,
         217, 226, 239, 261, 278, 282, 295, 299
@@ -154,6 +164,7 @@ object FemininityScale5F : Scale(//60
 )
 
 object RigidityScale6 : Scale(//40
+    name = "Шкала ригидности",
     yes = listOf(
         15, 16, 22, 24, 27, 35, 110, 121, 123, 127, 151, 157, 158, 202, 275, 284,
         291, 293, 299, 305, 317, 338, 341, 364, 365
@@ -169,6 +180,7 @@ object RigidityScale6 : Scale(//40
 )
 
 object AnxietyScale7 : Scale(//48
+    name = "Шкала тревожности",
     yes = listOf(
         10, 15, 22, 32, 41, 67, 76, 86, 94, 102, 106, 142, 159, 182, 189, 217, 238,
         266, 301, 304, 305, 317, 321, 336, 337, 340, 342, 343, 344, 346, 349, 351,
@@ -186,6 +198,7 @@ object AnxietyScale7 : Scale(//48
 )
 
 object IndividualismScale8 : Scale(//78
+    name = "Шкала индивидулизма",
     yes = listOf(
         15, 16, 21, 22, 24, 32, 33, 35, 38, 40, 41, 47, 52, 76,
         97, 104, 121, 156, 157, 159, 168, 179, 182, 194, 202, 210, 212,
@@ -205,6 +218,7 @@ object IndividualismScale8 : Scale(//78
 )
 
 object OptimismScale9 : Scale(//46
+    name = "Шкала оптимизма",
     yes = listOf(
         11, 13, 21, 22, 59, 64, 73, 97, 100, 109, 127, 134, 143,
         156, 157, 167, 181, 194, 212, 222, 226, 228, 232, 233, 238, 240,

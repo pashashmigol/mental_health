@@ -1,22 +1,25 @@
 import mmpi.Mmpi566
+import telegram.NextQuestion
+import telegram.TelegramMessage
+import telegram.TestResult
 
-data class Person(val id: Long) {
+data class PersonToTest(val id: Long) {
     companion object {
         const val TAG = "Person"
     }
     private var ongoingTest: Mmpi566? = null
 
-    fun requestFirstQuestion(): Response {
+    fun requestFirstQuestion(): TelegramMessage {
         println("$TAG: requestFirstQuestion();")
 
         val test  = Mmpi566()
         ongoingTest = test
 
         val question = test.nextQuestion()
-        return Response.NextQuestion(question)
+        return NextQuestion(question)
     }
 
-    fun submitAnswer(chosenOption: Int): Response {
+    fun submitAnswer(chosenOption: Int): TelegramMessage {
         println("$TAG: submitAnswer();")
 
         val test = ongoingTest!!
@@ -24,15 +27,10 @@ data class Person(val id: Long) {
 
         return if (test.hasNextQuestion()) {
             val question = test.nextQuestion()
-            Response.NextQuestion(question)
+            NextQuestion(question)
         } else {
             val result = test.calculateResult()
-            Response.TestResult(description = result.description)
+            TestResult(result = result)
         }
-    }
-
-    sealed class Response {
-        data class NextQuestion(val question: Mmpi566.Question) : Response()
-        data class TestResult(val description: String) : Response()
     }
 }

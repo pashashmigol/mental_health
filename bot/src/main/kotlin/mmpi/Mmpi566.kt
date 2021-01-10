@@ -33,11 +33,11 @@ class Mmpi566 {
     }
 
     fun calculateResult(): Result {
-        if(_answers.filterNotNull().size != 566)
+        if (_answers.filterNotNull().size != 566)
             throw RuntimeException("Not all questions are answered")
 
         println("$TAG: calculateResult()")
-        return notCompletedTest(_answers)
+        return calculate(_answers)
     }
 
     data class Question(
@@ -59,15 +59,35 @@ class Mmpi566 {
 
     }
 
-    class Result(val description: String,
-                 val introversionScale: Scale.Result,
-                 val overControlScale1: Scale.Result,
-                 val passivityScale2: Scale.Result,
-                 val labilityScale3: Scale.Result,
-                 val impulsivenessScale4: Scale.Result,
-                 val masculinityScale5: Scale.Result,
-                 val rigidityScale6: Scale.Result,
-                 val anxietyScale7: Scale.Result,
-                 val individualismScale8: Scale.Result,
-                 val optimismScale9: Scale.Result)
+    class Result(
+        val description: String,
+        liesScale: Scale.Result,
+        credibilityScale: Scale.Result,
+        introversionScale: Scale.Result,
+        overControlScale1: Scale.Result,
+        passivityScale2: Scale.Result,
+        labilityScale3: Scale.Result,
+        impulsivenessScale4: Scale.Result,
+        masculinityScale5: Scale.Result,
+        rigidityScale6: Scale.Result,
+        anxietyScale7: Scale.Result,
+        individualismScale8: Scale.Result,
+        optimismScale9: Scale.Result
+    ) {
+
+        val scalesToShow = listOf(
+            liesScale,
+            credibilityScale,
+            introversionScale,
+            overControlScale1,
+            passivityScale2,
+            labilityScale3,
+            impulsivenessScale4,
+            masculinityScale5,
+            rigidityScale6,
+            anxietyScale7,
+            individualismScale8,
+            optimismScale9
+        )
+    }
 }

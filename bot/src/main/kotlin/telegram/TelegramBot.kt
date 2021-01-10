@@ -9,6 +9,7 @@ import com.github.kotlintelegrambot.entities.TelegramFile
 import com.github.kotlintelegrambot.entities.inputmedia.InputMediaPhoto
 import com.github.kotlintelegrambot.entities.inputmedia.MediaGroup
 import com.github.kotlintelegrambot.webhook
+import telegram.TelegramRoom
 
 
 object MyBotConfig {
@@ -34,15 +35,20 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
                             "${pollAnswer.optionIds.lastOrNull()} in the poll ${pollAnswer.pollId}"
                 )
 
-                WorkSpace.onAnswer(this)
+                TelegramRoom.onAnswer(this)
             }
             command("mmpi") {
                 println("mmpi")
-                WorkSpace.launchMmpiTest(this)
+                TelegramRoom.launchMmpiTest(this)
             }
             command("reload") {
                 println("reloadQuestions")
                 CurrentQuestionsProvider.reloadQuestions()
+            }
+
+            command("test") {
+                println("test call")
+                TelegramRoom.makeMockTest(this)
             }
 
             command("html1") {

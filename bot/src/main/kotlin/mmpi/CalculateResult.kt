@@ -1,10 +1,12 @@
 package mmpi
 
-fun notCompletedTest(answers: Array<Mmpi566.Answer?>): Mmpi566.Result {
+fun calculate(answers: Array<Mmpi566.Answer?>): Mmpi566.Result {
     val score = answers.sumOf { it?.option ?: 0 }
 
     return Mmpi566.Result(
         description = "You've got $score. It seems you have an issue",
+        liesScale = LiesScaleL.calculate(answers),
+        credibilityScale = CredibilityScaleF.calculate(answers),
         introversionScale = IntroversionScale0.calculate(answers),
         overControlScale1 = OverControlScale1.calculate(answers),
         passivityScale2 = PassivityScale2.calculate(answers),
@@ -14,11 +16,12 @@ fun notCompletedTest(answers: Array<Mmpi566.Answer?>): Mmpi566.Result {
         rigidityScale6 = RigidityScale6.calculate(answers),
         anxietyScale7 = AnxietyScale7.calculate(answers),
         individualismScale8 = IndividualismScale8.calculate(answers),
-        optimismScale9 = OptimismScale9.calculate(answers),
+        optimismScale9 = OptimismScale9.calculate(answers)
     )
 }
 
 abstract class Scale(
+    val name: String,
     val yes: List<Int>,
     val no: List<Int>,
     val costOfZero: Int,
@@ -45,9 +48,13 @@ abstract class Scale(
 
         val finalScore = (rawScore * tA + tB).toInt()
 
-        return Result(score = finalScore, description = "Visit a doctor!!!")
+        return Result(
+            name = name,
+            score = finalScore,
+            description = "Visit a doctor!!!"
+        )
     }
 
-    data class Result(val score: Int, val description: String)
+    data class Result(val name: String, val score: Int, val description: String)
 }
 
