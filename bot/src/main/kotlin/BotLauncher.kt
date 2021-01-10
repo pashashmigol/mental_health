@@ -42,7 +42,7 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
             }
             command("reload") {
                 println("reloadQuestions")
-                CurrentQuesqtionsProvider.reloadQuestions()
+                CurrentQuestionsProvider.reloadQuestions()
             }
 
             command("html1") {
