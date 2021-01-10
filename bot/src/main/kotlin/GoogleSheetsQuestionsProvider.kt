@@ -11,7 +11,7 @@ import java.io.FileInputStream
 
 
 interface QuestionsProvider {
-    val mock566Questions: List<Mmpi566.Question>
+    val mmpi566Questions: List<Mmpi566.Question>
     fun reloadQuestions()
 }
 
@@ -22,8 +22,8 @@ object CurrentQuestionsProvider : QuestionsProvider {
         internalProvider = GoogleSheetsQuestionsProvider(rootPath)
     }
 
-    override val mock566Questions
-        get() = internalProvider?.mock566Questions ?: emptyList()
+    override val mmpi566Questions
+        get() = internalProvider?.mmpi566Questions ?: emptyList()
 
     override fun reloadQuestions() {
         internalProvider?.reloadQuestions()
@@ -41,7 +41,7 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
     private var _allQuestions: List<Mmpi566.Question> = emptyList()
     private var answerOptions: List<String> = emptyList()
 
-    override val mock566Questions: List<Mmpi566.Question>
+    override val mmpi566Questions: List<Mmpi566.Question>
         get() = _allQuestions
 
     init {

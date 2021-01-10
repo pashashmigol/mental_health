@@ -7,7 +7,7 @@ class Mmpi566 {
         const val TAG = "mmpi.MmpiTest"
     }
 
-    private var _questions = CurrentQuestionsProvider.mock566Questions
+    private var _questions = CurrentQuestionsProvider.mmpi566Questions
     private val _answers = arrayOfNulls<Answer>(566)
 
     init {
