@@ -9,6 +9,7 @@ import com.github.kotlintelegrambot.entities.TelegramFile
 import com.github.kotlintelegrambot.entities.inputmedia.InputMediaPhoto
 import com.github.kotlintelegrambot.entities.inputmedia.MediaGroup
 import com.github.kotlintelegrambot.webhook
+import mmpi.CurrentQuestionsProvider
 import telegram.TelegramRoom
 
 
@@ -43,7 +44,7 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
             }
             command("reload") {
                 println("reloadQuestions")
-                CurrentQuestionsProvider.reloadQuestions()
+                CurrentQuestionsProvider.reload()
             }
 
             command("test") {

@@ -1,7 +1,5 @@
 package mmpi
 
-import CurrentQuestionsProvider
-
 class Mmpi566 {
     companion object {
         const val TAG = "mmpi.MmpiTest"
@@ -37,7 +35,7 @@ class Mmpi566 {
             throw RuntimeException("Not all questions are answered")
 
         println("$TAG: calculateResult()")
-        return calculate(_answers)
+        return calculate(_answers, CurrentQuestionsProvider.mmpi566Scales!!)
     }
 
     data class Question(
@@ -90,4 +88,20 @@ class Mmpi566 {
             optimismScale9
         )
     }
+
+    data class Scales(
+        val correctionScale: Scale,
+        val liesScale: Scale,
+        val credibilityScale: Scale,
+        val introversionScale: Scale,
+        val overControlScale1: Scale,
+        val passivityScale2: Scale,
+        val labilityScale3: Scale,
+        val impulsivenessScale4: Scale,
+        val masculinityScale5: Scale,
+        val rigidityScale6: Scale,
+        val anxietyScale7: Scale,
+        val individualismScale8: Scale,
+        val optimismScale9: Scale
+    )
 }
