@@ -9,6 +9,7 @@ import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 import java.io.FileInputStream
+import java.util.ArrayList
 
 
 interface QuestionsProvider {
@@ -104,7 +105,8 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
                     costOfKeyAnswer = (it["cost_of_key_answer_men"] as String).toFloat(),
                     correctionFactor = (it["correction_factor"] as String).toFloat(),
                     tA = (it["t_a_men"] as String).toFloat(),
-                    tB = (it["t_b_men"] as String).toFloat()
+                    tB = (it["t_b_men"] as String).toFloat(),
+                    segments = createSegments(it)
                 )
                 return@map Pair(scale.id, scale)
             }.toMap()
@@ -125,6 +127,29 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
             optimismScale9 = scales["OptimismScale9"]!!
         )
     }
+}
+
+private fun createSegments(map: Map<String, Any>): List<Segment> {
+    val res = mutableListOf<Segment>()
+
+    createSegment(map["range_1"] as String?, map["range_1_description"] as String?)?.let { res.add(it) }
+    createSegment(map["range_2"] as String?, map["range_2_description"] as String?)?.let { res.add(it) }
+    createSegment(map["range_3"] as String?, map["range_3_description"] as String?)?.let { res.add(it) }
+    createSegment(map["range_4"] as String?, map["range_4_description"] as String?)?.let { res.add(it) }
+    createSegment(map["range_5"] as String?, map["range_5_description"] as String?)?.let { res.add(it) }
+
+    return ArrayList(res)
+}
+
+private fun createSegment(range: String?, description: String?): Segment? {
+    if (range == null || description == null) {
+        return null
+    }
+    val borders = range.split("-")
+    val min = borders[0].trim().toInt()
+    val max = borders[1].trim().toInt()
+
+    return Segment(IntRange(min, max), description)
 }
 
 private fun parseList(raw: String?): List<Int> {

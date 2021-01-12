@@ -31,7 +31,8 @@ open class Scale(
     val costOfKeyAnswer: Float,
     val correctionFactor: Float,
     val tA: Float,
-    val tB: Float
+    val tB: Float,
+    private val segments: List<Segment>
 ) {
     private fun countAnswers(answers: Array<Mmpi566.Answer?>): Int {
         val numberOfYes = yes.filter { answers[it] == Mmpi566.Answer.Agree }.size
@@ -48,13 +49,19 @@ open class Scale(
 
         val finalScore = (rawScore * tA + tB).toInt()
 
+        val description = segments.firstOrNull {
+            it.range.contains(finalScore)
+        }?.description ?: ""
+
         return Result(
             name = title,
             score = finalScore,
-            description = "Visit a doctor!!!"
+            description = description
         )
     }
 
     data class Result(val name: String, val score: Int, val description: String)
 }
+
+data class Segment(val range: IntRange, val description: String)
 

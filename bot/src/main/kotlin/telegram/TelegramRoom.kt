@@ -1,6 +1,6 @@
 package telegram
 
-import PersonToTest
+import PersonBeingTested
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnvironment
@@ -8,22 +8,22 @@ import mmpi.mockAnswers
 
 object TelegramRoom {
     private const val TAG = "telegram.WorkSpace"
-    private val people = mutableMapOf<Long, PersonToTest>()
+    private val people = mutableMapOf<Long, PersonBeingTested>()
 
     fun launchMmpiTest(handler: CommandHandlerEnvironment) {
         println("$TAG: launchMmpiTest();")
 
         val personId = handler.message.from?.id ?: return
-        val personToTest: PersonToTest
+        val personBeingTested: PersonBeingTested
 
         if (people.containsKey(personId)) {
-            personToTest = people[personId]!!
+            personBeingTested = people[personId]!!
         } else {
-            people[personId] = PersonToTest(id = personId)
-            personToTest = people[personId]!!
+            people[personId] = PersonBeingTested(id = personId)
+            personBeingTested = people[personId]!!
         }
 
-        val question = (personToTest.requestFirstQuestion() as NextQuestion)
+        val question = (personBeingTested.requestFirstQuestion() as NextQuestion)
 
         answerWithQuestion(handler.bot, personId, question)
     }
@@ -76,18 +76,18 @@ object TelegramRoom {
         println("$TAG: makeMockTest();")
 
         val personId = handler.message.from?.id ?: return
-        val personToTest: PersonToTest
+        val personBeingTested: PersonBeingTested
 
         if (people.containsKey(personId)) {
-            personToTest = people[personId]!!
+            personBeingTested = people[personId]!!
         } else {
-            people[personId] = PersonToTest(id = personId)
-            personToTest = people[personId]!!
+            people[personId] = PersonBeingTested(id = personId)
+            personBeingTested = people[personId]!!
         }
-        personToTest.requestFirstQuestion()
+        personBeingTested.requestFirstQuestion()
 
         mockAnswers.forEach {
-            val response = personToTest.submitAnswer(it.option)
+            val response = personBeingTested.submitAnswer(it.option)
             if (response is TestResult) {
                 answerWithResult(handler.bot, personId, response)
             }

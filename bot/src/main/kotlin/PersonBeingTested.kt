@@ -3,7 +3,7 @@ import telegram.NextQuestion
 import telegram.TelegramMessage
 import telegram.TestResult
 
-data class PersonToTest(val id: Long) {
+data class PersonBeingTested(val id: Long) {
     companion object {
         const val TAG = "Person"
     }
