@@ -10,10 +10,10 @@ object TelegramRoom {
     private const val TAG = "telegram.WorkSpace"
     private val people = mutableMapOf<Long, PersonBeingTested>()
 
-    fun launchMmpiTest(handler: CommandHandlerEnvironment) {
+    fun launchMmpiTest(handler: CommandHandlerEnvironment) = try {
         println("$TAG: launchMmpiTest();")
 
-        val personId = handler.message.from?.id ?: return
+        val personId = handler.message.from?.id!!
         val personBeingTested: PersonBeingTested
 
         if (people.containsKey(personId)) {
@@ -22,13 +22,11 @@ object TelegramRoom {
             people[personId] = PersonBeingTested(id = personId)
             personBeingTested = people[personId]!!
         }
+        val question = (personBeingTested.startMmpiTestAndGetFirstQuestion() as TelegramMessage.Question)
+        answerWithQuestion(handler.bot, personId, question)
 
-        try {
-            val question = (personBeingTested.startMmpiProcessTest() as NextQuestion)
-            answerWithQuestion(handler.bot, personId, question)
-        } catch (e: Exception) {
-            answerWithError(handler.bot, personId, exception = e)
-        }
+    } catch (e: Exception) {
+        answerWithError(handler.bot, handler.message.from?.id!!, exception = e)
     }
 
     fun onAnswer(handler: PollAnswerHandlerEnvironment) = try {
@@ -40,10 +38,10 @@ object TelegramRoom {
         val answerIndex: Int = handler.pollAnswer.optionIds.first()
 
         when (val response = person.notifyAnswerReceived(answerIndex)) {
-            is NextQuestion -> {
+            is TelegramMessage.Question -> {
                 answerWithQuestion(handler.bot, personId, response)
             }
-            is TestResult -> {
+            is TelegramMessage.TestResult -> {
                 answerWithResult(handler.bot, personId, response)
             }
         }
@@ -63,11 +61,11 @@ object TelegramRoom {
             people[personId] = PersonBeingTested(id = personId)
             personBeingTested = people[personId]!!
         }
-        personBeingTested.startMmpiProcessTest()
+        personBeingTested.startMmpiTestAndGetFirstQuestion()
 
         mockAnswers.forEach {
             val response = personBeingTested.notifyAnswerReceived(it.option)
-            if (response is TestResult) {
+            if (response is TelegramMessage.TestResult) {
                 answerWithResult(handler.bot, personId, response)
             }
         }
@@ -93,7 +91,7 @@ private fun answerWithError(
 private fun answerWithResult(
     bot: Bot,
     userId: Long,
-    result: TestResult
+    result: TelegramMessage.TestResult
 ) {
     bot.sendMessage(
         chatId = userId,
@@ -104,7 +102,7 @@ private fun answerWithResult(
 private fun answerWithQuestion(
     bot: Bot,
     userId: Long,
-    question: NextQuestion
+    question: TelegramMessage.Question
 ) {
     bot.sendPoll(
         chatId = userId,
