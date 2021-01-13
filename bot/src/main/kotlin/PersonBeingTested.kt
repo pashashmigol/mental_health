@@ -1,36 +1,35 @@
-import mmpi.Mmpi566
+import mmpi.MmpiProcess
 import telegram.NextQuestion
 import telegram.TelegramMessage
 import telegram.TestResult
 
 data class PersonBeingTested(val id: Long) {
     companion object {
-        const val TAG = "Person"
+        const val TAG = "PersonBeingTested"
     }
-    private var ongoingTest: Mmpi566? = null
+    private var ongoingTest: MmpiProcess? = null
 
-    fun requestFirstQuestion(): TelegramMessage {
+    /**
+     * Starts MmpiProcess test and returns first question
+     * */
+    fun startMmpiProcessTest(): TelegramMessage {
         println("$TAG: requestFirstQuestion();")
 
-        val test  = Mmpi566()
+        val test  = MmpiProcess()
         ongoingTest = test
 
-        val question = test.nextQuestion()
-        return NextQuestion(question)
+        return NextQuestion(test.firstQuestion())
     }
 
-    fun submitAnswer(chosenOption: Int): TelegramMessage {
+    fun notifyAnswerReceived(chosenOption: Int): TelegramMessage {
         println("$TAG: submitAnswer();")
 
-        val test = ongoingTest!!
-        test.submitAnswer(Mmpi566.Answer.byValue(chosenOption))
+        ongoingTest!!.submitAnswer(MmpiProcess.Answer.byValue(chosenOption))
 
-        return if (test.hasNextQuestion()) {
-            val question = test.nextQuestion()
-            NextQuestion(question)
+        return if (ongoingTest!!.hasNextQuestion()) {
+            NextQuestion(ongoingTest!!.nextQuestion())
         } else {
-            val result = test.calculateResult()
-            TestResult(result = result)
+            TestResult(ongoingTest!!.calculateResult())
         }
     }
 }

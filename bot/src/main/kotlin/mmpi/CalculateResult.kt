@@ -1,11 +1,11 @@
 package mmpi
 
-fun calculate(answers: Array<Mmpi566.Answer?>, scales: Mmpi566.Scales): Mmpi566.Result {
+fun calculate(answers: Array<MmpiProcess.Answer?>, scales: MmpiProcess.Scales): MmpiProcess.Result {
     val score = answers.sumOf { it?.option ?: 0 }
 
     val correction = scales.correctionScale.calculate(answers).score
 
-    return Mmpi566.Result(
+    return MmpiProcess.Result(
         description = "You've got $score. It seems you have an issue",
         liesScale = scales.liesScale.calculate(answers, correction),
         credibilityScale = scales.credibilityScale.calculate(answers, correction),
@@ -22,26 +22,26 @@ fun calculate(answers: Array<Mmpi566.Answer?>, scales: Mmpi566.Scales): Mmpi566.
     )
 }
 
-open class Scale(
+class Scale(
     val id: String,
     val title: String,
     val yes: List<Int>,
     val no: List<Int>,
-    val costOfZero: Int,
+    val costOfZero: Float,
     val costOfKeyAnswer: Float,
     val correctionFactor: Float,
     val tA: Float,
     val tB: Float,
     private val segments: List<Segment>
 ) {
-    private fun countAnswers(answers: Array<Mmpi566.Answer?>): Int {
-        val numberOfYes = yes.filter { answers[it] == Mmpi566.Answer.Agree }.size
-        val numberOfNo = no.filter { answers[it] == Mmpi566.Answer.Disagree }.size
+    private fun countAnswers(answers: Array<MmpiProcess.Answer?>): Int {
+        val numberOfYes = yes.filter { answers[it] == MmpiProcess.Answer.Agree }.size
+        val numberOfNo = no.filter { answers[it] == MmpiProcess.Answer.Disagree }.size
 
         return numberOfYes + numberOfNo
     }
 
-    fun calculate(answers: Array<Mmpi566.Answer?>, correctionValue: Int = 0): Result {
+    fun calculate(answers: Array<MmpiProcess.Answer?>, correctionValue: Int = 0): Result {
         val correction = correctionValue * correctionFactor
 
         val rawScore = (costOfZero + countAnswers(answers)

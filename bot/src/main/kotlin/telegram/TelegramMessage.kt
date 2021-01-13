@@ -1,11 +1,11 @@
 package telegram
 
-import mmpi.Mmpi566
+import mmpi.MmpiProcess
 
 sealed class TelegramMessage
 
-data class NextQuestion(val question: Mmpi566.Question) : TelegramMessage()
-data class TestResult(val result: Mmpi566.Result) : TelegramMessage() {
+data class NextQuestion(val question: MmpiProcess.Question) : TelegramMessage()
+data class TestResult(val result: MmpiProcess.Result) : TelegramMessage() {
     fun text(): String {
         val sb = StringBuilder()
         result.scalesToShow.forEach {

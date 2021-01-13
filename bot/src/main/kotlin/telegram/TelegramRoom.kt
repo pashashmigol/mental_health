@@ -23,12 +23,15 @@ object TelegramRoom {
             personBeingTested = people[personId]!!
         }
 
-        val question = (personBeingTested.requestFirstQuestion() as NextQuestion)
-
-        answerWithQuestion(handler.bot, personId, question)
+        try {
+            val question = (personBeingTested.startMmpiProcessTest() as NextQuestion)
+            answerWithQuestion(handler.bot, personId, question)
+        } catch (e: Exception) {
+            answerWithError(handler.bot, personId, exception = e)
+        }
     }
 
-    fun onAnswer(handler: PollAnswerHandlerEnvironment) {
+    fun onAnswer(handler: PollAnswerHandlerEnvironment) = try {
         println("$TAG: onAnswer();")
 
         val personId = handler.pollAnswer.user.id
@@ -36,7 +39,7 @@ object TelegramRoom {
 
         val answerIndex: Int = handler.pollAnswer.optionIds.first()
 
-        when (val response = person.submitAnswer(answerIndex)) {
+        when (val response = person.notifyAnswerReceived(answerIndex)) {
             is NextQuestion -> {
                 answerWithQuestion(handler.bot, personId, response)
             }
@@ -44,38 +47,14 @@ object TelegramRoom {
                 answerWithResult(handler.bot, personId, response)
             }
         }
+    } catch (e: Exception) {
+        answerWithError(handler.bot, handler.pollAnswer.user.id, exception = e)
     }
 
-    private fun answerWithResult(
-        bot: Bot,
-        userId: Long,
-        result: TestResult
-    ) {
-        println("$TAG: answerWithResult();")
-        bot.sendMessage(
-            chatId = userId,
-            text = result.text()
-        )
-    }
-
-    private fun answerWithQuestion(
-        bot: Bot,
-        userId: Long,
-        question: NextQuestion
-    ) {
-        println("$TAG: answerWithQuestion();")
-        bot.sendPoll(
-            chatId = userId,
-            question = question.question.text,
-            options = question.question.options.toList(),
-            isAnonymous = false
-        )
-    }
-
-    fun makeMockTest(handler: CommandHandlerEnvironment) {
+    fun makeMockTest(handler: CommandHandlerEnvironment) = try {
         println("$TAG: makeMockTest();")
 
-        val personId = handler.message.from?.id ?: return
+        val personId = handler.message.from!!.id
         val personBeingTested: PersonBeingTested
 
         if (people.containsKey(personId)) {
@@ -84,13 +63,53 @@ object TelegramRoom {
             people[personId] = PersonBeingTested(id = personId)
             personBeingTested = people[personId]!!
         }
-        personBeingTested.requestFirstQuestion()
+        personBeingTested.startMmpiProcessTest()
 
         mockAnswers.forEach {
-            val response = personBeingTested.submitAnswer(it.option)
+            val response = personBeingTested.notifyAnswerReceived(it.option)
             if (response is TestResult) {
                 answerWithResult(handler.bot, personId, response)
             }
         }
+    } catch (e: java.lang.Exception) {
+        answerWithError(handler.bot, handler.message.from!!.id, exception = e)
     }
+}
+
+
+private fun answerWithError(
+    bot: Bot,
+    userId: Long,
+    message: String? = null,
+    exception: java.lang.Exception? = null
+) {
+    bot.sendMessage(
+        chatId = userId,
+        text = message + "\n\n" + exception?.message +
+                "\n\n" + exception?.stackTrace.contentToString()
+    )
+}
+
+private fun answerWithResult(
+    bot: Bot,
+    userId: Long,
+    result: TestResult
+) {
+    bot.sendMessage(
+        chatId = userId,
+        text = result.text()
+    )
+}
+
+private fun answerWithQuestion(
+    bot: Bot,
+    userId: Long,
+    question: NextQuestion
+) {
+    bot.sendPoll(
+        chatId = userId,
+        question = question.question.text,
+        options = question.question.options.toList(),
+        isAnonymous = false
+    )
 }
