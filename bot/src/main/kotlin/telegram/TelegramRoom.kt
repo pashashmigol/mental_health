@@ -62,6 +62,7 @@ object TelegramRoom {
             personBeingTested = people[personId]!!
         }
         personBeingTested.startMmpiTestAndGetFirstQuestion()
+        personBeingTested.notifyAnswerReceived(0)
 
         mockAnswers.forEach {
             val response = personBeingTested.notifyAnswerReceived(it.option)
