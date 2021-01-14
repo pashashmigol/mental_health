@@ -1,6 +1,7 @@
 package telegram
 
 import PersonBeingTested
+import Message
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnvironment
@@ -22,7 +23,7 @@ object TelegramRoom {
             people[personId] = PersonBeingTested(id = personId)
             personBeingTested = people[personId]!!
         }
-        val question = (personBeingTested.startMmpiTestAndGetFirstQuestion() as TelegramMessage.Question)
+        val question = (personBeingTested.startMmpiTestAndGetFirstQuestion() as Message.Question)
         answerWithQuestion(handler.bot, personId, question)
 
     } catch (e: Exception) {
@@ -38,10 +39,10 @@ object TelegramRoom {
         val answerIndex: Int = handler.pollAnswer.optionIds.first()
 
         when (val response = person.notifyAnswerReceived(answerIndex)) {
-            is TelegramMessage.Question -> {
+            is Message.Question -> {
                 answerWithQuestion(handler.bot, personId, response)
             }
-            is TelegramMessage.TestResult -> {
+            is Message.TestResult -> {
                 answerWithResult(handler.bot, personId, response)
             }
         }
@@ -66,7 +67,7 @@ object TelegramRoom {
 
         mockAnswers.forEach {
             val response = personBeingTested.notifyAnswerReceived(it.option)
-            if (response is TelegramMessage.TestResult) {
+            if (response is Message.TestResult) {
                 answerWithResult(handler.bot, personId, response)
             }
         }
@@ -92,23 +93,23 @@ private fun answerWithError(
 private fun answerWithResult(
     bot: Bot,
     userId: Long,
-    result: TelegramMessage.TestResult
+    result: Message.TestResult
 ) {
     bot.sendMessage(
         chatId = userId,
-        text = result.text()
+        text = result.text
     )
 }
 
 private fun answerWithQuestion(
     bot: Bot,
     userId: Long,
-    question: TelegramMessage.Question
+    question: Message.Question
 ) {
     bot.sendPoll(
         chatId = userId,
-        question = question.question.text,
-        options = question.question.options.toList(),
+        question = question.text,
+        options = question.options.toList(),
         isAnonymous = false
     )
 }

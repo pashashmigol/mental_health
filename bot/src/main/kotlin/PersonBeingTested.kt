@@ -1,5 +1,4 @@
 import mmpi.MmpiTestingProcess
-import telegram.TelegramMessage
 
 data class PersonBeingTested(val id: Long) {
     companion object {
@@ -11,29 +10,29 @@ data class PersonBeingTested(val id: Long) {
     /**
      * Starts MmpiProcess test and returns first question
      * */
-    fun startMmpiTestAndGetFirstQuestion(): TelegramMessage {
+    fun startMmpiTestAndGetFirstQuestion(): Message {
         println("$TAG: requestFirstQuestion();")
         ongoingTest = null
-        return TelegramMessage.Question(createGenderQuestion())
+        return createGenderQuestion()
     }
 
-    fun notifyAnswerReceived(chosenOption: Int): TelegramMessage {
+    fun notifyAnswerReceived(chosenOption: Int): Message {
         if(ongoingTest == null) {//means we just get an answer on gender question
             val test = MmpiTestingProcess(Gender.byValue(chosenOption))
             ongoingTest = test
-            return TelegramMessage.Question(ongoingTest!!.nextQuestion())
+            return ongoingTest!!.nextQuestion()
         }
 
         ongoingTest!!.submitAnswer(MmpiTestingProcess.Answer.byValue(chosenOption))
         return if (ongoingTest!!.hasNextQuestion()) {
-            TelegramMessage.Question(ongoingTest!!.nextQuestion())
+            ongoingTest!!.nextQuestion()
         } else {
-            TelegramMessage.TestResult(ongoingTest!!.calculateResult())
+            Message.TestResult(ongoingTest!!.calculateResult().format())
         }
     }
 }
 
-private fun createGenderQuestion(): MmpiTestingProcess.Question = MmpiTestingProcess.Question(
+private fun createGenderQuestion() = Message.Question(
     text = "Выберите себе пол:",
     options = listOf("Мужской", "Женский")
 )

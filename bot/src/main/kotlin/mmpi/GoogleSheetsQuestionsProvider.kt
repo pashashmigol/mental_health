@@ -9,11 +9,12 @@ import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
+import Message
 import java.io.FileInputStream
 
 
 interface QuestionsProvider {
-    fun mmpiProcessQuestions(gender: Gender): List<MmpiTestingProcess.Question>
+    fun mmpiProcessQuestions(gender: Gender): List<Message.Question>
     fun mmpiProcessScales(gender: Gender): MmpiTestingProcess.Scales
     fun reload()
 }
@@ -25,7 +26,7 @@ object CurrentQuestionsProvider : QuestionsProvider {
         internalProvider = GoogleSheetsQuestionsProvider(rootPath)
     }
 
-    override fun mmpiProcessQuestions(gender: Gender): List<MmpiTestingProcess.Question> {
+    override fun mmpiProcessQuestions(gender: Gender): List<Message.Question> {
         return internalProvider?.mmpiProcessQuestions(gender)!!
     }
 
@@ -46,20 +47,17 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
     private val serviceAccount = FileInputStream("$projectRoot$CREDENTIALS_FILE_NAME")
     private val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
 
-    private var questionsMen: List<MmpiTestingProcess.Question> = emptyList()
+    private var questionsMen: List<Message.Question> = emptyList()
     private var scalesMen: MmpiTestingProcess.Scales? = null
 
-    private var questionWomen: List<MmpiTestingProcess.Question> = emptyList()
+    private var questionWomen: List<Message.Question> = emptyList()
     private var scalesWomen: MmpiTestingProcess.Scales? = null
-
-//    private var answerOptionsMen: List<String> = emptyList()
-//    private var answerOptionsWomen: List<String> = emptyList()
 
     init {
         reload()
     }
 
-    override fun mmpiProcessQuestions(gender: Gender): List<MmpiTestingProcess.Question> {
+    override fun mmpiProcessQuestions(gender: Gender): List<Message.Question> {
         return when (gender) {
             Gender.Male -> questionsMen
             Gender.Female -> questionWomen
@@ -90,7 +88,7 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
         scalesMen = loadScales(sheets, Gender.Male)
     }
 
-    private fun reloadQuestions(sheets: Sheets, gender: Gender): List<MmpiTestingProcess.Question> {
+    private fun reloadQuestions(sheets: Sheets, gender: Gender): List<Message.Question> {
 
         val answersPage = when (gender) {
             Gender.Male -> "'answer_options_men'"
@@ -211,7 +209,7 @@ private fun parseList(raw: String?): List<Int> = if (raw.isNullOrBlank())
 else
     raw.split(",").map { it.trim().toInt() }
 
-private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = MmpiTestingProcess.Question(
+private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = Message.Question(
     text = stringFor("question"),
     options = answerOptions
 )

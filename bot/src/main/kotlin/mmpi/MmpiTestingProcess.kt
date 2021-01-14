@@ -1,13 +1,14 @@
 package mmpi
 
 import Gender
+import Message
 
 const val NUMBER_OF_QUESTIONS = 566
 
 class MmpiTestingProcess(gender: Gender) {
     internal data class State(
         val currentQuestionIndex: Int,// = 0,
-        val questions: List<Question>,// = CurrentQuestionsProvider.MmpiProcessQuestions,
+        val questions: List<Message.Question>,// = CurrentQuestionsProvider.MmpiProcessQuestions,
         val answers: List<Answer>,// = arrayOfNulls<Answer>(NUMBER_OF_QUESTIONS)
         val scales: Scales?
     )
@@ -25,19 +26,13 @@ class MmpiTestingProcess(gender: Gender) {
 
     fun hasNextQuestion(): Boolean = hasNextQuestion(state)
 
-    fun nextQuestion(): Question {
+    fun nextQuestion(): Message.Question {
         val (newState, question) = nextQuestion(state)
         state = newState
         return question
     }
 
     fun calculateResult() = calculateResult(state)
-
-
-    data class Question(
-        val text: String,
-        val options: List<String>
-    )
 
     enum class Answer(val option: Int) {
         Agree(0),
@@ -67,7 +62,7 @@ class MmpiTestingProcess(gender: Gender) {
         individualismScale8: Scale.Result,
         optimismScale9: Scale.Result
     ) {
-        val scalesToShow = listOf(
+        private val scalesToShow = listOf(
             liesScale,
             credibilityScale,
             introversionScale,
@@ -81,6 +76,14 @@ class MmpiTestingProcess(gender: Gender) {
             individualismScale8,
             optimismScale9
         )
+
+        fun format(): String {
+            val sb = StringBuilder()
+            scalesToShow.forEach {
+                sb.append("${it.name} : ${it.score} \n${it.description} \n\n")
+            }
+            return sb.toString()
+        }
     }
 
     data class Scales(
@@ -114,7 +117,7 @@ private fun hasNextQuestion(state: MmpiTestingProcess.State): Boolean {
 }
 
 private fun nextQuestion(state: MmpiTestingProcess.State):
-        Pair<MmpiTestingProcess.State, MmpiTestingProcess.Question> {
+        Pair<MmpiTestingProcess.State, Message.Question> {
     val question = state.questions[state.currentQuestionIndex]
     return Pair(state, question)
 }
