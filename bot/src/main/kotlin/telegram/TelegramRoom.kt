@@ -12,42 +12,66 @@ import mmpi.mockAnswers
 object TelegramRoom {
     private const val TAG = "telegram.WorkSpace"
     private val people = mutableMapOf<Long, PersonBeingTested>()
+    private val sessions = mutableMapOf<Long, TelegramSession>()
 
     fun launchMmpiTest(handler: CommandHandlerEnvironment) = try {
         println("$TAG: launchMmpiTest();")
 
         val personId = handler.message.from?.id!!
-        val personBeingTested: PersonBeingTested
+//        val personBeingTested: PersonBeingTested
+//
+//        if (people.containsKey(personId)) {
+//            personBeingTested = people[personId]!!
+//        } else {
+//            people[personId] = PersonBeingTested(id = personId)
+//            personBeingTested = people[personId]!!
+//        }
+//        val question = (personBeingTested.startMmpiTestAndGetFirstQuestion() as Message.Question)
+//        answerWithQuestion(handler.bot, personId, question)
 
-        if (people.containsKey(personId)) {
-            personBeingTested = people[personId]!!
-        } else {
-            people[personId] = PersonBeingTested(id = personId)
-            personBeingTested = people[personId]!!
-        }
-        val question = (personBeingTested.startMmpiTestAndGetFirstQuestion() as Message.Question)
-        answerWithQuestion(handler.bot, personId, question)
+
+
+        sessions.remove(personId)
+        sessions[personId] = MmpiSession(personId) { sessions.remove(it.id) }
+        sessions[personId]!!.start(handler)
 
     } catch (e: Exception) {
         answerWithError(handler.bot, handler.message.from?.id!!, exception = e)
     }
 
-    fun onAnswer(handler: PollAnswerHandlerEnvironment) = try {
+    fun launchLucherTest(handler: CommandHandlerEnvironment) = try {
+        println("$TAG: launchLucherTest();")
+        val personId = handler.message.from?.id!!
+
+        sessions.remove(personId)
+        sessions[personId] = LucherSession(personId) { sessions.remove(it.id) }
+        sessions[personId]!!.start(handler)
+
+    } catch (e: Exception) {
+        answerWithError(handler.bot, handler.message.from?.id!!, exception = e)
+    }
+
+    fun pollAnswer(handler: PollAnswerHandlerEnvironment) = try {
         println("$TAG: onAnswer();")
 
-        val personId = handler.pollAnswer.user.id
-        val person = people[personId]!!
+//        val personId = handler.pollAnswer.user.id
+//        val person = people[personId]!!
+//
+//        val answerIndex: Int = handler.pollAnswer.optionIds.first()
+//
+//        when (val response = person.notifyAnswerReceived(answerIndex)) {
+//            is Message.Question -> {
+//                answerWithQuestion(handler.bot, personId, response)
+//            }
+//            is Message.TestResult -> {
+//                answerWithResult(handler.bot, personId, response)
+//            }
+//        }
 
-        val answerIndex: Int = handler.pollAnswer.optionIds.first()
+        val session = sessions[handler.pollAnswer.user.id]!!
+        session.pollAnswer(handler)
 
-        when (val response = person.notifyAnswerReceived(answerIndex)) {
-            is Message.Question -> {
-                answerWithQuestion(handler.bot, personId, response)
-            }
-            is Message.TestResult -> {
-                answerWithResult(handler.bot, personId, response)
-            }
-        }
+
     } catch (e: Exception) {
         answerWithError(handler.bot, handler.pollAnswer.user.id, exception = e)
     }
@@ -103,23 +127,5 @@ private fun answerWithResult(
     )
 }
 
-private fun answerWithQuestion(
-    bot: Bot,
-    userId: Long,
-    question: Message.Question
-) {
-    bot.sendPoll(
-        chatId = userId,
-        question = question.text,
-        options = question.options.toList(),
-        isAnonymous = false,
-        replyMarkup = InlineKeyboardMarkup.create(replyOptions(question))
-    )
-}
 
-private fun replyOptions(question: Message.Question): List<InlineKeyboardButton> {
-    return listOf(
-        InlineKeyboardButton.CallbackData(text = "1", callbackData = "1"),
-        InlineKeyboardButton.CallbackData(text = "2", callbackData = "2")
-    )
-}
+

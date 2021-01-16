@@ -5,7 +5,6 @@ import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.dispatcher.pollAnswer
-import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.webhook
 import lucher.LucherSession
 import mmpi.CurrentQuestionsProvider
@@ -35,12 +34,18 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
                             "${pollAnswer.optionIds.lastOrNull()} in the poll ${pollAnswer.pollId}"
                 )
 
-                TelegramRoom.onAnswer(this)
+                TelegramRoom.pollAnswer(this)
             }
             command("mmpi") {
                 println("mmpi")
                 TelegramRoom.launchMmpiTest(this)
             }
+
+            command("lucher") {
+                TelegramRoom.launchLucherTest(this)
+//                LucherSession.startTest(this)
+            }
+
             command("reload") {
                 println("reloadQuestions")
                 CurrentQuestionsProvider.reload()
@@ -49,21 +54,6 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
             command("test") {
                 println("test call")
                 TelegramRoom.makeMockTest(this)
-            }
-
-            command("html1") {
-                val markdownV2Text = """
-                  <a href='https://twitter.com/jordanbpeterson'>Jordan B. Peterson</a>
-                """.trimIndent()
-                bot.sendMessage(
-                    chatId = message.chat.id,
-                    text = markdownV2Text,
-                    parseMode = ParseMode.HTML
-                )
-            }
-
-            command("lucher") {
-                LucherSession.startTest(this)
             }
 
             callbackQuery {

@@ -15,7 +15,7 @@ internal class CalculateResultKtTest {
 
     @Test
     fun agree_with_everything() {
-        val test = MmpiProcess()
+        val test = MmpiTestingProcess(Gender.Male)
 
         allAgree.forEach {
             test.submitAnswer(it)
@@ -26,7 +26,7 @@ internal class CalculateResultKtTest {
 
     @Test
     fun notCompletedTest() {
-        val test = MmpiProcess()
+        val test = MmpiTestingProcess(Gender.Male)
 
         Assertions.assertThrows(RuntimeException::class.java) {
             justFewAnswers.forEach {
