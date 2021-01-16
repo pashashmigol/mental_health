@@ -1,10 +1,12 @@
 package telegram
 
-import PersonBeingTested
 import Message
+import PersonBeingTested
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnvironment
+import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
+import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import mmpi.mockAnswers
 
 object TelegramRoom {
@@ -110,6 +112,14 @@ private fun answerWithQuestion(
         chatId = userId,
         question = question.text,
         options = question.options.toList(),
-        isAnonymous = false
+        isAnonymous = false,
+        replyMarkup = InlineKeyboardMarkup.create(replyOptions(question))
+    )
+}
+
+private fun replyOptions(question: Message.Question): List<InlineKeyboardButton> {
+    return listOf(
+        InlineKeyboardButton.CallbackData(text = "1", callbackData = "1"),
+        InlineKeyboardButton.CallbackData(text = "2", callbackData = "2")
     )
 }
