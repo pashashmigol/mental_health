@@ -57,7 +57,8 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
             }
 
             callbackQuery {
-                LucherSession.onCallBack(this)
+//                LucherSession.onCallBack(this)
+                TelegramRoom.callbackQuery(this)
             }
         }
     }.apply {
