@@ -94,8 +94,8 @@ data class MmpiSession(
     }
 
     private fun genderButtons(question: Message.Question): List<List<InlineKeyboardButton>> {
-        return listOf(question.options.map {
-            InlineKeyboardButton.CallbackData(text = it, callbackData = "0")
+        return listOf(question.options.mapIndexed { i: Int, s: String ->
+            InlineKeyboardButton.CallbackData(text = s, callbackData = i.toString())
         })
     }
 
