@@ -1,4 +1,4 @@
-package telegram
+package mmpi
 
 import Gender
 import Message
@@ -8,41 +8,16 @@ import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironmen
 import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnvironment
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
-import mmpi.MmpiTestingProcess
+import telegram.OnEnded
+import telegram.TelegramSession
 
 data class MmpiSession(
     override val id: Long,
-    val callback: OnEnded
+    val onEndedCallback: OnEnded
 ) : TelegramSession {
 
     private var genderPollId: Long = 0L
     private var ongoingProcess: MmpiTestingProcess? = null
-
-    override fun pollAnswer(env: PollAnswerHandlerEnvironment) {
-        if (env.pollAnswer.pollId == genderPollId.toString()) {
-            val gender = Gender.valueOf(env.pollAnswer.optionIds[0].toString())
-            ongoingProcess = MmpiTestingProcess(gender)
-        } else {
-            ongoingProcess!!.submitAnswer(
-                MmpiTestingProcess.Answer.byValue(
-                    env.pollAnswer.optionIds.first()
-                )
-            )
-            if (ongoingProcess!!.hasNextQuestion()) {
-                sendQuestion(
-                    bot = env.bot,
-                    userId = id,
-                    question = ongoingProcess!!.nextQuestion()
-                )
-            } else {
-                sendResult(
-                    bot = env.bot,
-                    userId = id,
-                    result = Message.TestResult(ongoingProcess!!.calculateResult().format())
-                )
-            }
-        }
-    }
 
     override fun callbackQuery(env: CallbackQueryHandlerEnvironment) {
         if (ongoingProcess == null) {
@@ -72,6 +47,7 @@ data class MmpiSession(
                     userId = id,
                     result = Message.TestResult(ongoingProcess!!.calculateResult().format())
                 )
+                onEndedCallback(this)
             }
         }
     }
@@ -122,5 +98,16 @@ data class MmpiSession(
         return listOf(question.options.map {
             InlineKeyboardButton.CallbackData(text = it, callbackData = "0")
         })
+    }
+
+    private fun sendResult(
+        bot: Bot,
+        userId: Long,
+        result: Message.TestResult
+    ) {
+        bot.sendMessage(
+            chatId = userId,
+            text = result.text
+        )
     }
 }

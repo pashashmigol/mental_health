@@ -28,36 +28,18 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
             }
         }
         dispatch {
-            pollAnswer {
-                println(
-                    "${pollAnswer.user.firstName} has selected the option " +
-                            "${pollAnswer.optionIds.lastOrNull()} in the poll ${pollAnswer.pollId}"
-                )
-
-                TelegramRoom.pollAnswer(this)
-            }
             command("mmpi") {
                 println("mmpi")
                 TelegramRoom.launchMmpiTest(this)
             }
-
             command("lucher") {
                 TelegramRoom.launchLucherTest(this)
-//                LucherSession.startTest(this)
             }
-
             command("reload") {
                 println("reloadQuestions")
                 CurrentQuestionsProvider.reload()
             }
-
-            command("test") {
-                println("test call")
-                TelegramRoom.makeMockTest(this)
-            }
-
             callbackQuery {
-//                LucherSession.onCallBack(this)
                 TelegramRoom.callbackQuery(this)
             }
         }

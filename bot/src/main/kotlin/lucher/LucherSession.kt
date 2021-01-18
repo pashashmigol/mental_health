@@ -2,6 +2,7 @@ package lucher
 
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
+import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnvironment
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.TelegramFile
@@ -9,51 +10,57 @@ import com.github.kotlintelegrambot.entities.inputmedia.GroupableMedia
 import com.github.kotlintelegrambot.entities.inputmedia.InputMediaPhoto
 import com.github.kotlintelegrambot.entities.inputmedia.MediaGroup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import telegram.OnEnded
+import telegram.TelegramSession
 
-object LucherSession {
+data class LucherSession(
+    override val id: Long,
+    val onEndedCallback: OnEnded
+) : TelegramSession {
+
     private val mediaGroup = MediaGroup.from(*allOptions)
     private val replyOptions = mutableListOf(*allReplyOptions.toTypedArray())
     var messages: Array<Message>? = null
 
-    fun startTest(environment: CommandHandlerEnvironment) {
+    override fun start(env: CommandHandlerEnvironment) {
         replyOptions.clear()
         replyOptions.addAll(allReplyOptions)
 
-        val res = environment.bot.sendMediaGroup(
-            chatId = environment.message.chat.id,
+        val res = env.bot.sendMediaGroup(
+            chatId = env.message.chat.id,
             disableNotification = true,
             mediaGroup = mediaGroup
         )
 
         messages = res.first?.body()?.result
 
-        environment.bot.sendMessage(
-            chatId = environment.message.chat.id,
+        env.bot.sendMessage(
+            chatId = env.message.chat.id,
             text = "Выберите наиболее приятный вам цвет",
             replyMarkup = InlineKeyboardMarkup.create(replyOptions)
         )
     }
 
-    fun onCallBack(environment: CallbackQueryHandlerEnvironment) {
-        val answer = environment.callbackQuery.data
+    override fun callbackQuery(env: CallbackQueryHandlerEnvironment) {
+        val answer = env.callbackQuery.data
 
-        val user = "${environment.callbackQuery.from.firstName} ${environment.callbackQuery.from.lastName}"
+        val user = "${env.callbackQuery.from.firstName} ${env.callbackQuery.from.lastName}"
         println("callbackQuery(); answer = $answer; user = $user")
 
         replyOptions.removeIf { it.callbackData == answer }
 
-        environment.bot.editMessageReplyMarkup(
-            chatId = environment.callbackQuery.message?.chat?.id,
-            messageId = environment.callbackQuery.message?.messageId,
-            inlineMessageId = environment.callbackQuery.inlineMessageId,
+        env.bot.editMessageReplyMarkup(
+            chatId = env.callbackQuery.message?.chat?.id,
+            messageId = env.callbackQuery.message?.messageId,
+            inlineMessageId = env.callbackQuery.inlineMessageId,
             replyMarkup = InlineKeyboardMarkup.create(replyOptions)
         )
 
         messages
             ?.find { it.caption == answer }
             ?.let {
-                environment.bot.deleteMessage(
-                    chatId = environment.callbackQuery.message?.chat?.id ?: 0,
+                env.bot.deleteMessage(
+                    chatId = env.callbackQuery.message?.chat?.id ?: 0,
                     messageId = it.messageId
                 )
             }
