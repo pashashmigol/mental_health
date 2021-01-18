@@ -14,7 +14,9 @@ data class LucherSession(
 ) : TelegramSession {
 
     private val replyOptions = mutableListOf(*options.map { it.callbackData() }.toTypedArray())
-    var messages: Array<Message?> = arrayOfNulls(8)
+    private var messages: Array<Message?> = arrayOfNulls(8)
+    private val answers = mutableListOf<String>()
+    private var messageId = 0L
 
     override fun start(env: CommandHandlerEnvironment) {
         replyOptions.clear()
@@ -23,22 +25,22 @@ data class LucherSession(
         options.forEachIndexed { i, option ->
             val result = env.bot.sendPhoto(
                 caption = option.caption,
+                disableNotification = true,
                 chatId = env.message.chat.id,
                 photo = option.url,
             )
             messages[i] = result.first!!.body()!!.result!!
         }
 
-        env.bot.sendMessage(
+        messageId = env.bot.sendMessage(
             chatId = env.message.chat.id,
             text = "Выберите наиболее приятный вам цвет",
             replyMarkup = InlineKeyboardMarkup.create(replyOptions)
-        )
+        ).first!!.body()!!.result!!.messageId
     }
 
     override fun callbackQuery(env: CallbackQueryHandlerEnvironment) {
         val answer = env.callbackQuery.data
-
         val user = "${env.callbackQuery.from.firstName} ${env.callbackQuery.from.lastName}"
         println("callbackQuery(); answer = $answer; user = $user")
 
@@ -50,14 +52,36 @@ data class LucherSession(
             inlineMessageId = env.callbackQuery.inlineMessageId,
             replyMarkup = InlineKeyboardMarkup.create(replyOptions)
         )
+        messages.find { it!!.caption == answer }?.let {
+            env.bot.deleteMessage(
+                chatId = env.callbackQuery.message?.chat?.id ?: 0,
+                messageId = it.messageId
+            )
+        }
+        answers.add(answer)
 
-        messages.find { it!!.caption == answer }
-            ?.let {
+        if (answers.size == 7) {
+            val result = calculateResult(answers)
+
+            env.bot.editMessageText(
+                chatId = env.callbackQuery.message?.chat?.id ?: 0,
+                messageId = messageId,
+                text = result
+            )
+            messages.find { it!!.caption == replyOptions.first().text }?.let {
                 env.bot.deleteMessage(
                     chatId = env.callbackQuery.message?.chat?.id ?: 0,
                     messageId = it.messageId
                 )
             }
+            replyOptions.clear()
+            env.bot.editMessageReplyMarkup(
+                chatId = env.callbackQuery.message?.chat?.id,
+                messageId = env.callbackQuery.message?.messageId,
+                inlineMessageId = env.callbackQuery.inlineMessageId,
+                replyMarkup = InlineKeyboardMarkup.create(replyOptions)
+            )
+        }
     }
 }
 
@@ -75,5 +99,9 @@ private val options = arrayOf(
     Option("7", "https://drive.google.com/uc?export=download&id=1GuQ5B2jFD48rRVZcWjgB2VYymzZh9my1"),
     Option("8", "https://drive.google.com/uc?export=download&id=1FbQHlO_eycM9SVUOPkXJhEyjUzOKxEHF")
 )
+
+private fun calculateResult(answers: List<String>): String {
+    return "Ты очень странный, тебя надо лечить электричеством"
+}
 
 
