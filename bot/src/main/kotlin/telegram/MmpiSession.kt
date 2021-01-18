@@ -2,9 +2,12 @@ package telegram
 
 import Gender
 import Message
+import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnvironment
+import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
+import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import mmpi.MmpiTestingProcess
 
 data class MmpiSession(
@@ -16,33 +19,33 @@ data class MmpiSession(
     private var ongoingProcess: MmpiTestingProcess? = null
 
     override fun pollAnswer(env: PollAnswerHandlerEnvironment) {
-//        if (env.pollAnswer.pollId == genderPollId) {
-//            val gender = Gender.valueOf(env.pollAnswer.optionIds[0].toString())
-//            ongoingProcess = MmpiTestingProcess(gender)
-//        } else {
-//            ongoingProcess!!.submitAnswer(
-//                MmpiTestingProcess.Answer.byValue(
-//                    env.pollAnswer.optionIds.first()
-//                )
-//            )
-//            if (ongoingProcess!!.hasNextQuestion()) {
-//                sendQuestion(
-//                    bot = env.bot,
-//                    userId = id,
-//                    question = ongoingProcess!!.nextQuestion()
-//                )
-//            } else {
-//                sendResult(
-//                    bot = env.bot,
-//                    userId = id,
-//                    result = Message.TestResult(ongoingProcess!!.calculateResult().format())
-//                )
-//            }
-//        }
+        if (env.pollAnswer.pollId == genderPollId.toString()) {
+            val gender = Gender.valueOf(env.pollAnswer.optionIds[0].toString())
+            ongoingProcess = MmpiTestingProcess(gender)
+        } else {
+            ongoingProcess!!.submitAnswer(
+                MmpiTestingProcess.Answer.byValue(
+                    env.pollAnswer.optionIds.first()
+                )
+            )
+            if (ongoingProcess!!.hasNextQuestion()) {
+                sendQuestion(
+                    bot = env.bot,
+                    userId = id,
+                    question = ongoingProcess!!.nextQuestion()
+                )
+            } else {
+                sendResult(
+                    bot = env.bot,
+                    userId = id,
+                    result = Message.TestResult(ongoingProcess!!.calculateResult().format())
+                )
+            }
+        }
     }
 
     override fun callbackQuery(env: CallbackQueryHandlerEnvironment) {
-        if (env.callbackQuery.message?.messageId == genderPollId) {
+        if (ongoingProcess == null) {
             val gender = Gender.byValue(env.callbackQuery.data.toInt())
             ongoingProcess = MmpiTestingProcess(gender)
 
@@ -74,10 +77,50 @@ data class MmpiSession(
     }
 
     override fun start(env: CommandHandlerEnvironment) {
-        genderPollId = sendQuestion(
-            bot = env.bot,
-            userId = id,
-            question = createGenderQuestion()
+        genderPollId = askGender(bot = env.bot, userId = id, createGenderQuestion())
+    }
+
+    private fun sendQuestion(
+        bot: Bot,
+        userId: Long,
+        question: Message.Question
+    ): Long {
+        val result = bot.editMessageText(
+            chatId = userId,
+            messageId = genderPollId,
+            text = question.text,
+            replyMarkup = InlineKeyboardMarkup.create(mmpiButtons(question))
         )
+        return result.first!!.body()!!.result!!.messageId
+    }
+
+    private fun askGender(
+        bot: Bot,
+        userId: Long,
+        question: Message.Question
+    ): Long {
+        val result = bot.sendMessage(
+            chatId = userId,
+            text = question.text,
+            replyMarkup = InlineKeyboardMarkup.create(genderButtons(question))
+        )
+        return result.first!!.body()!!.result!!.messageId
+    }
+
+    private fun createGenderQuestion() = Message.Question(
+        text = "Выберите себе пол:",
+        options = listOf("Мужской", "Женский")
+    )
+
+    private fun mmpiButtons(question: Message.Question): List<List<InlineKeyboardButton>> {
+        return question.options.map {
+            listOf(InlineKeyboardButton.CallbackData(text = it, callbackData = "0"))
+        }
+    }
+
+    private fun genderButtons(question: Message.Question): List<List<InlineKeyboardButton>> {
+        return listOf(question.options.map {
+            InlineKeyboardButton.CallbackData(text = it, callbackData = "0")
+        })
     }
 }

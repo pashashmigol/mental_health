@@ -14,8 +14,8 @@ import java.io.FileInputStream
 
 
 interface QuestionsProvider {
-    fun mmpiProcessQuestions(gender: Gender): List<Message.Question>
-    fun mmpiProcessScales(gender: Gender): MmpiTestingProcess.Scales
+    fun loadMmpiQuestions(gender: Gender): List<Message.Question>
+    fun loadMmpiScales(gender: Gender): MmpiTestingProcess.Scales
     fun reload()
 }
 
@@ -26,12 +26,12 @@ object CurrentQuestionsProvider : QuestionsProvider {
         internalProvider = GoogleSheetsQuestionsProvider(rootPath)
     }
 
-    override fun mmpiProcessQuestions(gender: Gender): List<Message.Question> {
-        return internalProvider?.mmpiProcessQuestions(gender)!!
+    override fun loadMmpiQuestions(gender: Gender): List<Message.Question> {
+        return internalProvider?.loadMmpiQuestions(gender)!!
     }
 
-    override fun mmpiProcessScales(gender: Gender): MmpiTestingProcess.Scales {
-        return internalProvider?.mmpiProcessScales(gender)!!
+    override fun loadMmpiScales(gender: Gender): MmpiTestingProcess.Scales {
+        return internalProvider?.loadMmpiScales(gender)!!
     }
 
     override fun reload() {
@@ -57,14 +57,14 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
         reload()
     }
 
-    override fun mmpiProcessQuestions(gender: Gender): List<Message.Question> {
+    override fun loadMmpiQuestions(gender: Gender): List<Message.Question> {
         return when (gender) {
             Gender.Male -> questionsMen
             Gender.Female -> questionWomen
         }
     }
 
-    override fun mmpiProcessScales(gender: Gender): MmpiTestingProcess.Scales {
+    override fun loadMmpiScales(gender: Gender): MmpiTestingProcess.Scales {
         return when (gender) {
             Gender.Male -> scalesMen!!
             Gender.Female -> scalesWomen!!
@@ -99,7 +99,7 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
 
         val answerOptions = answerOptionsRequest.execute().getValues()
             .toRawEntries()
-            .map { it["answer"] as String }
+            .map { it["answer"].toString() }
 
         val questionsPage = when (gender) {
             Gender.Male -> "'questions_men'"
@@ -108,9 +108,14 @@ class GoogleSheetsQuestionsProvider(projectRoot: String) : QuestionsProvider {
         val allSheetsRequest = sheets.spreadsheets()
             .values().get(QUESTIONS_FILE_ID_GOOGLE_DOC, questionsPage)
 
-        return allSheetsRequest.execute().getValues()
+        val questions = allSheetsRequest.execute().getValues()
             .toRawEntries()
             .map { it.toQuestion(answerOptions) }
+
+        val size = questions.size
+        return questions.mapIndexed { i: Int, question: Message.Question ->
+            question.copy(text = question.text + " ${i + 1}/$size:")
+        }
     }
 
     private fun loadScales(sheets: Sheets, gender: Gender): MmpiTestingProcess.Scales {

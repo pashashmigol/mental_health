@@ -15,9 +15,9 @@ class MmpiTestingProcess(gender: Gender) {
 
     private var state = State(
         currentQuestionIndex = 0,
-        questions = CurrentQuestionsProvider.mmpiProcessQuestions(gender),
+        questions = CurrentQuestionsProvider.loadMmpiQuestions(gender),
         answers = emptyList(),
-        scales = CurrentQuestionsProvider.mmpiProcessScales(gender)
+        scales = CurrentQuestionsProvider.loadMmpiScales(gender)
     )
 
     fun submitAnswer(answer: Answer) {
