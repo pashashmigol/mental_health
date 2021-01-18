@@ -4,6 +4,8 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import mmpi.CurrentQuestionsProvider
+import telegram.LaunchMode
+import telegram.launchBot
 
 private const val TOKEN = "1466693925:AAGkgMILgAg4gvs4Ct6UFlPM5T9VJx0BoIY"
 

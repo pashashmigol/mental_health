@@ -1,14 +1,13 @@
-import MyBotConfig.SERVER_HOSTNAME
+package telegram
+
+import telegram.MyBotConfig.SERVER_HOSTNAME
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.command
-import com.github.kotlintelegrambot.dispatcher.pollAnswer
 import com.github.kotlintelegrambot.webhook
-import lucher.LucherSession
 import mmpi.CurrentQuestionsProvider
-import telegram.TelegramRoom
 
 
 object MyBotConfig {
