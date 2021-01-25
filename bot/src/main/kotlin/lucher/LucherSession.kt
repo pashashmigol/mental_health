@@ -100,8 +100,5 @@ private val options = arrayOf(
     Option("7", "https://drive.google.com/uc?export=download&id=1DHISDgiM6HPFWrDOnC09L1K9WGmTnpmX")
 )
 
-private fun calculateResult(answers: List<String>): String {
-    return "Ты очень странный, тебя надо лечить электричеством"
-}
 
 
