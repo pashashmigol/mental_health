@@ -1,6 +1,5 @@
 package telegram
 
-import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import lucher.LucherSession
@@ -19,7 +18,7 @@ object TelegramRoom {
         sessions[personId]!!.start(handler)
 
     } catch (e: Exception) {
-        answerWithError(handler.bot, handler.message.from?.id!!, exception = e)
+        sendError(handler.bot, handler.message.from?.id!!, exception = e)
     }
 
     fun launchLucherTest(handler: CommandHandlerEnvironment) = try {
@@ -31,31 +30,17 @@ object TelegramRoom {
         sessions[personId]!!.start(handler)
 
     } catch (e: Exception) {
-        answerWithError(handler.bot, handler.message.from?.id!!, exception = e)
+        sendError(handler.bot, handler.message.from?.id!!, exception = e)
     }
 
     fun callbackQuery(env: CallbackQueryHandlerEnvironment) = try {
         val session = sessions[env.callbackQuery.from.id]!!
-        session.callbackQuery(env)
+        session.onCallbackFromUser(env)
     } catch (e: Exception) {
-        answerWithError(
+        sendError(
             env.bot, env.update.message!!.from!!.id, exception = e
         )
     }
-}
-
-
-private fun answerWithError(
-    bot: Bot,
-    userId: Long,
-    message: String? = null,
-    exception: java.lang.Exception? = null
-) {
-    bot.sendMessage(
-        chatId = userId,
-        text = message + "\n\n" + exception?.message +
-                "\n\n" + exception?.stackTrace.contentToString()
-    )
 }
 
 

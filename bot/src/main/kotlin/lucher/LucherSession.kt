@@ -2,103 +2,73 @@ package lucher
 
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
-import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
-import com.github.kotlintelegrambot.entities.Message
-import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import telegram.OnEnded
 import telegram.TelegramSession
+import telegram.sendError
+
+typealias OnUserChoseColor = (env: CallbackQueryHandlerEnvironment, String) -> Unit
 
 data class LucherSession(
     override val id: Long,
     val onEndedCallback: OnEnded
 ) : TelegramSession {
+    companion object {
+        val scope = GlobalScope
+    }
 
-    private val replyOptions = mutableListOf(*options.map { it.callbackData() }.toTypedArray())
-    private var messages: Array<Message?> = arrayOfNulls(8)
-    private val answers = mutableListOf<String>()
-    private var messageId = 0L
+    private var onColorChosen: OnUserChoseColor? = null
 
     override fun start(env: CommandHandlerEnvironment) {
-        replyOptions.clear()
-        replyOptions.addAll(options.map { it.callbackData() })
-
-        options.forEachIndexed { i, option ->
-            val result = env.bot.sendPhoto(
-                caption = option.caption,
-                disableNotification = true,
-                chatId = env.message.chat.id,
-                photo = option.url,
-            )
-            messages[i] = result.first!!.body()!!.result!!
+        val handler = CoroutineExceptionHandler { _, exception ->
+            sendError(env.bot, env.message.from!!.id, "TelegramSession error", exception)
         }
-
-        messageId = env.bot.sendMessage(
-            chatId = env.message.chat.id,
-            text = "Выберите наиболее приятный вам цвет",
-            replyMarkup = InlineKeyboardMarkup.create(replyOptions)
-        ).first!!.body()!!.result!!.messageId
+        scope.launch(handler) { executeTesting(env) }
     }
 
-    override fun callbackQuery(env: CallbackQueryHandlerEnvironment) {
+    override fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment) {
         val answer = env.callbackQuery.data
-        val user = "${env.callbackQuery.from.firstName} ${env.callbackQuery.from.lastName}"
-        println("callbackQuery(); answer = $answer; user = $user")
+        onColorChosen?.invoke(env, answer)
+    }
 
-        replyOptions.removeIf { it.callbackData == answer }
+    private suspend fun executeTesting(env: CommandHandlerEnvironment) {
 
-        env.bot.editMessageReplyMarkup(
-            chatId = env.callbackQuery.message?.chat?.id,
-            messageId = env.callbackQuery.message?.messageId,
-            inlineMessageId = env.callbackQuery.inlineMessageId,
-            replyMarkup = InlineKeyboardMarkup.create(replyOptions)
-        )
-        messages.find { it!!.caption == answer }?.let {
-            env.bot.deleteMessage(
-                chatId = env.callbackQuery.message?.chat?.id ?: 0,
-                messageId = it.messageId
-            )
-        }
-        answers.add(answer)
+        val firstRoundAnswers = runRound(env)
+        askUserToWaitBeforeSecondRound(env, minutes = 1)
+        val secondRoundAnswers = runRound(env)
 
-        if (answers.size == 7) {
-            val result = calculateResult(answers)
+        val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
+        val result = calculateResult(answers)
 
-            env.bot.editMessageText(
-                chatId = env.callbackQuery.message?.chat?.id ?: 0,
-                messageId = messageId,
-                text = result
-            )
-            messages.find { it!!.caption == replyOptions.first().text }?.let {
-                env.bot.deleteMessage(
-                    chatId = env.callbackQuery.message?.chat?.id ?: 0,
-                    messageId = it.messageId
-                )
+        showResult(env, result)
+    }
+
+    private suspend fun runRound(env: CommandHandlerEnvironment): List<LucherColor> {
+
+        val shownColors = showAllColors(env)
+        val shownOptions = createReplyOptions()
+        askUserToChooseColor(env, shownOptions)
+
+        val answers = mutableListOf<String>()
+        val channel = Channel<Unit>(0)
+
+        onColorChosen = { callbackEnv, answer: String ->
+            removePressedButton(answer, callbackEnv, shownOptions)
+            removeChosenColor(callbackEnv, answer, shownColors)
+
+            answers.add(answer)
+
+            if (allColorsChosen(answers)) {
+                answers.add(shownColors.first()!!.caption!!)
+                cleanUp(callbackEnv, shownColors, shownOptions)
+
+                channel.offer(Unit)
             }
-            replyOptions.clear()
-            env.bot.editMessageReplyMarkup(
-                chatId = env.callbackQuery.message?.chat?.id,
-                messageId = env.callbackQuery.message?.messageId,
-                inlineMessageId = env.callbackQuery.inlineMessageId,
-                replyMarkup = InlineKeyboardMarkup.create(replyOptions)
-            )
         }
+        channel.receive()
+        assert(answers.size == LucherColor.values().size) { "wrong answers number" }
+
+        return answers.map { LucherColor.valueOf(it.toInt()) }
     }
 }
-
-private data class Option(val caption: String, val url: String) {
-    fun callbackData() = InlineKeyboardButton.CallbackData(text = caption, callbackData = caption)
-}
-
-private val options = arrayOf(
-    Option("0", "https://drive.google.com/uc?export=download&id=1GuQ5B2jFD48rRVZcWjgB2VYymzZh9my1"),
-    Option("1", "https://drive.google.com/uc?export=download&id=1FbQHlO_eycM9SVUOPkXJhEyjUzOKxEHF"),
-    Option("2", "https://drive.google.com/uc?export=download&id=12pgfDxHfe3BMZwJelx0oA8PaHrrGEL5k"),
-    Option("3", "https://drive.google.com/uc?export=download&id=16HI01RELVjYcOyW9WBH46yP435-XshJu"),
-    Option("4", "https://drive.google.com/uc?export=download&id=1fmoDra7KpOukr8Pveu2RabQxE618AfwC"),
-    Option("5", "https://drive.google.com/uc?export=download&id=1RJKBMtE7A1-serZ3yT-wFFmfKieSbURw"),
-    Option("6", "https://drive.google.com/uc?export=download&id=1QsRaeZ9KVI0GSQCF2AIGrXmUlL9sc1P0"),
-    Option("7", "https://drive.google.com/uc?export=download&id=1DHISDgiM6HPFWrDOnC09L1K9WGmTnpmX")
-)
-
-
-

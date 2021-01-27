@@ -6,7 +6,7 @@ import com.github.kotlintelegrambot.dispatcher.handlers.PollAnswerHandlerEnviron
 
 interface TelegramSession {
     val id: Long
-    fun callbackQuery(env: CallbackQueryHandlerEnvironment)
+    fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment)
     fun start(env: CommandHandlerEnvironment)
 }
 

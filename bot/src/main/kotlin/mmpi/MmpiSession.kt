@@ -18,7 +18,7 @@ data class MmpiSession(
     private var genderPollId: Long = 0L
     private var ongoingProcess: MmpiTestingProcess? = null
 
-    override fun callbackQuery(env: CallbackQueryHandlerEnvironment) {
+    override fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment) {
         if (ongoingProcess == null) {
             val gender = Gender.byValue(env.callbackQuery.data.toInt())
             ongoingProcess = MmpiTestingProcess(gender)
