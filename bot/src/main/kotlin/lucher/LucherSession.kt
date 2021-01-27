@@ -51,7 +51,7 @@ data class LucherSession(
         askUserToChooseColor(env, shownOptions)
 
         val answers = mutableListOf<String>()
-        val channel = Channel<Unit>(0)
+        val channel = Channel<Unit>(0)//using channel to wait until all colors are chosen
 
         onColorChosen = { callbackEnv, answer: String ->
             removePressedButton(answer, callbackEnv, shownOptions)
