@@ -7,8 +7,8 @@ data class LucherResult(val paragraphs: List<String>, val anxiety: Int) {
 class Answer(index: Int)
 
 class LucherAnswers(
-    val firstTouch: List<LucherColor>,
-    val secondTouch: List<LucherColor>
+    val firstRound: List<LucherColor>,
+    val secondRound: List<LucherColor>
 )
 
 fun calculateResult(answers: LucherAnswers): LucherResult {
@@ -22,5 +22,8 @@ internal fun findPairs(
     firstTouchAnswers: List<String>,
     secondTouchAnswers: List<String>
 ): List<String> {
+
+
+
     return emptyList()
 }
