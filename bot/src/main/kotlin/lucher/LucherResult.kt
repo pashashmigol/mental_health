@@ -18,12 +18,29 @@ fun calculateResult(answers: LucherAnswers): LucherResult {
     )
 }
 
-internal fun findPairs(
+fun findPairs(
     firstTouchAnswers: List<String>,
     secondTouchAnswers: List<String>
 ): List<String> {
+    assert(firstTouchAnswers.size == 8)
+    assert(secondTouchAnswers.size == 8)
 
+    val pairsFirst = firstTouchAnswers.zipWithNext()
+    val pairsSecond = secondTouchAnswers.zipWithNext()
 
+    val pairsShared = pairsSecond
+        .filter { pair1 ->
+            pairsFirst.any { pair2 -> (pair1.toList().toSet() == pair2.toList().toSet()) }
+        }
 
-    return emptyList()
+    val last = pairsShared.size - 1
+
+    return pairsShared.mapIndexed { index, pair ->
+        when (index) {
+            0 -> "+${pair.first}+${pair.second}"
+            1 -> "x${pair.first}x${pair.second}"
+            last -> "-${pair.first}-${pair.second}"
+            else -> "=${pair.first}=${pair.second}"
+        }
+    }
 }
