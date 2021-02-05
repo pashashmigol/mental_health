@@ -10,10 +10,29 @@ internal class LucherResultKtTest {
         val firstRound = listOf("5", "1", "3", "4", "0", "6", "2", "7")
         val secondRound = listOf("3", "1", "5", "4", "0", "7", "2", "6")
 
-        val pairs = findPairs(firstRound, secondRound)
-        val expected = listOf("+3+1", "x1x5", "=4=0", "=7=2", "-2-6", "+3-6", "+3-2")
+        val expectedStablePairs = listOf("+3+1", "x1x5", "=4=0", "=7=2", "-2-6").sorted()
+        val expectedContraPairs = listOf("+3-6", "+3-2").sorted()
 
-        assertEquals(expected, pairs)
+        val actualStablePairs = findPairs(firstRound, secondRound)
+            .stablePairs.map { it.toString() }.sorted()
+        assertEquals(expectedStablePairs, actualStablePairs)
+
+        val actualContraPairs = findPairs(firstRound, secondRound)
+            .contraversedPairs.map { it.toString() }.sorted()
+        assertEquals(expectedContraPairs, actualContraPairs)
+    }
+
+    @Test
+    fun `calculate result 1`() {
+        val firstRound = listOf("5", "1", "3", "4", "0", "6", "2", "7")
+        val secondRound = listOf("3", "1", "5", "4", "0", "7", "2", "6")
+
+        val expected = listOf("+3-6", "+3-2").sorted()
+
+        val actual = findContraversedPairs(firstRound, secondRound)
+            .map { it.toString() }.sorted()
+
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -21,10 +40,13 @@ internal class LucherResultKtTest {
         val firstRound = listOf("3", "1", "5", "4", "2", "6", "0", "7")
         val secondRound = listOf("3", "5", "1", "4", "2", "6", "7", "0")
 
-        val pairs = findPairs(firstRound, secondRound)
-        val expected = listOf("+3", "x5x1", "=4=2", "=2=6", "-7-0")
+        val expected = listOf("+3", "x5x1", "=4=2", "=2=6", "-7-0").sorted()
 
-        assertEquals(expected, pairs)
+        val actual = findPairs(firstRound, secondRound).stablePairs
+            .map { it.toString() }
+            .sorted()
+
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -32,18 +54,40 @@ internal class LucherResultKtTest {
         val firstRound = listOf("3", "1", "5", "4", "0", "6", "7", "2")
         val secondRound = listOf("3", "1", "4", "6", "0", "2", "7", "5")
 
-        val pairs = findPairs(firstRound, secondRound)
-        val expected = listOf("+3+1", "x4", "x4x5", "=6=0", "=2=7", "-5")
+        val expectedStable = listOf("+3+1", "x4", "=6=0", "=2=7", "-5").sorted()
+        val actualStable = findPairs(firstRound, secondRound)
+            .stablePairs.map { it.toString() }.sorted()
 
-        assertEquals(expected.sorted(), pairs.sorted())
+        assertEquals(expectedStable, actualStable)
+
+        val expectedBroken = listOf("x5x4")
+        val actualBroken = findPairs(firstRound, secondRound)
+            .brokenPairs.map { it.toString() }.sorted()
+
+        assertEquals(expectedBroken, actualBroken)
+
+        val expectedContra = listOf( "+3-2", "+3-7", "+3-5").sorted()
+        val actualContra = findPairs(firstRound, secondRound)
+            .contraversedPairs.map { it.toString() }.sorted()
+
+        assertEquals(expectedContra, actualContra)
     }
 
-    @Test fun `find broken pairs`() {
+
+    @Test
+    fun `find broken pairs`() {
         val firstRound = listOf("3", "1", "5", "4", "0", "6", "7", "2")
         val secondRound = listOf("3", "1", "4", "6", "0", "2", "7", "5")
 
-        val pairs = findBrokenPairs(firstRound, secondRound)
-        assertEquals(listOf(Element.Pair("x5", "x4")), pairs)
+        val actual = findBrokenPairs(firstRound, secondRound)
+
+        val expected = listOf(
+            Element.Pair(
+                AttributedColor("5", "x"),
+                AttributedColor("4", "x"),
+            )
+        )
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -51,26 +95,31 @@ internal class LucherResultKtTest {
         val firstRound = listOf("0", "6", "5", "1", "3", "4", "2", "7")
         val secondRound = listOf("7", "0", "6", "1", "5", "2", "4", "3")
 
-        val pairs = findContraversedPairs(firstRound, secondRound)
         val expected = listOf(
-            "+7-3", "+7-4", "+0-3", "+0-4", "+0-7",
+            "+7-3", "+7-4", "+0-3", "+0-4",
             "+7-2", "+0-2", "+6-3",
             "+6-4", "+6-2"
-        )
+        ).sorted()
 
-        assertEquals(expected.sorted(), pairs.sorted())
+        val actual = findContraversedPairs(firstRound, secondRound)
+            .map { it.toString() }
+            .sorted()
+
+        assertEquals(expected, actual)
     }
 
     @Test
     fun `find anxiety colors`() {
         val actual = findAnxietyColors(listOf("0", "6", "5", "1", "3", "4", "2", "7"))
-        assertEquals(listOf("4", "2", "7"), actual)
+            .map { it.toString() }
+        assertEquals(listOf("-4", "-2", "-7"), actual)
     }
 
     @Test
     fun `find compensatory colors`() {
         val actual = findCompensatoryColors(listOf("0", "6", "5", "1", "3", "4", "2", "7"))
-        assertEquals(listOf("0", "6"), actual)
+            .map { it.toString() }
+        assertEquals(listOf("+0", "+6"), actual)
     }
 
     @Test

@@ -59,7 +59,7 @@ fun showAllColors(env: CommandHandlerEnvironment): Array<Message?> {
             caption = option.index.toString(),
             disableNotification = true,
             chatId = env.message.chat.id,
-            photo = option.url,
+            photo = option.url(),
         )
         shownColors[i] = result.first!!.body()!!.result!!
     }

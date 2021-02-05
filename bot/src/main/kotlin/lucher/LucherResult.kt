@@ -2,15 +2,20 @@ package lucher
 
 import com.google.common.collect.Lists
 
+
 data class LucherResult(val paragraphs: List<String>, val anxiety: Int) {
     fun description() = paragraphs.joinToString(separator = "\n")
 }
 
-class Answer(index: Int)
-
 class LucherAnswers(
     val firstRound: List<LucherColor>,
     val secondRound: List<LucherColor>
+)
+
+data class AllPairs(
+    val stablePairs: List<Element>,
+    val brokenPairs: List<Element>,
+    val contraversedPairs: List<Element>
 )
 
 fun calculateResult(answers: LucherAnswers): LucherResult {
@@ -23,71 +28,112 @@ fun calculateResult(answers: LucherAnswers): LucherResult {
 fun findPairs(
     firstTouchAnswers: List<String>,
     secondTouchAnswers: List<String>
-): List<String> {
+): AllPairs {
     assert(firstTouchAnswers.size == 8)
     assert(secondTouchAnswers.size == 8)
 
-    val pairsFirst = firstTouchAnswers.zipWithNext()
-    val pairsSecond = secondTouchAnswers.zipWithNext()
+    val pairsFirst = firstTouchAnswers
+        .zipWithNext()
+        .map { Element.Pair(it.first, it.second) }
+
+    val pairsSecond = secondTouchAnswers
+        .zipWithNext()
+        .map { Element.Pair(it.first, it.second) }
 
     val commonPairs = findCommonPairs(pairsSecond, pairsFirst)
     val isolatedColors = isolatedColors(commonPairs, secondTouchAnswers)
-
     val last = commonPairs.size + isolatedColors.size - 1
 
-    return secondTouchAnswers
+    val mainPairs: List<Element> = secondTouchAnswers
         .mapNotNull { color: String ->
-            isolatedColors.find { it.color == color } ?: commonPairs.find { it.color1 == color }
-        }
-        .mapIndexed { index: Int, element: Element ->
+            isolatedColors.find { color == it.color.color.index.toString() }
+                ?: commonPairs.find { it.firstColor.color.index.toString() == color }
+        }.mapIndexed { index: Int, element: Element ->
             when (index) {
-                0 -> element.toString("+")
-                1 -> element.toString("x")
-                last -> element.toString("-")
-                else -> element.toString("=")
+                0 -> element.addAttribute("+")
+                1 -> element.addAttribute("x")
+                last -> element.addAttribute("-")
+                else -> element.addAttribute("=")
             }
         }
+
+    val brokenPairs = findBrokenPairs(firstTouchAnswers, secondTouchAnswers)
+    val contraversedPairs = findContraversedPairs(firstTouchAnswers, secondTouchAnswers)
+
+    return AllPairs(mainPairs, brokenPairs, contraversedPairs)
 }
 
 fun findContraversedPairs(
     firstRoundAnswers: List<String>,
     secondRoundAnswers: List<String>
-): Set<String> {
-    val firstTouchAs = findAnxietyColors(firstRoundAnswers)
-    val firstTouchCs = findCompensatoryColors(firstRoundAnswers)
+): List<Element.Pair> {
+    val firstTouchAs: MutableList<AttributedColor> = findAnxietyColors(firstRoundAnswers)
+    val firstTouchCs: MutableList<AttributedColor> = findCompensatoryColors(firstRoundAnswers)
+
+    if (firstTouchAs.isEmpty() && firstTouchCs.isNotEmpty()) {
+        firstTouchAs.add(
+            AttributedColor(LucherColor.of(firstRoundAnswers[7]), "-")
+        )
+    }
+    if (firstTouchCs.isEmpty() && firstTouchAs.isNotEmpty()) {
+        firstTouchCs.add(
+            AttributedColor(LucherColor.of(firstRoundAnswers[0]), "+")
+        )
+    }
 
     val secondTouchAs = findAnxietyColors(secondRoundAnswers)
     val secondTouchCs = findCompensatoryColors(secondRoundAnswers)
 
-    val pairsFirst = Lists.cartesianProduct(firstTouchCs, firstTouchAs)
-        .map { "+${it[0]}-${it[1]}" }.toMutableSet()
+    if (secondTouchAs.isEmpty() && secondTouchCs.isNotEmpty()) {
+        secondTouchAs.add(
+            AttributedColor(LucherColor.of(secondRoundAnswers[7]), "-")
+        )
+    }
+    if (secondTouchCs.isEmpty() && secondTouchAs.isNotEmpty()) {
+        secondTouchCs.add(
+            AttributedColor(LucherColor.of(secondRoundAnswers[0]), "+")
+        )
+    }
 
-    val pairsSecond = Lists.cartesianProduct(secondTouchCs, secondTouchAs)
-        .map { "+${it[0]}-${it[1]}" }.toSet()
-    pairsFirst.addAll(pairsSecond)
-
-    return pairsFirst
+    return Lists.cartesianProduct(secondTouchCs, secondTouchAs)
+        .map {
+            Element.Pair(firstColor = it[0], secondColor = it[1])
+        }
 }
 
 val mainColors = setOf("1", "2", "3", "4")
 val compensatoryColors = setOf("6", "7", "0")
 
-fun findAnxietyColors(answers: List<String>): List<String> {
-    val places = answers.takeLast(3)
+fun findAnxietyColors(answers: List<String>): MutableList<AttributedColor> {
+    val places: List<AttributedColor> = answers
+        .map {
+            AttributedColor(
+                color = LucherColor.of(it),
+                attribute = "-"
+            )
+        }
+        .takeLast(3)
 
-    return when (val index = places.indexOfFirst { it in mainColors }) {
-        -1 -> return emptyList()
+    return when (val index = places.indexOfFirst { it.color.index.toString() in mainColors }) {
+        -1 -> emptyList()
         else -> places.subList(index, places.size)
-    }
+    }.toMutableList()
 }
 
-fun findCompensatoryColors(answers: List<String>): List<String> {
-    val places = answers.take(3)
+fun findCompensatoryColors(answers: List<String>): MutableList<AttributedColor> {
+    val places: List<AttributedColor> = answers
+        .map {
+            AttributedColor(
+                color = LucherColor.of(it),
+                attribute = "+"
+            )
+        }
+        .take(3)
 
-    return when (val index = places.indexOfLast { it in compensatoryColors }) {
-        -1 -> return emptyList()
+    return when (val index = places.indexOfLast { it.color.index.toString() in compensatoryColors }) {
+        -1 -> emptyList()
         else -> places.subList(0, index + 1)
-    }
+    }.toMutableList()
 }
 
 fun calculateAnxiety(answers: List<String>): Int {
@@ -120,7 +166,11 @@ private fun isolatedColors(
     commonPairs: List<Element.Pair>,
     secondTouchAnswers: List<String>
 ): List<Element.Single> {
-    val pairedColors = commonPairs.flatMap { listOf(it.color1, it.color2) }.toSet()
+    val pairedColors: Set<String> =
+        commonPairs
+            .flatMap { listOf(it.firstColor, it.secondColor) }
+            .map { it.color.index.toString() }
+            .toSet()
 
     return secondTouchAnswers
         .filterNot { pairedColors.contains(it) }
@@ -132,55 +182,45 @@ internal fun findBrokenPairs(
     secondRoundAnswers: List<String>
 ): List<Element.Pair> {
 
-    val pairsFirst = firstRoundAnswers
+    val pairsFirst: List<Element.Pair> = firstRoundAnswers
         .chunked(2)
         .mapIndexed { index: Int, list: List<String> ->
-            when (index) {
-                0-> Element.Pair(list[0], list[1])
-                1->
-                2->
-                3->
-            }
+            val attribute = when (index) {
+                0 -> "+"
+                1 -> "x"
+                2 -> "="
+                3 -> "-"
+                else -> null
+            }!!
+            Element.Pair(
+                AttributedColor(LucherColor.of(list[0]), attribute),
+                AttributedColor(LucherColor.of(list[1]), attribute)
+            )
         }
 
-    val pairsSecond = secondRoundAnswers
+    val pairsSecond: List<Element.Pair> = secondRoundAnswers
         .zipWithNext()
-        .map { setOf(it.first, it.second) }
-        .toSet()
+        .map {
+            Element.Pair(
+                AttributedColor(it.first),
+                AttributedColor(it.second)
+            )
+        }
 
     return pairsFirst
-        .filterNot { pairsSecond.contains(it.toSet()) }
-        .map { Element.Pair(it[0], it[1]) }
+        .filterNot { first ->
+            pairsSecond.any { second ->
+                first.sameColors(second)
+            }
+        }
 }
 
 private fun findCommonPairs(
-    pairsSecond: List<Pair<String, String>>,
-    pairsFirst: List<Pair<String, String>>
-) = pairsSecond
+    pairsSecond: List<Element.Pair>,
+    pairsFirst: List<Element.Pair>
+): List<Element.Pair> = pairsSecond
     .filter { pair1 ->
-        pairsFirst.any { pair2 -> (pair1.toList().toSet() == pair2.toList().toSet()) }
-    }
-    .map {
-        Element.Pair(it.first, it.second)
-    }
-
-internal sealed class Element {
-    abstract fun toString(prefix: String): String
-    abstract fun same(to: Element): Boolean
-
-    data class Single(val color: String) : Element() {
-        override fun toString(prefix: String) = "$prefix$color"
-        override fun same(to: Element) = when (to) {
-            is Single -> color == to.color
-            else -> false
+        pairsFirst.any { pair2 ->
+            pair1.sameColors(pair2)
         }
     }
-
-    data class Pair(val color1: String, val color2: String) : Element() {
-        override fun toString(prefix: String) = "$prefix$color1$prefix$color2"
-        override fun same(to: Element) = when (to) {
-            is Pair -> setOf(color1, color2) == setOf(to.color1, to.color2)
-            else -> false
-        }
-    }
-}

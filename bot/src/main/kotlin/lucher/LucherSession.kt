@@ -69,6 +69,6 @@ data class LucherSession(
         channel.receive()
         assert(answers.size == LucherColor.values().size) { "wrong answers number" }
 
-        return answers.map { LucherColor.valueOf(it.toInt()) }
+        return answers.map { LucherColor.of(it) }
     }
 }
