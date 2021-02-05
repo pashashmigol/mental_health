@@ -50,14 +50,14 @@ fun findPairs(
 }
 
 fun findContraversedPairs(
-    firstTouchAnswers: List<String>,
-    secondTouchAnswers: List<String>
+    firstRoundAnswers: List<String>,
+    secondRoundAnswers: List<String>
 ): Set<String> {
-    val firstTouchAs = findAnxietyColors(firstTouchAnswers)
-    val firstTouchCs = findCompensatoryColors(firstTouchAnswers)
+    val firstTouchAs = findAnxietyColors(firstRoundAnswers)
+    val firstTouchCs = findCompensatoryColors(firstRoundAnswers)
 
-    val secondTouchAs = findAnxietyColors(secondTouchAnswers)
-    val secondTouchCs = findCompensatoryColors(secondTouchAnswers)
+    val secondTouchAs = findAnxietyColors(secondRoundAnswers)
+    val secondTouchCs = findCompensatoryColors(secondRoundAnswers)
 
     val pairsFirst = Lists.cartesianProduct(firstTouchCs, firstTouchAs)
         .map { "+${it[0]}-${it[1]}" }.toMutableSet()
@@ -127,6 +127,32 @@ private fun isolatedColors(
         .map { Element.Single(it) }
 }
 
+internal fun findBrokenPairs(
+    firstRoundAnswers: List<String>,
+    secondRoundAnswers: List<String>
+): List<Element.Pair> {
+
+    val pairsFirst = firstRoundAnswers
+        .chunked(2)
+        .mapIndexed { index: Int, list: List<String> ->
+            when (index) {
+                0-> Element.Pair(list[0], list[1])
+                1->
+                2->
+                3->
+            }
+        }
+
+    val pairsSecond = secondRoundAnswers
+        .zipWithNext()
+        .map { setOf(it.first, it.second) }
+        .toSet()
+
+    return pairsFirst
+        .filterNot { pairsSecond.contains(it.toSet()) }
+        .map { Element.Pair(it[0], it[1]) }
+}
+
 private fun findCommonPairs(
     pairsSecond: List<Pair<String, String>>,
     pairsFirst: List<Pair<String, String>>
@@ -138,14 +164,23 @@ private fun findCommonPairs(
         Element.Pair(it.first, it.second)
     }
 
-private sealed class Element {
+internal sealed class Element {
     abstract fun toString(prefix: String): String
+    abstract fun same(to: Element): Boolean
 
     data class Single(val color: String) : Element() {
         override fun toString(prefix: String) = "$prefix$color"
+        override fun same(to: Element) = when (to) {
+            is Single -> color == to.color
+            else -> false
+        }
     }
 
     data class Pair(val color1: String, val color2: String) : Element() {
         override fun toString(prefix: String) = "$prefix$color1$prefix$color2"
+        override fun same(to: Element) = when (to) {
+            is Pair -> setOf(color1, color2) == setOf(to.color1, to.color2)
+            else -> false
+        }
     }
 }
