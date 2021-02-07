@@ -3,7 +3,11 @@ package lucher
 import com.google.common.collect.Lists
 
 
-data class LucherResult(val paragraphs: List<String>, val anxiety: Int) {
+data class LucherResult(
+    val paragraphs: List<String>,
+    val firstRoundAnxiety: Int,
+    val secondRoundAnxiety: Int
+) {
     fun description() = paragraphs.joinToString(separator = "\n")
 }
 
@@ -19,9 +23,21 @@ data class AllPairs(
 )
 
 fun calculateResult(answers: LucherAnswers): LucherResult {
+
+    val firstTouchAnswers = answers.firstRound.map { it.index.toString() }
+    val secondTouchAnswers = answers.secondRound.map { it.index.toString() }
+
+    val pairs = findPairs(firstTouchAnswers, secondTouchAnswers)
+    val interpretator = LucherPairsInterpretator
+
+    val stable = pairs.stablePairs.map { interpretator.meaningOf(it.toString()) }
+    val broken = pairs.brokenPairs.map { interpretator.meaningOf(it.toString()) }
+    val contraversed = pairs.contraversedPairs.map { interpretator.meaningOf(it.toString()) }
+
     return LucherResult(
-        paragraphs = listOf("Ты очень странный, тебя надо лечить электричеством"),
-        anxiety = 0
+        paragraphs = stable + broken + contraversed,
+        firstRoundAnxiety = calculateAnxiety(firstTouchAnswers),
+        secondRoundAnxiety = calculateAnxiety(secondTouchAnswers)
     )
 }
 
