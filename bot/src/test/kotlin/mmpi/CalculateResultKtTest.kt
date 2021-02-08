@@ -1,16 +1,16 @@
 package mmpi
 
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import storage.CentralDataStorage
 
 internal class CalculateResultKtTest {
 
     @BeforeEach
     fun setup() {
-        CurrentQuestionsProvider.initGoogleSheetsProvider(rootPath = "src/main/webapp/")
+        CentralDataStorage.reload(rootPath = "src/main/webapp/")
     }
 
     @Test

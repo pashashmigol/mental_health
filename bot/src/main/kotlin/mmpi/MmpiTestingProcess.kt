@@ -2,6 +2,7 @@ package mmpi
 
 import Gender
 import Message
+import storage.CentralDataStorage
 
 const val NUMBER_OF_QUESTIONS = 566
 
@@ -15,9 +16,9 @@ class MmpiTestingProcess(gender: Gender) {
 
     private var state = State(
         currentQuestionIndex = 0,
-        questions = CurrentQuestionsProvider.loadMmpiQuestions(gender),
+        questions = CentralDataStorage.mmpiData.questions(gender),
         answers = emptyList(),
-        scales = CurrentQuestionsProvider.loadMmpiScales(gender)
+        scales = CentralDataStorage.mmpiData.scales(gender)
     )
 
     fun submitAnswer(answer: Answer) {

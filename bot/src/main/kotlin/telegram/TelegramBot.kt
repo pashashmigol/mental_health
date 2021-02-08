@@ -7,14 +7,12 @@ import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.webhook
-import mmpi.CurrentQuestionsProvider
+import storage.CentralDataStorage
 
 
 object MyBotConfig {
     const val SERVER_HOSTNAME = "mental-health-300314.oa.r.appspot.com"
 }
-
-enum class LaunchMode { LOCAL, APP_ENGINE }
 
 fun launchBot(mode: LaunchMode, token: String): Bot {
     return bot {
@@ -36,7 +34,7 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
             }
             command("reload") {
                 println("reloadQuestions")
-                CurrentQuestionsProvider.reload()
+                CentralDataStorage.reload(mode.rootPath)
             }
             callbackQuery {
                 TelegramRoom.callbackQuery(this)

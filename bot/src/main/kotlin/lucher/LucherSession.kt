@@ -4,6 +4,7 @@ import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvi
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import storage.CentralDataStorage
 import telegram.OnEnded
 import telegram.TelegramSession
 import telegram.sendError
@@ -39,7 +40,7 @@ data class LucherSession(
         val secondRoundAnswers = runRound(env)
 
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
-        val result = calculateResult(answers)
+        val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
 
         showResult(env, result)
     }

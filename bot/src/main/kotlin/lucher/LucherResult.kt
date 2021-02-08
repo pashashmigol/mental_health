@@ -22,17 +22,16 @@ data class AllPairs(
     val contraversedPairs: List<Element>
 )
 
-fun calculateResult(answers: LucherAnswers): LucherResult {
+fun calculateResult(answers: LucherAnswers, meanings: Map<String, String>): LucherResult {
 
     val firstTouchAnswers = answers.firstRound.map { it.index.toString() }
     val secondTouchAnswers = answers.secondRound.map { it.index.toString() }
 
     val pairs = findPairs(firstTouchAnswers, secondTouchAnswers)
-    val interpretator = LucherPairsInterpretator
 
-    val stable = pairs.stablePairs.map { interpretator.meaningOf(it.toString()) }
-    val broken = pairs.brokenPairs.map { interpretator.meaningOf(it.toString()) }
-    val contraversed = pairs.contraversedPairs.map { interpretator.meaningOf(it.toString()) }
+    val stable = pairs.stablePairs.mapNotNull { meanings[it.toString()] }
+    val broken = pairs.brokenPairs.mapNotNull { meanings[it.toString()] }
+    val contraversed = pairs.contraversedPairs.mapNotNull { meanings[it.toString()] }
 
     return LucherResult(
         paragraphs = stable + broken + contraversed,
