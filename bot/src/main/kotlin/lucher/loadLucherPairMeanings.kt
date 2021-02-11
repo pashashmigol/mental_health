@@ -8,7 +8,8 @@ fun loadLucherData(connection: GoogleDriveConnection): LucherData {
         page = "'pairs'"
     )
     val meanings = list.fold(initial = mapOf()) { acc: Map<String, String>, row: Map<String, String> ->
-        val pair = row["pair"]!! to row["description"]!!
+        val key: String = row["pair"]!!.let { it.substring(1, it.length -1) }
+        val pair = key to row["description"]!!
         return@fold acc + pair
     }
 

@@ -8,7 +8,12 @@ data class LucherResult(
     val firstRoundAnxiety: Int,
     val secondRoundAnxiety: Int
 ) {
-    fun description() = paragraphs.joinToString(separator = "\n")
+    fun description(): String {
+        val paragraphs = paragraphs.joinToString(separator = "\n\n")
+        val anxiety = "Тревожность - ($firstRoundAnxiety -> $secondRoundAnxiety)"
+
+        return "$paragraphs\n\n $anxiety"
+    }
 }
 
 class LucherAnswers(
