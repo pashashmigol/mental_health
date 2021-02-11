@@ -47,7 +47,7 @@ private fun reloadQuestions(
 
     val size = questions.size
     return questions.mapIndexed { i: Int, question: Message.Question ->
-        question.copy(text = question.text + " ${i + 1}/$size:")
+        question.copy(text = "(${i + 1}/$size) ${question.text}:")
     }
 }
 

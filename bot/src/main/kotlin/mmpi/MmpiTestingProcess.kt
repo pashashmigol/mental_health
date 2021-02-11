@@ -108,7 +108,7 @@ private fun submitAnswer(
     state: MmpiTestingProcess.State,
     answer: MmpiTestingProcess.Answer
 ): MmpiTestingProcess.State {
-    val newIndex = state.currentQuestionIndex
+    val newIndex = state.currentQuestionIndex + 1
     val answers = state.answers + answer
     return state.copy(currentQuestionIndex = newIndex, answers = answers)
 }
