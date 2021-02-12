@@ -42,6 +42,7 @@ data class LucherSession(
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
 
+        CentralDataStorage.saveLucherResult()
         showResult(env, result)
     }
 
