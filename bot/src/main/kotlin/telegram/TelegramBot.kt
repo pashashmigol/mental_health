@@ -34,7 +34,7 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
             }
             command("reload") {
                 println("reloadQuestions")
-                CentralDataStorage.reload(mode.rootPath)
+                CentralDataStorage.reload()
             }
             callbackQuery {
                 TelegramRoom.callbackQuery(this)

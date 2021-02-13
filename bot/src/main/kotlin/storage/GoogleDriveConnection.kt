@@ -1,96 +1,109 @@
 package storage
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import com.google.api.client.http.FileContent
-import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.InputStreamContent
 import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.client.testing.http.MockHttpContent
+import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.File
+import com.google.api.services.drive.model.FileList
 import com.google.api.services.drive.model.Permission
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 import java.io.FileInputStream
-import java.io.InputStream
-import java.util.Collections
 
 
 class GoogleDriveConnection(projectRoot: String) {
-
     companion object {
         private const val CREDENTIALS_FILE_NAME = "mental-health-300314-1be17f2cdb6f.json"
     }
 
-    private val serviceAccount = FileInputStream("$projectRoot$CREDENTIALS_FILE_NAME")
-    private val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
+    private val driveService: Drive
+    private val sheets: Sheets
 
-    fun saveReport(
-//        userId: String,
-//        testName: String,
-//        title: String,
-//        text: String
-    ) {
-
+    init {
+        val serviceAccount = FileInputStream("$projectRoot$CREDENTIALS_FILE_NAME")
+        val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
         val transport = GoogleNetHttpTransport.newTrustedTransport()
         val jacksonFactory = JacksonFactory.getDefaultInstance()
         val scopes = listOf(SheetsScopes.DRIVE)
-
-        val driveService = com.google.api.services.drive.Drive.Builder(
-            transport,
-            jacksonFactory,
-            HttpCredentialsAdapter(credentials.createScoped(scopes))
-        )
+        val local = HttpCredentialsAdapter(credentials.createScoped(scopes))
+        driveService = Drive.Builder(transport, jacksonFactory, local)
             .setApplicationName("imaginary_friend")
             .build()
-
-        try {
-            val folderMetadata = File()
-            folderMetadata.name = "Invoices"
-            folderMetadata.mimeType = "application/vnd.google-apps.folder"
-
-            val permission = createPermission()
-//            folderMetadata.permissions = listOf(permission)
-
-            val folder = driveService.files()
-                .create(folderMetadata)
-                .setFields("id")
-                .execute()
-
-            println("Folder ID: " + folder.id)
-
-            val folderId = folder.id
-            val fileMetadata = File()
-            fileMetadata.name = "photo.jpg"
-            fileMetadata.parents = listOf(folderId)
-//            fileMetadata.permissions = listOf(permission)
-
-            val mediaContent = InputStreamContent(null, InputStream.nullInputStream())
-
-            val file = driveService.files()
-                .create(fileMetadata, mediaContent)
-                .setFields("id, parents")
-                .execute()
-
-            println("File ID: " + file.id)
-
-            val result = driveService.permissions()
-                .create(folderId, createPermission())
-                .execute()
-
-
-            println("result : $result")
-
-        } catch (e: Exception) {
-            println("Exception : $e")
-        }
+        sheets = Sheets.Builder(transport, jacksonFactory, local).build()
     }
 
-    private fun createPermission(): Permission {
+    fun saveFile(
+        fileName: String,
+        folderName: String,
+        textContent: String,
+        shareWithEmail: String?
+    ) = try {
+
+        val folderId = findFolder(folderName) ?: createFolder(folderName)
+        val fileId = createFile(fileName, folderId, textContent)
+
+        if (shareWithEmail != null) {
+            giveAccess(folderId, to = shareWithEmail)
+        }
+        println("fileId : $fileId")
+
+    } catch (e: Exception) {
+        println("Exception : $e")
+    }
+
+    private fun findFolder(name: String): String? {
+        val fileList: FileList = driveService.files().list()
+            .setQ("mimeType = 'application/vnd.google-apps.folder' and name = '$name'")
+            .setSpaces("drive")
+            .setFields("nextPageToken, files(id, name)")
+            .execute()
+
+        if (fileList.files.isEmpty()) return null
+
+        return fileList.files.first().id
+    }
+
+    private fun createFolder(name: String): String {
+        val folderMetadata = File()
+        folderMetadata.name = name
+        folderMetadata.mimeType = "application/vnd.google-apps.folder"
+
+        val folder = driveService.files()
+            .create(folderMetadata)
+            .setFields("id")
+            .execute()
+
+        println("Folder ID: " + folder.id)
+
+        return folder.id
+    }
+
+    private fun createFile(name: String, folderId: String, content: String): String {
+        val fileMetadata = File()
+
+        fileMetadata.name = name
+        fileMetadata.parents = listOf(folderId)
+
+        val mediaContent = InputStreamContent(
+            "text/plain",
+            content.byteInputStream()
+        )
+
+        val file = driveService.files()
+            .create(fileMetadata, mediaContent)
+            .setFields("id, parents")
+            .execute()
+
+        return file.id
+    }
+
+    private fun giveAccess(folderId: String, to: String) {
         val permission = Permission()
 
-        permission.emailAddress = "pashashmigol@gmail.com"
+        permission.emailAddress = to
 
         val details = Permission.PermissionDetails()
         permission.role = "writer"
@@ -98,18 +111,14 @@ class GoogleDriveConnection(projectRoot: String) {
 
         permission.permissionDetails = listOf(details)
 
-        return permission
+        val result = driveService.permissions()
+            .create(folderId, permission)
+            .execute()
+
+        println("result : $result")
     }
 
     fun loadDataFromFile(fileId: String, page: String): List<Map<String, String>> {
-        val transport = GoogleNetHttpTransport.newTrustedTransport()
-        val jacksonFactory = JacksonFactory.getDefaultInstance()
-
-        val scopes = listOf(SheetsScopes.SPREADSHEETS_READONLY)
-        val local: HttpRequestInitializer by lazy {
-            HttpCredentialsAdapter(credentials.createScoped(scopes))
-        }
-        val sheets = Sheets.Builder(transport, jacksonFactory, local).build()
 
         val request = sheets.spreadsheets()
             .values().get(fileId, page)

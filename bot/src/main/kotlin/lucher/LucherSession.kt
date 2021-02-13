@@ -2,8 +2,10 @@ package lucher
 
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import storage.CentralDataStorage
 import telegram.OnEnded
 import telegram.TelegramSession
@@ -22,8 +24,10 @@ data class LucherSession(
     private var onColorChosen: OnUserChoseColor? = null
 
     override fun start(env: CommandHandlerEnvironment) {
+        val userId = env.message.from!!.id
+
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError(env.bot, env.message.from!!.id, "TelegramSession error", exception)
+            sendError(env.bot, userId, "TelegramSession error", exception)
         }
         scope.launch(handler) { executeTesting(env) }
     }
@@ -34,6 +38,7 @@ data class LucherSession(
     }
 
     private suspend fun executeTesting(env: CommandHandlerEnvironment) {
+        val userId = "${env.message.from!!.firstName} ${env.message.from!!.lastName}"
 
         val firstRoundAnswers = runRound(env)
         askUserToWaitBeforeSecondRound(env, minutes = 1)
@@ -42,7 +47,11 @@ data class LucherSession(
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
 
-        CentralDataStorage.saveLucherResult()
+        CentralDataStorage.saveLucher(
+            userId = userId,
+            answers = answers,
+            result = result
+        )
         showResult(env, result)
     }
 

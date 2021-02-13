@@ -14,7 +14,9 @@ private const val TOKEN = "1466693925:AAGkgMILgAg4gvs4Ct6UFlPM5T9VJx0BoIY"
  * */
 fun Application.main() {
     val launchMode = LaunchMode.APP_ENGINE
-    CentralDataStorage.reload(launchMode.rootPath)
+    CentralDataStorage.init(launchMode.rootPath)
+    CentralDataStorage.reload()
+
     val bot = launchBot(mode = LaunchMode.APP_ENGINE, token = TOKEN)
 
     routing {

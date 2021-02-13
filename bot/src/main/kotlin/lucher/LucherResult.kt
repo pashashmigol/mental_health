@@ -19,7 +19,11 @@ data class LucherResult(
 class LucherAnswers(
     val firstRound: List<LucherColor>,
     val secondRound: List<LucherColor>
-)
+) {
+    fun description(): String =
+        "First: ${firstRound.joinToString(separator = ", ")} " +
+                "\nSecond: ${secondRound.joinToString(separator = ", ")}"
+}
 
 data class AllPairs(
     val stablePairs: List<Element>,

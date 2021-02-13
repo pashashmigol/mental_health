@@ -10,7 +10,8 @@ internal class CalculateResultKtTest {
 
     @BeforeEach
     fun setup() {
-        CentralDataStorage.reload(rootPath = "src/main/webapp/")
+        CentralDataStorage.init(rootPath = "src/main/webapp/")
+        CentralDataStorage.reload()
     }
 
     @Test

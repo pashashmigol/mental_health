@@ -9,6 +9,7 @@ refactor * starts bot locally for debugging
  * */
 fun main() {
     val launchMode = LaunchMode.LOCAL
-    CentralDataStorage.reload(launchMode.rootPath)
+    CentralDataStorage.init(launchMode.rootPath)
+    CentralDataStorage.reload()
     launchBot(mode = LaunchMode.LOCAL, token = TOKEN)
 }
