@@ -47,12 +47,12 @@ data class LucherSession(
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
 
-        CentralDataStorage.saveLucher(
+        val folderLink = CentralDataStorage.saveLucher(
             userId = userId,
             answers = answers,
             result = result
         )
-        showResult(env, result)
+        showResult(env, folderLink)
     }
 
     private suspend fun runRound(env: CommandHandlerEnvironment): List<LucherColor> {

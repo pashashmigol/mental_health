@@ -37,6 +37,13 @@ fun showResult(env: CommandHandlerEnvironment, result: LucherResult) {
     )
 }
 
+fun showResult(env: CommandHandlerEnvironment, link: String) {
+    env.bot.sendMessage(
+        chatId = env.message.chat.id,
+        text = "Ваши результаты тут: $link"
+    )
+}
+
 fun allColorsChosen(answers: List<String>) = answers.size == LucherColor.values().size - 1
 
 fun askUserToChooseColor(

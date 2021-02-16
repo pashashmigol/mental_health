@@ -12,7 +12,7 @@ data class LucherResult(
         val paragraphs = paragraphs.joinToString(separator = "\n\n")
         val anxiety = "Тревожность - ($firstRoundAnxiety -> $secondRoundAnxiety)"
 
-        return "$paragraphs\n\n $anxiety"
+        return "$paragraphs\n\n$anxiety"
     }
 }
 

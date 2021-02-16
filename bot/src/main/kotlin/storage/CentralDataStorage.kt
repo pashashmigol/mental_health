@@ -30,15 +30,16 @@ object CentralDataStorage {
         userId: String,
         answers: LucherAnswers,
         result: LucherResult
-    ) {
+    ): String {
         val fileName = "Lucher ${DateTime.now().format(DateFormat.DEFAULT_FORMAT)}.txt"
         val text = "${answers.description()}\n\n${result.description()}"
 
-        connection.saveFile(
+        val parentFolderLink = connection.saveFile(
             fileName = fileName,
             folderName = userId,
-            textContent = text,
-            shareWithEmail = "pashashmigol@gmail.com"
+            textContent = text
         )
+        println("saveLucher(); report saved to : $parentFolderLink")
+        return parentFolderLink
     }
 }

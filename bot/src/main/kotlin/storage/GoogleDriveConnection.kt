@@ -38,47 +38,47 @@ class GoogleDriveConnection(projectRoot: String) {
     fun saveFile(
         fileName: String,
         folderName: String,
-        textContent: String,
-        shareWithEmail: String?
-    ) = try {
-
-        val folderId = findFolder(folderName) ?: createFolder(folderName)
+        textContent: String
+    ): String = try {
+        val (folderId, folderLink) = findFolder(folderName) ?: createFolder(folderName)
         val fileId = createFile(fileName, folderId, textContent)
 
-        if (shareWithEmail != null) {
-            giveAccess(folderId, to = shareWithEmail)
-        }
+        giveAccess(folderId)
         println("fileId : $fileId")
+
+        folderLink
 
     } catch (e: Exception) {
         println("Exception : $e")
+        ""
     }
 
-    private fun findFolder(name: String): String? {
+    private fun findFolder(name: String): Pair<String, String>? {
         val fileList: FileList = driveService.files().list()
             .setQ("mimeType = 'application/vnd.google-apps.folder' and name = '$name'")
             .setSpaces("drive")
-            .setFields("nextPageToken, files(id, name)")
+            .setFields("nextPageToken, files(id, name, webViewLink)")
             .execute()
 
         if (fileList.files.isEmpty()) return null
 
-        return fileList.files.first().id
+        val folder = fileList.files.first()
+        return Pair(folder.id, folder.webViewLink)
     }
 
-    private fun createFolder(name: String): String {
+    private fun createFolder(name: String): Pair<String, String> {
         val folderMetadata = File()
         folderMetadata.name = name
         folderMetadata.mimeType = "application/vnd.google-apps.folder"
 
         val folder = driveService.files()
             .create(folderMetadata)
-            .setFields("id")
+            .setFields("id, webViewLink")
             .execute()
 
         println("Folder ID: " + folder.id)
 
-        return folder.id
+        return Pair(folder.id, folder.webViewLink)
     }
 
     private fun createFile(name: String, folderId: String, content: String): String {
@@ -97,17 +97,17 @@ class GoogleDriveConnection(projectRoot: String) {
             .setFields("id, parents")
             .execute()
 
+        file.webViewLink
+
         return file.id
     }
 
-    private fun giveAccess(folderId: String, to: String) {
+    private fun giveAccess(folderId: String) {
         val permission = Permission()
 
-        permission.emailAddress = to
-
         val details = Permission.PermissionDetails()
-        permission.role = "writer"
-        permission.type = "user"
+        permission.role = "reader"
+        permission.type = "anyone"
 
         permission.permissionDetails = listOf(details)
 
@@ -119,7 +119,6 @@ class GoogleDriveConnection(projectRoot: String) {
     }
 
     fun loadDataFromFile(fileId: String, page: String): List<Map<String, String>> {
-
         val request = sheets.spreadsheets()
             .values().get(fileId, page)
 
