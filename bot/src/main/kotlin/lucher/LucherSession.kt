@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import storage.CentralDataStorage
 import telegram.OnEnded
 import telegram.TelegramSession
+import telegram.helpers.showResult
 import telegram.sendError
 
 typealias OnUserChoseColor = (env: CallbackQueryHandlerEnvironment, String) -> Unit
@@ -38,7 +39,8 @@ data class LucherSession(
     }
 
     private suspend fun executeTesting(env: CommandHandlerEnvironment) {
-        val userId = "${env.message.from!!.firstName} ${env.message.from!!.lastName}"
+        val userName = "${env.message.from!!.firstName} ${env.message.from!!.lastName}"
+        val userId = env.message.from!!.id
 
         val firstRoundAnswers = runRound(env)
         askUserToWaitBeforeSecondRound(env, minutes = 1)
@@ -48,11 +50,11 @@ data class LucherSession(
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
 
         val folderLink = CentralDataStorage.saveLucher(
-            userId = userId,
+            userId = userName,
             answers = answers,
             result = result
         )
-        showResult(env, folderLink)
+        showResult(env.bot, userId, folderLink)
     }
 
     private suspend fun runRound(env: CommandHandlerEnvironment): List<LucherColor> {

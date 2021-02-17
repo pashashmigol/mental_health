@@ -1,6 +1,7 @@
 package mmpi
 
 import Gender
+import mmpi.MmpiTestingProcess.Answer.*
 import models.Question
 import storage.CentralDataStorage
 
@@ -21,8 +22,10 @@ class MmpiTestingProcess(gender: Gender) {
         scales = CentralDataStorage.mmpiData.scales(gender)
     )
 
-    val answers = state.answers
-    val questions = state.questions
+    val answers
+        get() = state.answers
+    val questions
+        get() = state.questions
 
     fun submitAnswer(answer: Answer) {
         state = submitAnswer(state, answer)
@@ -49,6 +52,15 @@ class MmpiTestingProcess(gender: Gender) {
             private val VALUES = values()
             fun byValue(value: Int) = VALUES.firstOrNull { it.option == value } ?: NotSure
         }
+
+        val text
+            get() = when (this) {
+                Agree -> "Согласен"
+                PartiallyAgree -> "Частично согласен"
+                NotSure -> "Не уверен"
+                PartiallyDisagree -> "Немного согласен"
+                Disagree -> "Вообще не согласен"
+            }
     }
 
     class Result(

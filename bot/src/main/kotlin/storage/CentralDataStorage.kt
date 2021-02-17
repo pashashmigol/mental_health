@@ -56,7 +56,7 @@ object CentralDataStorage {
         val answersText = questions
             .zip(answers)
             .joinToString(separator = "\n") {
-                it.first.text + " - " + it.second.name
+                it.first.text + " " + it.second.text
             }
 
         val text = "${result}\n\n${answersText}"

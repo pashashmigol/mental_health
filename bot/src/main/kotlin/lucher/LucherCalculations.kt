@@ -181,7 +181,6 @@ fun calculateAnxiety(answers: List<String>): Int {
             }
         else 0
     }
-
     return anxiety1 + anxiety2
 }
 

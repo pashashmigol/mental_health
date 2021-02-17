@@ -49,14 +49,3 @@ fun genderButtons(question: Question): List<List<InlineKeyboardButton>> {
         InlineKeyboardButton.CallbackData(text = s, callbackData = i.toString())
     })
 }
-
-fun sendResult(
-    bot: Bot,
-    userId: Long,
-    result: String
-) {
-    bot.sendMessage(
-        chatId = userId,
-        text = result
-    )
-}

@@ -3,7 +3,7 @@ package lucher
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-internal class LucherResultKtTest {
+internal class LucherCalculationsTest {
 
     @Test
     fun `calculate result`() {

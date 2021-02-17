@@ -4,6 +4,7 @@ import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvi
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import lucher.LucherSession
 import mmpi.MmpiSession
+import mmpi.MmpiTestingSession
 
 object TelegramRoom {
     private const val TAG = "telegram.WorkSpace"
@@ -15,6 +16,18 @@ object TelegramRoom {
 
         sessions.remove(personId)
         sessions[personId] = MmpiSession(personId) { sessions.remove(it.id) }
+        sessions[personId]!!.start(handler)
+
+    } catch (e: Exception) {
+        sendError(handler.bot, handler.message.from?.id!!, exception = e)
+    }
+
+    fun launchMmpiMockTest(handler: CommandHandlerEnvironment) = try {
+        println("$TAG: launchMmpiTest();")
+        val personId = handler.message.from?.id!!
+
+        sessions.remove(personId)
+        sessions[personId] = MmpiTestingSession(personId) { sessions.remove(it.id) }
         sessions[personId]!!.start(handler)
 
     } catch (e: Exception) {
