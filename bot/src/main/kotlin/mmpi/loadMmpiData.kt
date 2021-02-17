@@ -1,6 +1,7 @@
 package mmpi
 
 import Gender
+import models.Question
 import Settings.QUESTIONS_FILE_ID_GOOGLE_DOC
 import storage.GoogleDriveConnection
 
@@ -23,7 +24,7 @@ fun loadMmpiData(connection: GoogleDriveConnection): MmpiData {
 private fun reloadQuestions(
     connection: GoogleDriveConnection,
     gender: Gender
-): List<Message.Question> {
+): List<Question> {
 
     val answersPage = when (gender) {
         Gender.Male -> "'answer_options_men'"
@@ -46,7 +47,7 @@ private fun reloadQuestions(
     ).map { it.toQuestion(answerOptions) }
 
     val size = questions.size
-    return questions.mapIndexed { i: Int, question: Message.Question ->
+    return questions.mapIndexed { i: Int, question: Question ->
         question.copy(text = "(${i + 1}/$size) ${question.text}:")
     }
 }
@@ -148,7 +149,7 @@ private fun createSegment(range: String?, description: String?): Segment? {
     return Segment(IntRange(min, max), description)
 }
 
-private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = Message.Question(
+private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = Question(
     text = stringFor("question"),
     options = answerOptions
 )

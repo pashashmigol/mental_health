@@ -1,10 +1,11 @@
 package mmpi
 
 import Gender
+import models.Question
 
 class MmpiData(
-    val questionsForMen: List<Message.Question>,
-    val questionsForWomen: List<Message.Question>,
+    val questionsForMen: List<Question>,
+    val questionsForWomen: List<Question>,
     val scalesForMen: MmpiTestingProcess.Scales,
     val scalesForWomen: MmpiTestingProcess.Scales,
 ) {

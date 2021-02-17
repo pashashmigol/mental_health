@@ -1,112 +1,101 @@
 package mmpi
 
 import Gender
-import Message
-import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
-import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
-import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
+import kotlinx.coroutines.launch
+import storage.CentralDataStorage
 import telegram.OnEnded
 import telegram.TelegramSession
+import telegram.sendError
+
+
+typealias OnAnswerReceived = (answer: String) -> Unit
 
 data class MmpiSession(
     override val id: Long,
     val onEndedCallback: OnEnded
 ) : TelegramSession {
+    companion object {
+        val scope = GlobalScope
+    }
 
-    private var genderPollId: Long = 0L
-    private var ongoingProcess: MmpiTestingProcess? = null
+    private var onAnswer: OnAnswerReceived? = null
 
-    override fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment) {
-        if (ongoingProcess == null) {
-            val gender = Gender.byValue(env.callbackQuery.data.toInt())
-            ongoingProcess = MmpiTestingProcess(gender)
+    override fun start(env: CommandHandlerEnvironment) {
+        val userId = env.message.from!!.id
 
-            sendQuestion(
-                bot = env.bot,
-                userId = id,
-                question = ongoingProcess!!.nextQuestion()
+        val handler = CoroutineExceptionHandler { _, exception ->
+            sendError(env.bot, userId, "MmpiSession error", exception)
+        }
+        scope.launch(handler) { executeTesting(env) }
+    }
+
+    private suspend fun executeTesting(env: CommandHandlerEnvironment) {
+        //using channel to wait until all colors are chosen
+        val gChannel = Channel<Gender>(RENDEZVOUS)
+
+        val messageId = askGender(bot = env.bot, userId = id, createGenderQuestion())
+        onAnswer = { answer: String ->
+            val gender = Gender.byValue(answer.toInt())
+            gChannel.offer(gender)
+        }
+
+        val gender = gChannel.receive()
+        val ongoingProcess = MmpiTestingProcess(gender)
+        sendNextQuestion(env, messageId, ongoingProcess)
+
+        onAnswer = { answer: String ->
+            ongoingProcess.submitAnswer(
+                MmpiTestingProcess.Answer.byValue(answer.toInt())
             )
-        } else {
-            ongoingProcess!!.submitAnswer(
-                MmpiTestingProcess.Answer.byValue(
-                    env.callbackQuery.data.toInt()
-                )
-            )
-            if (ongoingProcess!!.hasNextQuestion()) {
-                sendQuestion(
-                    bot = env.bot,
-                    userId = id,
-                    question = ongoingProcess!!.nextQuestion()
-                )
+            if (ongoingProcess.hasNextQuestion()) {
+                sendNextQuestion(env, messageId, ongoingProcess)
             } else {
-                sendResult(
-                    bot = env.bot,
-                    userId = id,
-                    result = Message.TestResult(ongoingProcess!!.calculateResult().format())
-                )
-                onEndedCallback(this)
+                finishTesting(ongoingProcess, env)
             }
         }
     }
 
-    override fun start(env: CommandHandlerEnvironment) {
-        genderPollId = askGender(bot = env.bot, userId = id, createGenderQuestion())
-    }
-
-    private fun sendQuestion(
-        bot: Bot,
-        userId: Long,
-        question: Message.Question
-    ): Long {
-        val result = bot.editMessageText(
-            chatId = userId,
-            messageId = genderPollId,
-            text = question.text,
-            replyMarkup = InlineKeyboardMarkup.create(mmpiButtons(question))
-        )
-        return result.first!!.body()!!.result!!.messageId
-    }
-
-    private fun askGender(
-        bot: Bot,
-        userId: Long,
-        question: Message.Question
-    ): Long {
-        val result = bot.sendMessage(
-            chatId = userId,
-            text = question.text,
-            replyMarkup = InlineKeyboardMarkup.create(genderButtons(question))
-        )
-        return result.first!!.body()!!.result!!.messageId
-    }
-
-    private fun createGenderQuestion() = Message.Question(
-        text = "Выберите себе пол:",
-        options = listOf("Мужской", "Женский")
-    )
-
-    private fun mmpiButtons(question: Message.Question): List<List<InlineKeyboardButton>> {
-        return question.options.map {
-            listOf(InlineKeyboardButton.CallbackData(text = it, callbackData = "0"))
-        }
-    }
-
-    private fun genderButtons(question: Message.Question): List<List<InlineKeyboardButton>> {
-        return listOf(question.options.mapIndexed { i: Int, s: String ->
-            InlineKeyboardButton.CallbackData(text = s, callbackData = i.toString())
-        })
-    }
-
-    private fun sendResult(
-        bot: Bot,
-        userId: Long,
-        result: Message.TestResult
+    private fun finishTesting(
+        ongoingProcess: MmpiTestingProcess,
+        env: CommandHandlerEnvironment
     ) {
-        bot.sendMessage(
-            chatId = userId,
-            text = result.text
+        val userName = "${env.message.from!!.firstName} ${env.message.from!!.lastName}"
+        val result = ongoingProcess.calculateResult().format()
+
+        CentralDataStorage.saveMmpi(
+            userId = userName,
+            questions = ongoingProcess.questions,
+            answers = ongoingProcess.answers,
+            result = result
         )
+        sendResult(
+            bot = env.bot,
+            userId = id,
+            result = result
+        )
+        onEndedCallback(this)
+    }
+
+    private fun sendNextQuestion(
+        env: CommandHandlerEnvironment,
+        messageId: Long,
+        ongoingProcess: MmpiTestingProcess
+    ) {
+        sendQuestion(
+            bot = env.bot,
+            userId = id,
+            messageId = messageId,
+            question = ongoingProcess.nextQuestion()
+        )
+    }
+
+    override fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment) {
+        onAnswer?.invoke(env.callbackQuery.data)
     }
 }

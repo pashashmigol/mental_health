@@ -27,7 +27,7 @@ data class LucherSession(
         val userId = env.message.from!!.id
 
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError(env.bot, userId, "TelegramSession error", exception)
+            sendError(env.bot, userId, "LucherSession error", exception)
         }
         scope.launch(handler) { executeTesting(env) }
     }

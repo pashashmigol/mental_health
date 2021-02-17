@@ -1,7 +1,7 @@
 package mmpi
 
 import Gender
-import Message
+import models.Question
 import storage.CentralDataStorage
 
 const val NUMBER_OF_QUESTIONS = 566
@@ -9,7 +9,7 @@ const val NUMBER_OF_QUESTIONS = 566
 class MmpiTestingProcess(gender: Gender) {
     internal data class State(
         val currentQuestionIndex: Int,// = 0,
-        val questions: List<Message.Question>,// = CurrentQuestionsProvider.MmpiProcessQuestions,
+        val questions: List<Question>,// = CurrentQuestionsProvider.MmpiProcessQuestions,
         val answers: List<Answer>,// = arrayOfNulls<Answer>(NUMBER_OF_QUESTIONS)
         val scales: Scales?
     )
@@ -21,13 +21,16 @@ class MmpiTestingProcess(gender: Gender) {
         scales = CentralDataStorage.mmpiData.scales(gender)
     )
 
+    val answers = state.answers
+    val questions = state.questions
+
     fun submitAnswer(answer: Answer) {
         state = submitAnswer(state, answer)
     }
 
     fun hasNextQuestion(): Boolean = hasNextQuestion(state)
 
-    fun nextQuestion(): Message.Question {
+    fun nextQuestion(): Question {
         val (newState, question) = nextQuestion(state)
         state = newState
         return question
@@ -118,7 +121,7 @@ private fun hasNextQuestion(state: MmpiTestingProcess.State): Boolean {
 }
 
 private fun nextQuestion(state: MmpiTestingProcess.State):
-        Pair<MmpiTestingProcess.State, Message.Question> {
+        Pair<MmpiTestingProcess.State, Question> {
     val question = state.questions[state.currentQuestionIndex]
     return Pair(state, question)
 }
