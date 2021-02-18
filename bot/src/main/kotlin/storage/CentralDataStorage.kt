@@ -8,8 +8,8 @@ import lucher.LucherData
 import lucher.LucherResult
 import lucher.loadLucherData
 import mmpi.MmpiData
-import mmpi.MmpiTestingProcess
-import mmpi.loadMmpiData
+import mmpi.MmpiProcess
+import mmpi.storage.loadMmpiData
 
 object CentralDataStorage {
     private lateinit var connection: GoogleDriveConnection
@@ -33,7 +33,7 @@ object CentralDataStorage {
         answers: LucherAnswers,
         result: LucherResult
     ): String {
-        val fileName = "Люшер ${DateTime.now().format(DateFormat.DEFAULT_FORMAT)}.txt"
+        val fileName = "Люшер ${DateTime.now().format(DateFormat.DEFAULT_FORMAT)}.html"
         val text = "${answers.description()}\n\n${result.description()}"
 
         val parentFolderLink = connection.saveFile(
@@ -47,24 +47,14 @@ object CentralDataStorage {
 
     fun saveMmpi(
         userId: String,
-        questions: List<Question>,
-        answers: List<MmpiTestingProcess.Answer>,
-        result: String
+        report: String
     ): String {
-        val fileName = "MMPI ${DateTime.now().format(DateFormat.DEFAULT_FORMAT)}.txt"
-
-        val answersText = questions
-            .zip(answers)
-            .joinToString(separator = "\n") {
-                it.first.text + " " + it.second.text
-            }
-
-        val text = "${result}\n\n${answersText}"
+        val fileName = "MMPI ${DateTime.now().format(DateFormat.DEFAULT_FORMAT)}.html"
 
         val parentFolderLink = connection.saveFile(
             fileName = fileName,
             folderName = userId,
-            textContent = text
+            textContent = report
         )
         println("saveMmpi(); report saved to : $parentFolderLink")
         return parentFolderLink

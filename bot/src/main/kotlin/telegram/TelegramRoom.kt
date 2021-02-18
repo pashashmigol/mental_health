@@ -2,9 +2,9 @@ package telegram
 
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
-import lucher.LucherSession
-import mmpi.MmpiSession
-import mmpi.MmpiTestingSession
+import lucher.telegram.LucherSession
+import mmpi.telegram.MmpiSession
+import mmpi.telegram.MmpiTestingSession
 
 object TelegramRoom {
     private const val TAG = "telegram.WorkSpace"

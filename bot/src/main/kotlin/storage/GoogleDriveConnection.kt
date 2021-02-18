@@ -88,7 +88,7 @@ class GoogleDriveConnection(projectRoot: String) {
         fileMetadata.parents = listOf(folderId)
 
         val mediaContent = InputStreamContent(
-            "text/plain",
+            "text/html",
             content.byteInputStream()
         )
 

@@ -1,8 +1,12 @@
-package mmpi
+package mmpi.storage
 
 import Gender
 import models.Question
 import Settings.QUESTIONS_FILE_ID_GOOGLE_DOC
+import mmpi.MmpiData
+import mmpi.MmpiProcess
+import mmpi.Scale
+import mmpi.Segment
 import storage.GoogleDriveConnection
 
 fun loadMmpiData(connection: GoogleDriveConnection): MmpiData {
@@ -55,7 +59,7 @@ private fun reloadQuestions(
 private fun loadScales(
     connection: GoogleDriveConnection,
     gender: Gender
-): MmpiTestingProcess.Scales {
+): MmpiProcess.Scales {
 
     val scalesMap = connection.loadDataFromFile(
         fileId = QUESTIONS_FILE_ID_GOOGLE_DOC,
@@ -67,7 +71,7 @@ private fun loadScales(
             return@map Pair(scale.id, scale)
         }.toMap()
 
-    return MmpiTestingProcess.Scales(
+    return MmpiProcess.Scales(
         correctionScale = scalesMap["CorrectionScaleK"]!!,
         liesScale = scalesMap["LiesScaleL"]!!,
         credibilityScale = scalesMap["CredibilityScaleF"]!!,

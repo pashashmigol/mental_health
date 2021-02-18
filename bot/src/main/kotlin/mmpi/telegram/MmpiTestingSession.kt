@@ -1,6 +1,7 @@
-package mmpi
+package mmpi.telegram
 
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
+import mmpi.MmpiProcess
 import storage.CentralDataStorage
 import telegram.OnEnded
 
@@ -12,7 +13,7 @@ class MmpiTestingSession(
     override fun sendNextQuestion(
         env: CommandHandlerEnvironment,
         messageId: Long,
-        ongoingProcess: MmpiTestingProcess
+        ongoingProcess: MmpiProcess
     ) {
         repeat(CentralDataStorage.mmpiData.questionsForMen.size) {
             onAnswer?.invoke("0")

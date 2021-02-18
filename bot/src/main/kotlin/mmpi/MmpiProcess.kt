@@ -1,13 +1,12 @@
 package mmpi
 
 import Gender
-import mmpi.MmpiTestingProcess.Answer.*
 import models.Question
 import storage.CentralDataStorage
 
 const val NUMBER_OF_QUESTIONS = 566
 
-class MmpiTestingProcess(gender: Gender) {
+class MmpiProcess(gender: Gender) {
     internal data class State(
         val currentQuestionIndex: Int,// = 0,
         val questions: List<Question>,// = CurrentQuestionsProvider.MmpiProcessQuestions,
@@ -78,7 +77,7 @@ class MmpiTestingProcess(gender: Gender) {
         individualismScale8: Scale.Result,
         optimismScale9: Scale.Result
     ) {
-        private val scalesToShow = listOf(
+        val scalesToShow = listOf(
             liesScale,
             credibilityScale,
             introversionScale,
@@ -120,25 +119,25 @@ class MmpiTestingProcess(gender: Gender) {
 }
 
 private fun submitAnswer(
-    state: MmpiTestingProcess.State,
-    answer: MmpiTestingProcess.Answer
-): MmpiTestingProcess.State {
+    state: MmpiProcess.State,
+    answer: MmpiProcess.Answer
+): MmpiProcess.State {
     val newIndex = state.currentQuestionIndex + 1
     val answers = state.answers + answer
     return state.copy(currentQuestionIndex = newIndex, answers = answers)
 }
 
-private fun hasNextQuestion(state: MmpiTestingProcess.State): Boolean {
+private fun hasNextQuestion(state: MmpiProcess.State): Boolean {
     return state.currentQuestionIndex < NUMBER_OF_QUESTIONS
 }
 
-private fun nextQuestion(state: MmpiTestingProcess.State):
-        Pair<MmpiTestingProcess.State, Question> {
+private fun nextQuestion(state: MmpiProcess.State):
+        Pair<MmpiProcess.State, Question> {
     val question = state.questions[state.currentQuestionIndex]
     return Pair(state, question)
 }
 
-private fun calculateResult(state: MmpiTestingProcess.State): MmpiTestingProcess.Result {
+private fun calculateResult(state: MmpiProcess.State): MmpiProcess.Result {
     if (state.answers.size != NUMBER_OF_QUESTIONS)
         throw RuntimeException("Not all questions are answered")
     if (state.scales == null)

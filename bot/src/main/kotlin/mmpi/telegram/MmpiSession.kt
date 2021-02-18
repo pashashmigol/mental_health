@@ -1,13 +1,19 @@
-package mmpi
+package mmpi.telegram
 
 import Gender
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
+import io.ktor.util.*
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
 import kotlinx.coroutines.launch
+import mmpi.MmpiProcess
+import mmpi.askGender
+import mmpi.createGenderQuestion
+import mmpi.report.generateReport
+import mmpi.sendQuestion
 import storage.CentralDataStorage
 import telegram.OnEnded
 import telegram.TelegramSession
@@ -17,6 +23,7 @@ import telegram.sendError
 
 typealias OnAnswerReceived = (answer: String) -> Unit
 
+@KtorExperimentalAPI
 open class MmpiSession(
     override val id: Long,
     open val onEndedCallback: OnEnded
@@ -51,13 +58,13 @@ open class MmpiSession(
         }
 
         val gender = gChannel.receive()
-        val ongoingProcess = MmpiTestingProcess(gender)
+        val ongoingProcess = MmpiProcess(gender)
 
         onAnswer = { answer: String ->
             println("executeTesting.onAnswer($answer);")
 
             ongoingProcess.submitAnswer(
-                MmpiTestingProcess.Answer.byValue(answer.toInt())
+                MmpiProcess.Answer.byValue(answer.toInt())
             )
             if (ongoingProcess.hasNextQuestion()) {
                 sendNextQuestion(env, messageId, ongoingProcess)
@@ -70,17 +77,21 @@ open class MmpiSession(
     }
 
     private fun finishTesting(
-        ongoingProcess: MmpiTestingProcess,
+        ongoingProcess: MmpiProcess,
         env: CommandHandlerEnvironment
     ) {
         val userName = "${env.message.from!!.firstName} ${env.message.from!!.lastName}"
-        val result = ongoingProcess.calculateResult().format()
+        val result = ongoingProcess.calculateResult()
 
-        val resultFolder = CentralDataStorage.saveMmpi(
+        val report = generateReport(
             userId = userName,
             questions = ongoingProcess.questions,
             answers = ongoingProcess.answers,
             result = result
+        )
+        val resultFolder = CentralDataStorage.saveMmpi(
+            userId = userName,
+            report = report
         )
         showResult(
             bot = env.bot,
@@ -93,7 +104,7 @@ open class MmpiSession(
     internal open fun sendNextQuestion(
         env: CommandHandlerEnvironment,
         messageId: Long,
-        ongoingProcess: MmpiTestingProcess
+        ongoingProcess: MmpiProcess
     ) {
         sendQuestion(
             bot = env.bot,
