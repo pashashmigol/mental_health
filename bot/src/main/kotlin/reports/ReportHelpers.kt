@@ -14,10 +14,10 @@ fun chartFor(result: MmpiProcess.Result): String {
     return writer.toString()
 }
 
-fun mmpiChartTemplate() = SVG.svg {
-    width = "369px"
-    height = "389px"
-    viewBox = "0 0 369 389"
+fun mmpiChartTemplate(size: Int = 450) = SVG.svg {
+    width = "${size + 140}px"
+    height = "${size + 140}px"
+    viewBox = "0 0 $width $height"
 
     g {
         id = "graph"
@@ -30,36 +30,41 @@ fun mmpiChartTemplate() = SVG.svg {
             attributes["transform"] = "translate(40.000000, 56.000000)"
             attributes["fill"] = "#000000"
 
-            for (X in 25..277 step 21) {
+            val step = size / 12 - 1
+            (25..(25 + size) step step).forEach { X ->
                 rect {
                     x = X.toString()
                     y = "5"
                     width = "1"
-                    height = "253"
+                    height = (size - step/2).toString()
                 }
             }
-            for (Y in 257 downTo 5 step 21) {
+            (5..(5 + size) step step).forEach { Y ->
                 rect {
                     x = "25"
                     y = Y.toString()
-                    width = "253"
+                    width = (size - step/2 + 1).toString()
                     height = "1"
                 }
             }
-            val scales = arrayOf("L", "F", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0").iterator()
-            for (X in 22..275 step 21) {
+            val scales = arrayOf(
+                "L", "F", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
+            ).iterator()
+            for (X in 23..(30 + size) step step) {
                 text {
                     fontFamily = "Roboto-Medium, Roboto"
                     fontSize = "12"
                     attributes["font-weight"] = "400"
                     x = X.toString()
-                    y = "273"
+                    y = (12 + size).toString()
                     body = scales.next()
                 }
             }
-            val numbers =
-                arrayOf("0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100", "110", "120").iterator()
-            for (Y in 261 downTo 0 step 21) {
+            val numbers = arrayOf(
+                "0", "10", "20", "30", "40", "50", "60",
+                "70", "80", "90", "100", "110", "120"
+            ).iterator()
+            for (Y in size downTo 0 step step) {
                 text {
                     fontFamily = "Roboto-Medium, Roboto"
                     fontSize = "12"
