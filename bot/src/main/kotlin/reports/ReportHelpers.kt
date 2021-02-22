@@ -7,16 +7,24 @@ import java.io.StringWriter
 
 
 fun chartFor(result: MmpiProcess.Result): String {
-    val svg = mmpiChartTemplate()
+    val size = 444
+    val ratio = size.toFloat() / 120
+
+    val ys = result.scalesToShow
+        .map { it.score }
+        .map { size - it * ratio }
+        .map { it.toInt() }
+
+    val svg = mmpiChartTemplate(size, ys)
 
     val writer = StringWriter()
     svg.render(writer, RenderMode.FILE)
     return writer.toString()
 }
 
-fun mmpiChartTemplate(size: Int = 450) = SVG.svg {
-    width = "${size + 140}px"
-    height = "${size + 140}px"
+fun mmpiChartTemplate(size1: Int, ys: List<Int>) = SVG.svg {
+    width = "${size1 + 140}px"
+    height = "${size1 + 140}px"
     viewBox = "0 0 $width $height"
 
     g {
@@ -30,36 +38,59 @@ fun mmpiChartTemplate(size: Int = 450) = SVG.svg {
             attributes["transform"] = "translate(40.000000, 56.000000)"
             attributes["fill"] = "#000000"
 
-            val step = size / 12 - 1
-            (25..(25 + size) step step).forEach { X ->
+            val step = size1 / 12
+            val size = step * 12
+            val xOffset = 25
+            val yOffset = 5
+
+            (xOffset..(xOffset + size) step step).forEach { X ->
                 rect {
                     x = X.toString()
-                    y = "5"
+                    y = yOffset.toString()
                     width = "1"
-                    height = (size - step/2).toString()
+                    height = (size /*- step / 2*/).toString()
                 }
             }
-            (5..(5 + size) step step).forEach { Y ->
+            (yOffset..(yOffset + size) step step).forEach { Y ->
                 rect {
-                    x = "25"
+                    x = xOffset.toString()
                     y = Y.toString()
-                    width = (size - step/2 + 1).toString()
+                    width = (size /*- step / 2*/ ).toString()
                     height = "1"
                 }
             }
             val scales = arrayOf(
                 "L", "F", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
             ).iterator()
-            for (X in 23..(30 + size) step step) {
+
+            val verticalBars = xOffset..(xOffset + size) step step
+
+            for (X in verticalBars) {
                 text {
                     fontFamily = "Roboto-Medium, Roboto"
                     fontSize = "12"
                     attributes["font-weight"] = "400"
-                    x = X.toString()
-                    y = (12 + size).toString()
+                    x = (X - 2).toString()
+                    y = (size + 20).toString()
                     body = scales.next()
                 }
             }
+
+            (verticalBars zip ys)
+                .zipWithNext()
+                .forEach {
+                    val (ax, ay) = it.first
+                    val (bx, by) = it.second
+                    line {
+                        x1 = ax.toString()
+                        y1 = (ay + yOffset).toString()
+                        x2 = bx.toString()
+                        y2 = (by + yOffset).toString()
+                        stroke = "#ff0000"
+                        strokeWidth = "3"
+                    }
+                }
+
             val numbers = arrayOf(
                 "0", "10", "20", "30", "40", "50", "60",
                 "70", "80", "90", "100", "110", "120"
@@ -70,12 +101,11 @@ fun mmpiChartTemplate(size: Int = 450) = SVG.svg {
                     fontSize = "12"
                     attributes["font-weight"] = "400"
                     x = "2"
-                    y = Y.toString()
+                    y = (Y + yOffset * 2).toString()
                     body = numbers.next()
                 }
             }
         }
-
     }
 }
 
