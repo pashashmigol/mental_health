@@ -5,7 +5,7 @@ import telegram.launchBot
 private const val TOKEN = "1417030770:AAEI89UL2hYjEuuiX55_6HLtjs6pUSeaNMI"
 
 /**
-refactor * starts bot locally for debugging
+ * starts bot locally for debugging
  * */
 fun main() {
     val launchMode = LaunchMode.LOCAL

@@ -9,6 +9,6 @@ fun showResult(
 ) {
     bot.sendMessage(
         chatId = userId,
-        text = "Ваши результаты тут: $link"
+        text = "Ваши результаты: $link"
     )
 }

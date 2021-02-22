@@ -40,13 +40,13 @@ class GoogleDriveConnection(projectRoot: String) {
         folderName: String,
         textContent: String
     ): String = try {
-        val (folderId, folderLink) = findFolder(folderName) ?: createFolder(folderName)
-        val fileId = createFile(fileName, folderId, textContent)
+        val (folderId, _) = findFolder(folderName) ?: createFolder(folderName)
+        val fileLink = createFile(fileName, folderId, textContent)
 
         giveAccess(folderId)
-        println("fileId : $fileId")
+        println("fileLink : $fileLink")
 
-        folderLink
+        fileLink
 
     } catch (e: Exception) {
         println("Exception : $e")
@@ -94,12 +94,10 @@ class GoogleDriveConnection(projectRoot: String) {
 
         val file = driveService.files()
             .create(fileMetadata, mediaContent)
-            .setFields("id, parents")
+            .setFields("id, parents, webContentLink")
             .execute()
 
-        file.webViewLink
-
-        return file.id
+        return file.webContentLink
     }
 
     private fun giveAccess(folderId: String) {
