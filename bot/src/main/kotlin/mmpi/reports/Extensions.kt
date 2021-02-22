@@ -1,4 +1,4 @@
-package mmpi.report
+package mmpi.reports
 
 import kotlinx.html.BODY
 import kotlinx.html.HtmlTagMarker

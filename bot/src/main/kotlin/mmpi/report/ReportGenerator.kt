@@ -4,7 +4,7 @@ import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 import mmpi.MmpiProcess
 import models.Question
-import reports.chartFor
+import mmpi.reports.chart
 
 fun generateReport(
     userId: String,
@@ -20,10 +20,12 @@ fun generateReport(
         body {
             chart(chartFor(result))
 
-            result.scalesToShow.forEach { scale ->
-                div {
-                    b { text("${scale.name}: ${scale.score}") }
-                    bdi { text("\n" + scale.description) }
+            dl {
+                result.scalesToShow.forEach { scale ->
+                    dt {
+                        b { text("${scale.name}: ${scale.score}") }
+                    }
+                    dd { text("\n" + scale.description) }
                 }
             }
             table {

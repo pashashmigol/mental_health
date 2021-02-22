@@ -1,7 +1,8 @@
-package reports
+package mmpi.reports
 
 import mmpi.MmpiProcess
 import mmpi.Scale
+import mmpi.report.chartFor
 import org.junit.jupiter.api.Test
 
 

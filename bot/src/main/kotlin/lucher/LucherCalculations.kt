@@ -4,26 +4,17 @@ import com.google.common.collect.Lists
 
 
 data class LucherResult(
-    val paragraphs: List<String>,
+    val stablePairs: Map<Element, String>,
+    val brokenPairs: Map<Element, String>,
+    val contraversedPairs: Map<Element, String>,
     val firstRoundAnxiety: Int,
     val secondRoundAnxiety: Int
-) {
-    fun description(): String {
-        val paragraphs = paragraphs.joinToString(separator = "\n\n")
-        val anxiety = "Тревожность - ($firstRoundAnxiety -> $secondRoundAnxiety)"
-
-        return "$paragraphs\n\n$anxiety"
-    }
-}
+)
 
 class LucherAnswers(
     val firstRound: List<LucherColor>,
     val secondRound: List<LucherColor>
-) {
-    fun description(): String =
-        "First: ${firstRound.joinToString(separator = ", ")} " +
-                "\nSecond: ${secondRound.joinToString(separator = ", ")}"
-}
+)
 
 data class AllPairs(
     val stablePairs: List<Element>,
@@ -38,12 +29,25 @@ fun calculateResult(answers: LucherAnswers, meanings: Map<String, String>): Luch
 
     val pairs = findPairs(firstTouchAnswers, secondTouchAnswers)
 
-    val stable = pairs.stablePairs.mapNotNull { meanings[it.toString()] }
-    val broken = pairs.brokenPairs.mapNotNull { meanings[it.toString()] }
-    val contraversed = pairs.contraversedPairs.mapNotNull { meanings[it.toString()] }
+    val stable = pairs.stablePairs
+        .map { it to (meanings[it.toString()] ?: "") }
+        .filter { it.second.isEmpty() }
+        .toMap()
+
+    val broken = pairs.brokenPairs
+        .map { it to (meanings[it.toString()] ?: "") }
+        .filter { it.second.isEmpty() }
+        .toMap()
+
+    val contraversed = pairs.contraversedPairs
+        .map { it to (meanings[it.toString()] ?: "") }
+        .filter { it.second.isEmpty() }
+        .toMap()
 
     return LucherResult(
-        paragraphs = stable + broken + contraversed,
+        stablePairs = stable,
+        brokenPairs = broken,
+        contraversedPairs = contraversed,
         firstRoundAnxiety = calculateAnxiety(firstTouchAnswers),
         secondRoundAnxiety = calculateAnxiety(secondTouchAnswers)
     )

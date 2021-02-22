@@ -1,14 +1,13 @@
 package storage
 
-import models.Question
 import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTime
 import lucher.LucherAnswers
 import lucher.LucherData
 import lucher.LucherResult
 import lucher.loadLucherData
+import lucher.report.generateReport
 import mmpi.MmpiData
-import mmpi.MmpiProcess
 import mmpi.storage.loadMmpiData
 
 object CentralDataStorage {
@@ -34,12 +33,12 @@ object CentralDataStorage {
         result: LucherResult
     ): String {
         val fileName = "Люшер ${DateTime.now().format(DateFormat.DEFAULT_FORMAT)}.html"
-        val text = "${answers.description()}\n\n${result.description()}"
+        val report = generateReport(userId, answers, result)
 
         val parentFolderLink = connection.saveFile(
             fileName = fileName,
             folderName = userId,
-            textContent = text
+            textContent = report
         )
         println("saveLucher(); report saved to : $parentFolderLink")
         return parentFolderLink

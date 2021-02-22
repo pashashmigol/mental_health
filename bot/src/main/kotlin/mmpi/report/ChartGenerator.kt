@@ -1,4 +1,4 @@
-package reports
+package mmpi.report
 
 import com.github.nwillc.ksvg.RenderMode
 import com.github.nwillc.ksvg.elements.Container
