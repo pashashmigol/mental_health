@@ -9,6 +9,8 @@ import lucher.loadLucherData
 import lucher.report.generateReport
 import mmpi.MmpiData
 import mmpi.storage.loadMmpiData
+import java.util.*
+
 
 object CentralDataStorage {
     private lateinit var connection: GoogleDriveConnection
@@ -18,6 +20,9 @@ object CentralDataStorage {
 
     fun init(rootPath: String) {
         connection = GoogleDriveConnection(rootPath)
+
+        val messages: ResourceBundle = ResourceBundle.getBundle("Messages", Locale("ru", "ru"))
+        val value: String = messages.getString("greeting")
     }
 
     private lateinit var lucher: LucherData
