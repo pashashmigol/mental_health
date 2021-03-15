@@ -1,5 +1,6 @@
 package mmpi
 
+import Gender
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
@@ -30,8 +31,8 @@ internal class CalculateResultKtTest {
         val test = MmpiProcess(Gender.Male)
 
         Assertions.assertThrows(RuntimeException::class.java) {
-            justFewAnswers.forEach {
-                test.submitAnswer(it)
+            justFewAnswers.forEach { answer ->
+                test.submitAnswer(answer)
             }
             test.calculateResult()
         }

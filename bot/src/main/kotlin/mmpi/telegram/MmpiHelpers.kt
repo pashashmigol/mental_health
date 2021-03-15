@@ -1,9 +1,10 @@
 package mmpi
 
-import models.Question
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import models.Question
+import storage.CentralDataStorage.string
 
 fun sendQuestion(
     bot: Bot,
@@ -34,8 +35,8 @@ fun askGender(
 }
 
 fun createGenderQuestion() = Question(
-    text = "Выберите себе пол:",
-    options = listOf("Мужской", "Женский")
+    text = string("choose_your_sex"),
+    options = listOf(string("male"), "female")
 )
 
 fun mmpiButtons(question: Question): List<List<InlineKeyboardButton>> {

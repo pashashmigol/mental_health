@@ -6,6 +6,7 @@ import lucher.LucherAnswers
 import lucher.LucherColor
 import lucher.LucherResult
 import lucher.url
+import storage.CentralDataStorage.string
 
 fun generateReport(
     userId: String,
@@ -21,7 +22,7 @@ private fun TagConsumer<StringBuilder>.createAnswersTable(answers: LucherAnswers
     caption {
         b {
             style = "font-size:24px; text-align:center; margin:64px"
-            text("Ответы")
+            text(string("answers"))
         }
     }
     body {

@@ -34,7 +34,6 @@ dependencies {
     implementation("org.junit.jupiter:junit-jupiter:5.4.2")
     implementation("com.soywiz.korlibs.klock:klock:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.1")
-
     implementation("com.github.nwillc:ksvg:3.0.0")
 }
 
@@ -51,4 +50,18 @@ tasks.test {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+tasks {
+    val printSourceSetInformation by registering {
+        doLast {
+            sourceSets.forEach { srcSet ->
+                println("[" + srcSet.name + "]")
+                print("-->Source directories: " + srcSet.allJava.srcDirs + "\n")
+                print("-->Resources directories: " + srcSet.resources.srcDirs + "\n")
+                print("-->Output directories: " + srcSet.output.classesDirs.files + "\n")
+                println("")
+            }
+        }
+    }
 }

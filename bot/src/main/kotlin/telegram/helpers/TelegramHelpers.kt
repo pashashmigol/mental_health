@@ -1,6 +1,7 @@
 package telegram.helpers
 
 import com.github.kotlintelegrambot.Bot
+import storage.CentralDataStorage.string
 
 fun showResult(
     bot: Bot,
@@ -9,6 +10,6 @@ fun showResult(
 ) {
     bot.sendMessage(
         chatId = userId,
-        text = "Ваши результаты: $link"
+        text = string("results", link)
     )
 }

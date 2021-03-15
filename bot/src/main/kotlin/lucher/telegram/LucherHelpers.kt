@@ -6,6 +6,8 @@ import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import kotlinx.coroutines.delay
+import storage.CentralDataStorage
+import storage.CentralDataStorage.string
 
 
 suspend fun askUserToWaitBeforeSecondRound(env: CommandHandlerEnvironment, minutes: Int) {
@@ -18,7 +20,7 @@ suspend fun askUserToWaitBeforeSecondRound(env: CommandHandlerEnvironment, minut
 fun askUserToWait(env: CommandHandlerEnvironment, minutes: Int): Long {
     return env.bot.sendMessage(
         chatId = env.message.chat.id,
-        text = "Подожди $minutes мин и отвечай снова!"
+        text = string("lucher_timeout", minutes)
     ).first!!.body()!!.result!!.messageId
 }
 
@@ -38,7 +40,7 @@ fun askUserToChooseColor(
 ) {
     env.bot.sendMessage(
         chatId = env.message.chat.id,
-        text = "Выберите наиболее приятный вам цвет",
+        text = string("choose_color"),
         replyMarkup = InlineKeyboardMarkup.create(options)
     ).first!!.body()!!.result!!.messageId
 }

@@ -3,6 +3,7 @@ package mmpi
 import Gender
 import models.Question
 import storage.CentralDataStorage
+import storage.CentralDataStorage.string
 
 const val NUMBER_OF_QUESTIONS = 566
 
@@ -42,23 +43,17 @@ class MmpiProcess(gender: Gender) {
 
     enum class Answer(val option: Int) {
         Agree(0),
-        PartiallyAgree(1),
-        NotSure(2),
-        PartiallyDisagree(3),
         Disagree(4);
 
         companion object {
             private val VALUES = values()
-            fun byValue(value: Int) = VALUES.firstOrNull { it.option == value } ?: NotSure
+            fun byValue(value: Int) = VALUES.firstOrNull { it.option == value } ?: Disagree
         }
 
         val text
             get() = when (this) {
-                Agree -> "Согласен"
-                PartiallyAgree -> "Частично согласен"
-                NotSure -> "Не уверен"
-                PartiallyDisagree -> "Немного согласен"
-                Disagree -> "Вообще не согласен"
+                Agree -> string("agree")
+                Disagree -> string("disagree")
             }
     }
 

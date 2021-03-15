@@ -11,5 +11,5 @@ fun main() {
     val launchMode = LaunchMode.LOCAL
     CentralDataStorage.init(launchMode.rootPath)
     CentralDataStorage.reload()
-    launchBot(mode = LaunchMode.LOCAL, token = TOKEN)
+    launchBot(mode = launchMode, token = TOKEN)
 }

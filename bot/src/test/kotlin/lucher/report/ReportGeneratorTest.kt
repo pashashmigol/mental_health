@@ -45,7 +45,7 @@ internal class ReportGeneratorTest {
         )
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
         val report = generateReport(
-                userId = "Паша",
+                userId = "Pasha",
                 answers = answers,
                 result = result
         )
