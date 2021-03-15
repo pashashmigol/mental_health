@@ -61,6 +61,10 @@ class Scale(
         )
     }
 
+    override fun toString(): String {
+        return "Scale(yes=$yes, no=$no)"
+    }
+
     data class Result(val name: String, val score: Int, val description: String)
 }
 

@@ -25,9 +25,13 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
             }
         }
         dispatch {
-            command("mmpi") {
-                println("mmpi")
-                TelegramRoom.launchMmpiTest(this)
+            command("mmpi566") {
+                println("mmpi566")
+                TelegramRoom.launchMmpi566Test(this)
+            }
+            command("mmpi377") {
+                println("mmpi377")
+                TelegramRoom.launchMmpi377Test(this)
             }
             command("mmpiTest") {
                 println("mmpiTest")

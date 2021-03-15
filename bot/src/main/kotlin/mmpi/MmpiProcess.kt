@@ -7,7 +7,8 @@ import storage.CentralDataStorage.string
 
 const val NUMBER_OF_QUESTIONS = 566
 
-class MmpiProcess(gender: Gender) {
+class MmpiProcess(gender: Gender, type: Type) {
+
     internal data class State(
         val currentQuestionIndex: Int,// = 0,
         val questions: List<Question>,// = CurrentQuestionsProvider.MmpiProcessQuestions,
@@ -15,12 +16,20 @@ class MmpiProcess(gender: Gender) {
         val scales: Scales?
     )
 
-    private var state = State(
-        currentQuestionIndex = 0,
-        questions = CentralDataStorage.mmpiData.questions(gender),
-        answers = emptyList(),
-        scales = CentralDataStorage.mmpiData.scales(gender)
-    )
+    private var state = when (type) {
+        Type.Mmpi566 -> State(
+            currentQuestionIndex = 0,
+            questions = CentralDataStorage.mmpi566Data.questions(gender),
+            answers = emptyList(),
+            scales = CentralDataStorage.mmpi566Data.scales(gender)
+        )
+        Type.Mmpi377 -> State(
+            currentQuestionIndex = 0,
+            questions = CentralDataStorage.mmpi377Data.questions(gender),
+            answers = emptyList(),
+            scales = CentralDataStorage.mmpi377Data.scales(gender)
+        )
+    }
 
     val answers
         get() = state.answers
@@ -112,7 +121,11 @@ class MmpiProcess(gender: Gender) {
         val anxietyScale7: Scale,
         val individualismScale8: Scale,
         val optimismScale9: Scale
-    )
+    ) {
+        override fun toString(): String {
+            return "Scales(masculinityScale5=$masculinityScale5)"
+        }
+    }
 }
 
 private fun submitAnswer(

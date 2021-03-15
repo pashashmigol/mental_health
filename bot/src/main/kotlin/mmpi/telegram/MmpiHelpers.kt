@@ -36,7 +36,7 @@ fun askGender(
 
 fun createGenderQuestion() = Question(
     text = string("choose_your_sex"),
-    options = listOf(string("male"), "female")
+    options = listOf(string("male"), string("female"))
 )
 
 fun mmpiButtons(question: Question): List<List<InlineKeyboardButton>> {

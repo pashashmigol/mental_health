@@ -2,24 +2,23 @@ package mmpi.storage
 
 import Gender
 import models.Question
-import Settings.QUESTIONS_FILE_ID_GOOGLE_DOC
 import mmpi.MmpiData
 import mmpi.MmpiProcess
 import mmpi.Scale
 import mmpi.Segment
 import storage.GoogleDriveConnection
 
-fun loadMmpiData(connection: GoogleDriveConnection): MmpiData {
+fun loadMmpiData(connection: GoogleDriveConnection, fileId: String): MmpiData {
 
-    val questionsMen = reloadQuestions(connection, Gender.Male)
-    val questionWomen = reloadQuestions(connection, Gender.Female)
+    val questionsMen = reloadQuestions(connection, Gender.Male, fileId)
+    val questionWomen = reloadQuestions(connection, Gender.Female, fileId) ?: questionsMen
 
-    val scalesMen = loadScales(connection, Gender.Male)
-    val scalesWomen = loadScales(connection, Gender.Female)
+    val scalesMen = loadScales(connection, Gender.Male, fileId)
+    val scalesWomen = loadScales(connection, Gender.Female, fileId)
 
     return MmpiData(
-        questionsForMen = questionsMen,
-        questionsForWomen = questionWomen,
+        questionsForMen = questionsMen!!,
+        questionsForWomen = questionWomen!!,
         scalesForMen = scalesMen,
         scalesForWomen = scalesWomen
     )
@@ -27,18 +26,23 @@ fun loadMmpiData(connection: GoogleDriveConnection): MmpiData {
 
 private fun reloadQuestions(
     connection: GoogleDriveConnection,
-    gender: Gender
-): List<Question> {
+    gender: Gender,
+    fileId: String
+): List<Question>? {
 
     val answersPage = when (gender) {
         Gender.Male -> "'answer_options_men'"
         Gender.Female -> "'answer_options_women'"
     }
 
-    val answerOptions = connection.loadDataFromFile(
-        fileId = QUESTIONS_FILE_ID_GOOGLE_DOC,
-        page = answersPage
-    ).map { it["answer"].toString() }
+    val answerOptions: List<String> =
+        (connection.loadDataFromFile(
+            fileId = fileId,
+            page = answersPage
+        ) ?: connection.loadDataFromFile(
+            fileId = fileId,
+            page = "'answer_options_men'"
+        ))!!.map { it["answer"].toString() }
 
     val questionsPage = when (gender) {
         Gender.Male -> "'questions_men'"
@@ -46,25 +50,26 @@ private fun reloadQuestions(
     }
 
     val questions = connection.loadDataFromFile(
-        fileId = QUESTIONS_FILE_ID_GOOGLE_DOC,
+        fileId = fileId,
         page = questionsPage
-    ).map { it.toQuestion(answerOptions) }
+    )?.map { it.toQuestion(answerOptions) }
 
-    val size = questions.size
-    return questions.mapIndexed { i: Int, question: Question ->
+    val size = questions?.size
+    return questions?.mapIndexed { i: Int, question: Question ->
         question.copy(text = "(${i + 1}/$size) ${question.text}:")
     }
 }
 
 private fun loadScales(
     connection: GoogleDriveConnection,
-    gender: Gender
+    gender: Gender,
+    fileId: String
 ): MmpiProcess.Scales {
 
     val scalesMap = connection.loadDataFromFile(
-        fileId = QUESTIONS_FILE_ID_GOOGLE_DOC,
+        fileId = fileId,
         page = "'scales'"
-    )
+    )!!
         .filter { it.isNotEmpty() }
         .map {
             val scale = toScale(it, gender)
@@ -94,15 +99,15 @@ private fun toScale(map: Map<String, Any>, gender: Gender) = Scale(
     yes = parseList(
         when (gender) {
             Gender.Male -> map["key_answers_yes_men"]
-            Gender.Female ->
-                map.getOrDefault("key_answers_yes_women", map["key_answers_yes_men"])
+            Gender.Female -> map["key_answers_yes_women"]
+                .takeIf { (it as String).isNotBlank() } ?: map["key_answers_yes_men"]
         } as String
     ),
     no = parseList(
         when (gender) {
             Gender.Male -> map["key_answers_no_men"]
-            Gender.Female ->
-                map.getOrDefault("key_answers_no_women", map["key_answers_no_men"])
+            Gender.Female -> map["key_answers_no_women"]
+                .takeIf { (it as String).isNotBlank() } ?: map["key_answers_no_men"]
         } as String
     ),
     costOfZero = (when (gender) {

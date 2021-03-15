@@ -1,6 +1,7 @@
 1. open '@BotFather' chat in telergam app
 2. enter '/setcommands' command
 3. enter:
-   mmpi - Пройти тест СМИЛ
+   mmpi566 - Пройти тест СМИЛ из 566-и вопросов
+   mmpi377 - Пройти тест СМИЛ из 377-и вопросов
    lucher - Пройти цветовой тест Люшера
    reload - Обновить вопросы

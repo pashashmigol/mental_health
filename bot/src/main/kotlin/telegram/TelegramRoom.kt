@@ -3,6 +3,7 @@ package telegram
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import lucher.telegram.LucherSession
+import mmpi.Type
 import mmpi.telegram.MmpiSession
 import mmpi.telegram.MmpiTestingSession
 
@@ -10,12 +11,24 @@ object TelegramRoom {
     private const val TAG = "telegram.WorkSpace"
     private val sessions = mutableMapOf<Long, TelegramSession>()
 
-    fun launchMmpiTest(handler: CommandHandlerEnvironment) = try {
-        println("$TAG: launchMmpiTest();")
+    fun launchMmpi566Test(handler: CommandHandlerEnvironment) = try {
+        println("$TAG: launchMmpi566Test();")
         val personId = handler.message.from?.id!!
 
         sessions.remove(personId)
-        sessions[personId] = MmpiSession(personId) { sessions.remove(it.id) }
+        sessions[personId] = MmpiSession(personId, Type.Mmpi566) { sessions.remove(it.id) }
+        sessions[personId]!!.start(handler)
+
+    } catch (e: Exception) {
+        sendError(handler.bot, handler.message.from?.id!!, exception = e)
+    }
+
+    fun launchMmpi377Test(handler: CommandHandlerEnvironment) = try {
+        println("$TAG: launchMmpi377Test();")
+        val personId = handler.message.from?.id!!
+
+        sessions.remove(personId)
+        sessions[personId] = MmpiSession(personId, Type.Mmpi377) { sessions.remove(it.id) }
         sessions[personId]!!.start(handler)
 
     } catch (e: Exception) {

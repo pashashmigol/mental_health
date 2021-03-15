@@ -3,17 +3,13 @@ package mmpi.telegram
 import Gender
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
-import io.ktor.util.*
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
 import kotlinx.coroutines.launch
-import mmpi.MmpiProcess
-import mmpi.askGender
-import mmpi.createGenderQuestion
+import mmpi.*
 import mmpi.report.generateReport
-import mmpi.sendQuestion
 import storage.CentralDataStorage
 import telegram.OnEnded
 import telegram.TelegramSession
@@ -23,9 +19,9 @@ import telegram.sendError
 
 typealias OnAnswerReceived = (answer: String) -> Unit
 
-@KtorExperimentalAPI
 open class MmpiSession(
     override val id: Long,
+    private val type: Type,
     open val onEndedCallback: OnEnded
 ) : TelegramSession {
     companion object {
@@ -58,7 +54,7 @@ open class MmpiSession(
         }
 
         val gender = gChannel.receive()
-        val ongoingProcess = MmpiProcess(gender)
+        val ongoingProcess = MmpiProcess(gender, type)
 
         onAnswer = { answer: String ->
             println("executeTesting.onAnswer($answer);")

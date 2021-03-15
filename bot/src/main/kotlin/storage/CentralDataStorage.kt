@@ -13,25 +13,25 @@ import java.util.*
 import java.text.MessageFormat
 
 
-
-
-
 object CentralDataStorage {
     private lateinit var connection: GoogleDriveConnection
 
     val lucherData get() = lucher
-    val mmpiData get() = mmpi
-
+    val mmpi566Data get() = mmpi566
+    val mmpi377Data get() = mmpi377
 
     fun init(rootPath: String) {
         connection = GoogleDriveConnection(rootPath)
     }
 
     private lateinit var lucher: LucherData
-    private lateinit var mmpi: MmpiData
+    private lateinit var mmpi566: MmpiData
+    private lateinit var mmpi377: MmpiData
+
     fun reload() {
         lucher = loadLucherData(connection)
-        mmpi = loadMmpiData(connection)
+        mmpi566 = loadMmpiData(connection, Settings.MMPI_566_QUESTIONS_FILE_ID)
+        mmpi377 = loadMmpiData(connection, Settings.MMPI_377_QUESTIONS_FILE_ID)
     }
 
     private val messages: ResourceBundle = ResourceBundle.getBundle("Messages")

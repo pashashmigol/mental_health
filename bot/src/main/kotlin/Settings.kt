@@ -1,10 +1,4 @@
 object Settings {
-    const val QUESTIONS_FILE_ID_GOOGLE_DOC = "1ogoB6NjRtl5929sX8cRqWdyqCUq8hrR7P307NeaPZIc"
-//    const val CREDENTIALS_FILE_NAME = "bot/src/main/webapp/mental-health-300314-1be17f2cdb6f.json"
-    fun  credentialsFilePath(root: String) = root + "mental-health-300314-1be17f2cdb6f.json"
-    //"bot/src/main/webapp/mental-health-300314-1be17f2cdb6f.json"
-
-    const val LUCHER_PAIRS_FILE_ID = "1yp9goGpmgNRwnFa74yKh87xIzw25czpqqWzA0gXrVG0"
-
-
+    const val MMPI_566_QUESTIONS_FILE_ID = "1ogoB6NjRtl5929sX8cRqWdyqCUq8hrR7P307NeaPZIc"
+    const val MMPI_377_QUESTIONS_FILE_ID = "1yx3hsC8E9UKDRJF0DjwnXTgf-QLQXXHk4_d2ZlMzoEk"
 }

@@ -116,11 +116,15 @@ class GoogleDriveConnection(projectRoot: String) {
         println("result : $result")
     }
 
-    fun loadDataFromFile(fileId: String, page: String): List<Map<String, String>> {
+    fun loadDataFromFile(fileId: String, page: String): List<Map<String, String>>? {
         val request = sheets.spreadsheets()
             .values().get(fileId, page)
 
-        return request.execute().getValues().toRawEntries()
+        return try {
+            request.execute().getValues().toRawEntries()
+        } catch (e: Throwable) {
+            null
+        }
     }
 
 
