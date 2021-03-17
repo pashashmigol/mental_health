@@ -52,6 +52,7 @@ fun launchBot(mode: LaunchMode, token: String): Bot {
         when (mode) {
             LaunchMode.LOCAL -> startPolling()
             LaunchMode.APP_ENGINE -> startWebhook()
+            else -> throw IllegalArgumentException("Illegal mode value")
         }
     }
 }

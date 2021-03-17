@@ -1,5 +1,6 @@
 package storage
 
+import Settings.FIREBASE_CREDENTIALS_FILE_NAME
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.InputStreamContent
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -15,15 +16,12 @@ import java.io.FileInputStream
 
 
 class GoogleDriveConnection(projectRoot: String) {
-    companion object {
-        private const val CREDENTIALS_FILE_NAME = "mental-health-300314-1be17f2cdb6f.json"
-    }
 
     private val driveService: Drive
     private val sheets: Sheets
 
     init {
-        val serviceAccount = FileInputStream("$projectRoot$CREDENTIALS_FILE_NAME")
+        val serviceAccount = FileInputStream("$projectRoot$FIREBASE_CREDENTIALS_FILE_NAME")
         val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
         val transport = GoogleNetHttpTransport.newTrustedTransport()
         val jacksonFactory = JacksonFactory.getDefaultInstance()

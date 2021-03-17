@@ -7,7 +7,6 @@ import storage.CentralDataStorage
 import telegram.LaunchMode
 import telegram.launchBot
 
-private const val TOKEN = "1466693925:AAGkgMILgAg4gvs4Ct6UFlPM5T9VJx0BoIY"
 
 /**
  * used by App Engine to run bot on cloud
@@ -17,13 +16,14 @@ fun Application.main() {
     CentralDataStorage.init(launchMode.rootPath)
     CentralDataStorage.reload()
 
-    val bot = launchBot(mode = LaunchMode.APP_ENGINE, token = TOKEN)
+    val token = Settings.TELEGRAM_BOT_TOKEN
+    val bot = launchBot(mode = LaunchMode.APP_ENGINE, token = token)
 
     routing {
         get("/status") {
             call.respond("Server is running!")
         }
-        post("/$TOKEN") {
+        post("/$token") {
             val response = call.receiveText()
             bot.processUpdate(response)
             call.respond(HttpStatusCode.OK)

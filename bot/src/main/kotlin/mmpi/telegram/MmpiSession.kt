@@ -87,7 +87,8 @@ open class MmpiSession(
         )
         val resultFolder = CentralDataStorage.saveMmpi(
             userId = userName,
-            report = report
+            report = report,
+            type = type
         )
         showResult(
             bot = env.bot,

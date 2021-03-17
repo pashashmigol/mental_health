@@ -8,6 +8,7 @@ import lucher.LucherResult
 import lucher.loadLucherData
 import lucher.report.generateReport
 import mmpi.MmpiData
+import mmpi.Type
 import mmpi.storage.loadMmpiData
 import java.util.*
 import java.text.MessageFormat
@@ -65,9 +66,14 @@ object CentralDataStorage {
 
     fun saveMmpi(
         userId: String,
-        report: String
+        report: String,
+        type: Type
     ): String {
-        val fileName = "MMPI ${DateTime.now().format(DateFormat.DEFAULT_FORMAT)}.html"
+        val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
+        val fileName = when (type) {
+            Type.Mmpi566 -> string("mmpi_566_result_filename", date)
+            Type.Mmpi377 -> string("mmpi_377_result_filename", date)
+        }
 
         val parentFolderLink = connection.saveFile(
             fileName = fileName,
