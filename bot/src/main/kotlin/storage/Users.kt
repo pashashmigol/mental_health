@@ -4,7 +4,6 @@ import com.google.firebase.database.*
 
 
 class Users(database: FirebaseDatabase) {
-
     private val usersRef: DatabaseReference = database.reference.child("users")
 
     @Volatile

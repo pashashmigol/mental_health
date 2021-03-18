@@ -1,5 +1,6 @@
 package lucher.telegram
 
+import Settings.LUCHER_TEST_TIMEOUT
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -44,7 +45,7 @@ data class LucherSession(
         val userId = env.message.from!!.id
 
         val firstRoundAnswers = runRound(env)
-        askUserToWaitBeforeSecondRound(env, minutes = 1)
+        askUserToWaitBeforeSecondRound(env, minutes = LUCHER_TEST_TIMEOUT)
         val secondRoundAnswers = runRound(env)
 
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
