@@ -1,13 +1,14 @@
 package storage
 
 import com.google.firebase.database.*
+import models.User
 
 
 class Users(database: FirebaseDatabase) {
     private val usersRef: DatabaseReference = database.reference.child("users")
 
     @Volatile
-    private var users = mapOf<String, User>()
+    private var users = mapOf<Long, User>()
 
     init {
         usersRef.addValueEventListener(object : ValueEventListener {
@@ -24,21 +25,17 @@ class Users(database: FirebaseDatabase) {
 
     private fun parseToMap(snapshot: DataSnapshot?) = snapshot!!.children.map {
         val user = it.getValue(User::class.java)
-        Pair(it.key, user)
+        Pair(user.id, user)
     }.toMap()
+
+    fun get(id: Long) = users[id]
+
+    fun allUsers(): List<User> = users.values.toList()
 
     fun add(user: User) {
         usersRef.push()
-        usersRef.child(user.id).setValue(user) { error: DatabaseError, ref: DatabaseReference ->
+        usersRef.child(user.id.toString()).setValue(user) { error: DatabaseError, ref: DatabaseReference ->
             println("onCancelled() ref: $ref, error: $error")
         }
     }
-
-    fun get(id: String) = users[id]
-}
-
-data class User(
-    val id: String
-) {
-    constructor() : this("")
 }

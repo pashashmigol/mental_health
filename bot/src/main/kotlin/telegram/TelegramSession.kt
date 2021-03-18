@@ -1,12 +1,13 @@
 package telegram
 
+import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
-import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
+import models.User
 
 interface TelegramSession {
     val id: Long
     fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment)
-    fun start(env: CommandHandlerEnvironment)
+    fun start(user: User, chatId: Long, bot: Bot)
 }
 
 typealias OnEnded = (TelegramSession) -> Unit

@@ -5,7 +5,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import storage.CentralDataStorage
 import telegram.LaunchMode
-import telegram.launchBot
+import telegram.launchBots
 
 
 /**
@@ -16,8 +16,8 @@ fun Application.main() {
     CentralDataStorage.init(launchMode.rootPath)
     CentralDataStorage.reload()
 
-    val token = Settings.TELEGRAM_BOT_TOKEN
-    val bot = launchBot(mode = LaunchMode.APP_ENGINE, token = token)
+    val token = Settings.OLD_BOT_TOKEN
+    val bot = launchBots(mode = LaunchMode.APP_ENGINE)
 
     routing {
         get("/status") {
@@ -25,7 +25,7 @@ fun Application.main() {
         }
         post("/$token") {
             val response = call.receiveText()
-            bot.processUpdate(response)
+            bot[token]?.processUpdate(response)
             call.respond(HttpStatusCode.OK)
         }
     }

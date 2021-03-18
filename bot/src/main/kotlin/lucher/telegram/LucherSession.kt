@@ -1,13 +1,14 @@
 package lucher.telegram
 
 import Settings.LUCHER_TEST_TIMEOUT
+import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
-import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import lucher.*
+import models.User
 import storage.CentralDataStorage
 import telegram.OnEnded
 import telegram.TelegramSession
@@ -26,13 +27,13 @@ data class LucherSession(
 
     private var onColorChosen: OnUserChoseColor? = null
 
-    override fun start(env: CommandHandlerEnvironment) {
-        val userId = env.message.from!!.id
+    override fun start(user: User, chatId: Long, bot: Bot) {
+        val userId = user.id
 
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError(env.bot, userId, "LucherSession error", exception)
+            sendError(bot, userId, "LucherSession error", exception)
         }
-        scope.launch(handler) { executeTesting(env) }
+        scope.launch(handler) { executeTesting(user, chatId, bot) }
     }
 
     override fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment) {
@@ -40,30 +41,28 @@ data class LucherSession(
         onColorChosen?.invoke(env, answer)
     }
 
-    private suspend fun executeTesting(env: CommandHandlerEnvironment) {
-        val userName = "${env.message.from!!.firstName} ${env.message.from!!.lastName}"
-        val userId = env.message.from!!.id
-
-        val firstRoundAnswers = runRound(env)
-        askUserToWaitBeforeSecondRound(env, minutes = LUCHER_TEST_TIMEOUT)
-        val secondRoundAnswers = runRound(env)
+    private suspend fun executeTesting(user: User, chatId: Long, bot: Bot) {
+        val firstRoundAnswers = runRound(chatId, bot)
+        askUserToWaitBeforeSecondRound(chatId, bot, minutes = LUCHER_TEST_TIMEOUT)
+        val secondRoundAnswers = runRound(chatId, bot)
 
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
 
-        val folderLink = CentralDataStorage.saveLucher(
-            userId = userName,
+        val folderLink = CentralDataStorage.reports.saveLucher(
+            userId = user.name,
             answers = answers,
             result = result
         )
-        showResult(env.bot, userId, folderLink)
+        onEndedCallback(this)
+        showResult(bot, user.id, folderLink)
     }
 
-    private suspend fun runRound(env: CommandHandlerEnvironment): List<LucherColor> {
+    private suspend fun runRound(chatId: Long, bot: Bot): List<LucherColor> {
 
-        val shownColors = showAllColors(env)
+        val shownColors = showAllColors(chatId, bot)
         val shownOptions = createReplyOptions()
-        askUserToChooseColor(env, shownOptions)
+        askUserToChooseColor(chatId, bot, shownOptions)
 
         val answers = mutableListOf<String>()
         val channel = Channel<Unit>(0)//using channel to wait until all colors are chosen

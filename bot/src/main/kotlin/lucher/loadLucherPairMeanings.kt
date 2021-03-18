@@ -12,6 +12,5 @@ fun loadLucherData(connection: GoogleDriveConnection): LucherData {
         val pair = key to row["description"]!!
         return@fold acc + pair
     }
-
     return LucherData(meanings = meanings)
 }

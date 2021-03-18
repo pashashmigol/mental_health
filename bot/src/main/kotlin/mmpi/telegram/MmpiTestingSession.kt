@@ -1,8 +1,8 @@
 package mmpi.telegram
 
-import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
+import com.github.kotlintelegrambot.Bot
 import mmpi.MmpiProcess
-import mmpi.Type
+import models.Type
 import storage.CentralDataStorage
 import telegram.OnEnded
 
@@ -12,7 +12,7 @@ class MmpiTestingSession(
 ) : MmpiSession(id, Type.Mmpi377, onEndedCallback) {
 
     override fun sendNextQuestion(
-        env: CommandHandlerEnvironment,
+        bot: Bot,
         messageId: Long,
         ongoingProcess: MmpiProcess
     ) {

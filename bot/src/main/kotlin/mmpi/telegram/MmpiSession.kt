@@ -1,8 +1,8 @@
 package mmpi.telegram
 
 import Gender
+import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
-import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
@@ -10,6 +10,8 @@ import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
 import kotlinx.coroutines.launch
 import mmpi.*
 import mmpi.report.generateReport
+import models.Type
+import models.User
 import storage.CentralDataStorage
 import telegram.OnEnded
 import telegram.TelegramSession
@@ -30,21 +32,19 @@ open class MmpiSession(
 
     internal var onAnswer: OnAnswerReceived? = null
 
-    override fun start(env: CommandHandlerEnvironment) {
-        val userId = env.message.from!!.id
-
+    override fun start(user: User, chatId: Long, bot: Bot) {
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError(env.bot, userId, "MmpiSession error", exception)
+            sendError(bot, user.id, "MmpiSession error", exception)
         }
-        scope.launch(handler) { executeTesting(env) }
+        scope.launch(handler) { executeTesting(user, bot) }
     }
 
-    private suspend fun executeTesting(env: CommandHandlerEnvironment) {
+    private suspend fun executeTesting(user: User, bot: Bot) {
         //using channel to wait until all colors are chosen
         val gChannel = Channel<Gender>(RENDEZVOUS)
 
         val messageId = askGender(
-            bot = env.bot,
+            bot = bot,
             userId = id,
             createGenderQuestion()
         )
@@ -63,35 +63,35 @@ open class MmpiSession(
                 MmpiProcess.Answer.byValue(answer.toInt())
             )
             if (ongoingProcess.hasNextQuestion()) {
-                sendNextQuestion(env, messageId, ongoingProcess)
+                sendNextQuestion(bot, messageId, ongoingProcess)
             } else {
-                env.bot.deleteMessage(id, messageId)
-                finishTesting(ongoingProcess, env)
+                bot.deleteMessage(id, messageId)
+                finishTesting(ongoingProcess, user, bot)
             }
         }
-        sendNextQuestion(env, messageId, ongoingProcess)
+        sendNextQuestion(bot, messageId, ongoingProcess)
     }
 
     private fun finishTesting(
         ongoingProcess: MmpiProcess,
-        env: CommandHandlerEnvironment
+        user: User,
+        bot: Bot
     ) {
-        val userName = "${env.message.from!!.firstName} ${env.message.from!!.lastName}"
         val result = ongoingProcess.calculateResult()
 
         val report = generateReport(
-            userId = userName,
+            userId = user.name,
             questions = ongoingProcess.questions,
             answers = ongoingProcess.answers,
             result = result
         )
-        val resultFolder = CentralDataStorage.saveMmpi(
-            userId = userName,
+        val resultFolder = CentralDataStorage.reports.saveMmpi(
+            userId = user.name,
             report = report,
             type = type
         )
         showResult(
-            bot = env.bot,
+            bot = bot,
             userId = id,
             link = resultFolder
         )
@@ -99,12 +99,12 @@ open class MmpiSession(
     }
 
     internal open fun sendNextQuestion(
-        env: CommandHandlerEnvironment,
+        bot: Bot,
         messageId: Long,
         ongoingProcess: MmpiProcess
     ) {
         sendQuestion(
-            bot = env.bot,
+            bot = bot,
             userId = id,
             messageId = messageId,
             question = ongoingProcess.nextQuestion()

@@ -1,6 +1,6 @@
 import storage.CentralDataStorage
 import telegram.LaunchMode
-import telegram.launchBot
+import telegram.launchBots
 
 private const val TOKEN = "1417030770:AAEI89UL2hYjEuuiX55_6HLtjs6pUSeaNMI"
 
@@ -11,5 +11,5 @@ fun main() {
     val launchMode = LaunchMode.LOCAL
     CentralDataStorage.init(launchMode.rootPath)
     CentralDataStorage.reload()
-    launchBot(mode = launchMode, token = TOKEN)
+    launchBots(mode = launchMode)
 }

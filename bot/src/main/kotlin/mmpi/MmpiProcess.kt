@@ -2,6 +2,7 @@ package mmpi
 
 import Gender
 import models.Question
+import models.Type
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
@@ -29,6 +30,7 @@ class MmpiProcess(gender: Gender, type: Type) {
             answers = emptyList(),
             scales = CentralDataStorage.mmpi377Data.scales(gender)
         )
+        else -> throw IllegalStateException()
     }
 
     val answers
