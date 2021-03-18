@@ -20,6 +20,7 @@ object CentralDataStorage {
     val lucherData get() = lucher
     val mmpi566Data get() = mmpi566
     val mmpi377Data get() = mmpi377
+    val usersRepository get() = users
 
     fun init(rootPath: String) {
         connection = GoogleDriveConnection(rootPath)
@@ -28,11 +29,13 @@ object CentralDataStorage {
     private lateinit var lucher: LucherData
     private lateinit var mmpi566: MmpiData
     private lateinit var mmpi377: MmpiData
+    private lateinit var users: Users
 
     fun reload() {
         lucher = loadLucherData(connection)
         mmpi566 = loadMmpiData(connection, Settings.MMPI_566_QUESTIONS_FILE_ID)
         mmpi377 = loadMmpiData(connection, Settings.MMPI_377_QUESTIONS_FILE_ID)
+        users = Users(connection.database)
     }
 
     private val messages: ResourceBundle = ResourceBundle.getBundle("Messages")
