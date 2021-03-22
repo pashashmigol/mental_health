@@ -49,7 +49,8 @@ object CentralDataStorage {
     }
 
     fun createUser(userId: Long, userName: String) {
-        val (_, reportsFolderLink) = reportsRepository.createFolder(userId.toString())
+        val (folderId, reportsFolderLink) = reportsRepository.createFolder(userId.toString())
+        giveAccess(folderId, connection)
 
         val user = User(
             id = userId,

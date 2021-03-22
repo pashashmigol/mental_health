@@ -56,10 +56,15 @@ object TelegramRoom {
 
         sessions.remove(personId)
         sessions[personId] = MmpiSession(personId, Type.Mmpi566) { sessions.remove(it.id) }
-        sessions[personId]!!.start(env.ourUser()!!, env.message.chat.id, env.bot)
+        sessions[personId]!!.start(
+            env.ourUser()!!,
+            env.message.chat.id,
+            BotsKeeper.adminBot,
+            BotsKeeper.clientBot
+        )
 
     } catch (e: Exception) {
-        sendError(env.bot, env.message.from?.id!!, exception = e)
+        sendError(userId = env.message.from?.id!!, exception = e)
     }
 
     fun launchMmpi377Test(env: CommandHandlerEnvironment) = try {
@@ -68,10 +73,18 @@ object TelegramRoom {
 
         sessions.remove(personId)
         sessions[personId] = MmpiSession(personId, Type.Mmpi377) { sessions.remove(it.id) }
-        sessions[personId]!!.start(env.ourUser()!!, env.message.chat.id, env.bot)
+        sessions[personId]!!.start(
+            env.ourUser()!!,
+            env.message.chat.id,
+            BotsKeeper.adminBot,
+            BotsKeeper.clientBot
+        )
 
     } catch (e: Exception) {
-        sendError(env.bot, env.message.from?.id!!, exception = e)
+        sendError(
+            userId = env.message.from?.id!!,
+            exception = e
+        )
     }
 
     fun launchMmpiMockTest(env: CommandHandlerEnvironment) = try {
@@ -80,10 +93,18 @@ object TelegramRoom {
 
         sessions.remove(personId)
         sessions[personId] = MmpiTestingSession(personId) { sessions.remove(it.id) }
-        sessions[personId]!!.start(env.ourUser()!!, env.message.chat.id, env.bot)
+        sessions[personId]!!.start(
+            env.ourUser()!!,
+            env.message.chat.id,
+            BotsKeeper.adminBot,
+            BotsKeeper.clientBot
+        )
 
     } catch (e: Exception) {
-        sendError(env.bot, env.message.from?.id!!, exception = e)
+        sendError(
+            userId = env.message.from?.id!!,
+            exception = e
+        )
     }
 
     fun launchLucherTest(env: CommandHandlerEnvironment) = try {
@@ -92,10 +113,15 @@ object TelegramRoom {
 
         sessions.remove(personId)
         sessions[personId] = LucherSession(personId) { sessions.remove(it.id) }
-        sessions[personId]!!.start(env.ourUser()!!, env.message.chat.id, env.bot)
+        sessions[personId]!!.start(
+            env.ourUser()!!,
+            env.message.chat.id,
+            BotsKeeper.adminBot,
+            BotsKeeper.clientBot
+        )
 
     } catch (e: Exception) {
-        sendError(env.bot, env.message.from?.id!!, exception = e)
+        sendError(userId = env.message.from?.id!!, exception = e)
     }
 
     fun callbackQuery(env: CallbackQueryHandlerEnvironment) = try {
@@ -107,9 +133,7 @@ object TelegramRoom {
             launchTest(env)
         }
     } catch (e: Exception) {
-        sendError(
-            env.bot, env.update.callbackQuery!!.from.id, exception = e
-        )
+        sendError(userId = env.update.callbackQuery!!.from.id, exception = e)
     }
 
     private fun launchTest(env: CallbackQueryHandlerEnvironment) {
@@ -124,8 +148,12 @@ object TelegramRoom {
             Type.Mmpi566, Type.Mmpi377 -> MmpiSession(personId, type) { sessions.remove(it.id) }
             Type.Lucher -> LucherSession(personId) { sessions.remove(it.id) }
         }
-
-        sessions[personId]!!.start(env.ourUser()!!, chatId, env.bot)
+        sessions[personId]!!.start(
+            env.ourUser()!!,
+            chatId,
+            BotsKeeper.adminBot,
+            BotsKeeper.clientBot
+        )
     }
 }
 

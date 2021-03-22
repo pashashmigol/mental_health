@@ -1,15 +1,15 @@
 package mmpi
 
-fun calculate(answers: List<MmpiProcess.Answer?>, scales: MmpiProcess.Scales): MmpiProcess.Result {
-    val score = answers.sumOf { it?.option ?: 0 }
+import kotlin.math.roundToInt
 
-    val correction = scales.correctionScale.calculate(answers).score
+fun calculate(answers: List<MmpiProcess.Answer?>, scales: MmpiProcess.Scales): MmpiProcess.Result {
+
+    val correction = scales.correctionScale.calculate(answers).raw
 
     return MmpiProcess.Result(
-        description = "You've got $score. It seems you have an issue",
-        liesScale = scales.liesScale.calculate(answers, correction),
-        credibilityScale = scales.credibilityScale.calculate(answers, correction),
-        correctionScale = scales.correctionScale.calculate(answers, correction),
+        liesScaleL = scales.liesScale.calculate(answers, correction),
+        credibilityScaleF = scales.credibilityScale.calculate(answers, correction),
+        correctionScaleK = scales.correctionScale.calculate(answers, correction),
         introversionScale0 = scales.introversionScale.calculate(answers, correction),
         overControlScale1 = scales.overControlScale1.calculate(answers, correction),
         passivityScale2 = scales.passivityScale2.calculate(answers, correction),
@@ -28,27 +28,16 @@ class Scale(
     val title: String,
     val yes: List<Int>,
     val no: List<Int>,
-    val costOfZero: Float,
-    val costOfKeyAnswer: Float,
     val correctionFactor: Float,
     val tA: Float,
     val tB: Float,
     private val segments: List<Segment>
 ) {
-    private fun countAnswers(answers: List<MmpiProcess.Answer?>): Int {
-        val numberOfYes = yes.filter { answers[it] == MmpiProcess.Answer.Agree }.size
-        val numberOfNo = no.filter { answers[it] == MmpiProcess.Answer.Disagree }.size
-
-        return numberOfYes + numberOfNo
-    }
-
     fun calculate(answers: List<MmpiProcess.Answer?>, correctionValue: Int = 0): Result {
-        val correction = correctionValue * correctionFactor
 
-        val rawScore = (costOfZero + countAnswers(answers)
-                * costOfKeyAnswer + correction).toInt()
-
-        val finalScore = (rawScore * tA + tB).toInt()
+        val rawScore = rawScore(answers)
+        val rawScoreCorrected = rawScoreCorrected(rawScore, correctionValue)
+        val finalScore = (rawScoreCorrected * tA + tB).toInt()
 
         val description = segments.firstOrNull {
             it.range.contains(finalScore)
@@ -57,15 +46,27 @@ class Scale(
         return Result(
             name = title,
             score = finalScore,
-            description = description
+            description = description,
+            raw = rawScoreCorrected
         )
     }
 
-    override fun toString(): String {
-        return "Scale(yes=$yes, no=$no)"
+    private fun rawScore(answers: List<MmpiProcess.Answer?>): Int {
+        val numberOfYes = yes.filter { answers[it - 1] == MmpiProcess.Answer.Agree }.size
+        val numberOfNo = no.filter { answers[it - 1] == MmpiProcess.Answer.Disagree }.size
+
+        return numberOfYes + numberOfNo
     }
 
-    data class Result(val name: String, val score: Int, val description: String)
+    private fun rawScoreCorrected(rawScore: Int, correction: Int): Int {
+        return (rawScore + correction * correctionFactor).roundToInt()
+    }
+
+    override fun toString(): String {
+        return "$id(yes=$yes, no=$no)"
+    }
+
+    data class Result(val name: String, val score: Int, val description: String, val raw: Int)
 }
 
 data class Segment(val range: IntRange, val description: String)

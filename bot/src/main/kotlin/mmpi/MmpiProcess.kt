@@ -3,12 +3,11 @@ package mmpi
 import Gender
 import models.Question
 import models.Type
+import models.size
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
-const val NUMBER_OF_QUESTIONS = 566
-
-class MmpiProcess(gender: Gender, type: Type) {
+class MmpiProcess(gender: Gender, val type: Type) {
 
     internal data class State(
         val currentQuestionIndex: Int,// = 0,
@@ -42,7 +41,7 @@ class MmpiProcess(gender: Gender, type: Type) {
         state = submitAnswer(state, answer)
     }
 
-    fun hasNextQuestion(): Boolean = hasNextQuestion(state)
+    fun hasNextQuestion(): Boolean = hasNextQuestion(state, type)
 
     fun nextQuestion(): Question {
         val (newState, question) = nextQuestion(state)
@@ -50,7 +49,7 @@ class MmpiProcess(gender: Gender, type: Type) {
         return question
     }
 
-    fun calculateResult() = calculateResult(state)
+    fun calculateResult() = calculateResult(state, type)
 
     enum class Answer(val option: Int) {
         Agree(0),
@@ -69,25 +68,24 @@ class MmpiProcess(gender: Gender, type: Type) {
     }
 
     class Result(
-        val description: String,
-        liesScale: Scale.Result,
-        credibilityScale: Scale.Result,
-        correctionScale: Scale.Result,
-        introversionScale0: Scale.Result,
-        overControlScale1: Scale.Result,
-        passivityScale2: Scale.Result,
-        labilityScale3: Scale.Result,
-        impulsivenessScale4: Scale.Result,
-        masculinityScale5: Scale.Result,
-        rigidityScale6: Scale.Result,
-        anxietyScale7: Scale.Result,
-        individualismScale8: Scale.Result,
-        optimismScale9: Scale.Result
+        val liesScaleL: Scale.Result,
+        val credibilityScaleF: Scale.Result,
+        val correctionScaleK: Scale.Result,
+        val introversionScale0: Scale.Result,
+        val overControlScale1: Scale.Result,
+        val passivityScale2: Scale.Result,
+        val labilityScale3: Scale.Result,
+        val impulsivenessScale4: Scale.Result,
+        val masculinityScale5: Scale.Result,
+        val rigidityScale6: Scale.Result,
+        val anxietyScale7: Scale.Result,
+        val individualismScale8: Scale.Result,
+        val optimismScale9: Scale.Result
     ) {
         val scalesToShow = listOf(
-            liesScale,
-            credibilityScale,
-            correctionScale,
+            liesScaleL,
+            credibilityScaleF,
+            correctionScaleK,
             introversionScale0,
             overControlScale1,
             passivityScale2,
@@ -99,14 +97,6 @@ class MmpiProcess(gender: Gender, type: Type) {
             individualismScale8,
             optimismScale9
         )
-
-        fun format(): String {
-            val sb = StringBuilder()
-            scalesToShow.forEach {
-                sb.append("${it.name} : ${it.score} \n${it.description} \n\n")
-            }
-            return sb.toString()
-        }
     }
 
     data class Scales(
@@ -139,8 +129,8 @@ private fun submitAnswer(
     return state.copy(currentQuestionIndex = newIndex, answers = answers)
 }
 
-private fun hasNextQuestion(state: MmpiProcess.State): Boolean {
-    return state.currentQuestionIndex < NUMBER_OF_QUESTIONS
+private fun hasNextQuestion(state: MmpiProcess.State, type: Type): Boolean {
+    return state.currentQuestionIndex < type.size
 }
 
 private fun nextQuestion(state: MmpiProcess.State):
@@ -149,8 +139,8 @@ private fun nextQuestion(state: MmpiProcess.State):
     return Pair(state, question)
 }
 
-private fun calculateResult(state: MmpiProcess.State): MmpiProcess.Result {
-    if (state.answers.size != NUMBER_OF_QUESTIONS)
+private fun calculateResult(state: MmpiProcess.State, type: Type): MmpiProcess.Result {
+    if (state.answers.size != type.size)
         throw RuntimeException("Not all questions are answered")
     if (state.scales == null)
         throw RuntimeException("Scales are not loaded")

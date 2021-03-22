@@ -110,14 +110,6 @@ private fun toScale(map: Map<String, Any>, gender: Gender) = Scale(
                 .takeIf { (it as String).isNotBlank() } ?: map["key_answers_no_men"]
         } as String
     ),
-    costOfZero = (when (gender) {
-        Gender.Male -> map["cost_of_zero_men"]
-        Gender.Female -> map["cost_of_zero_women"]
-    }.toString().toFloat()),
-    costOfKeyAnswer = (when (gender) {
-        Gender.Male -> map["cost_of_key_answer_men"]
-        Gender.Female -> map["cost_of_key_answer_women"]
-    } as String).toFloat(),
     correctionFactor = (map["correction_factor"] as String).toFloat(),
     tA = (when (gender) {
         Gender.Male -> map["t_a_men"]

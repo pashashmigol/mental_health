@@ -8,13 +8,19 @@ import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
 fun showResult(
-    bot: Bot,
-    userId: Long,
-    link: String
+    user: User,
+    adminId: Long,
+    resultLink: String,
+    adminBot: Bot,
+    clientBot: Bot
 ) {
-    bot.sendMessage(
-        chatId = userId,
-        text = string("results", link)
+    clientBot.sendMessage(
+        chatId = user.id,
+        text = string("your_results", resultLink)
+    )
+    adminBot.sendMessage(
+        chatId = adminId,
+        text = string("user_completed_test", user.name, resultLink)
     )
 }
 
@@ -34,7 +40,7 @@ fun showUsersList(
 ) {
     val text = CentralDataStorage.users
         .allUsers()
-        .joinToString("/n") { it.name }
+        .joinToString("/n") { "${it.name}: ${it.googleDriveFolder}" }
 
     bot.sendMessage(
         chatId = userId,

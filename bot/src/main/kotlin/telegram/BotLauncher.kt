@@ -30,6 +30,9 @@ fun launchBots(mode: LaunchMode): Map<String, Bot> {
     val adminBot = launchAdminBot(mode, adminBotToken)
     val clientBot = launchClientBot(mode, clientBotToken)
 
+    BotsKeeper.adminBot = adminBot
+    BotsKeeper.clientBot = clientBot
+
     return mapOf(adminBotToken to adminBot, clientBotToken to clientBot)
 }
 
@@ -63,7 +66,6 @@ private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
                 showUsersList(bot, message.from!!.id)
             }
             command("reload") {
-                println("reloadQuestions")
                 CentralDataStorage.reload()
             }
             callbackQuery {

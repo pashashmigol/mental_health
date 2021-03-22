@@ -17,7 +17,7 @@ fun Application.main() {
     CentralDataStorage.reload()
 
     val token = Settings.OLD_BOT_TOKEN
-    val bot = launchBots(mode = LaunchMode.APP_ENGINE)
+    val bots = launchBots(mode = LaunchMode.APP_ENGINE)
 
     routing {
         get("/status") {
@@ -25,7 +25,7 @@ fun Application.main() {
         }
         post("/$token") {
             val response = call.receiveText()
-            bot[token]?.processUpdate(response)
+            bots[token]?.processUpdate(response)
             call.respond(HttpStatusCode.OK)
         }
     }

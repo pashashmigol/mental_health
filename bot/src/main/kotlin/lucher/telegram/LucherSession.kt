@@ -1,5 +1,6 @@
 package lucher.telegram
 
+import Settings.ADMIN_ID
 import Settings.LUCHER_TEST_TIMEOUT
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
@@ -27,13 +28,13 @@ data class LucherSession(
 
     private var onColorChosen: OnUserChoseColor? = null
 
-    override fun start(user: User, chatId: Long, bot: Bot) {
+    override fun start(user: User, chatId: Long, adminBot: Bot, clientBot: Bot) {
         val userId = user.id
 
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError(bot, userId, "LucherSession error", exception)
+            sendError(userId, "LucherSession error", exception)
         }
-        scope.launch(handler) { executeTesting(user, chatId, bot) }
+        scope.launch(handler) { executeTesting(user, chatId, adminBot, clientBot) }
     }
 
     override fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment) {
@@ -41,10 +42,10 @@ data class LucherSession(
         onColorChosen?.invoke(env, answer)
     }
 
-    private suspend fun executeTesting(user: User, chatId: Long, bot: Bot) {
-        val firstRoundAnswers = runRound(chatId, bot)
-        askUserToWaitBeforeSecondRound(chatId, bot, minutes = LUCHER_TEST_TIMEOUT)
-        val secondRoundAnswers = runRound(chatId, bot)
+    private suspend fun executeTesting(user: User, chatId: Long, adminBot: Bot, clientBot: Bot) {
+        val firstRoundAnswers = runRound(chatId, clientBot)
+        askUserToWaitBeforeSecondRound(chatId, clientBot, minutes = LUCHER_TEST_TIMEOUT)
+        val secondRoundAnswers = runRound(chatId, clientBot)
 
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
@@ -55,7 +56,7 @@ data class LucherSession(
             result = result
         )
         onEndedCallback(this)
-        showResult(bot, user.id, folderLink)
+        showResult(user, ADMIN_ID, folderLink, adminBot, clientBot)
     }
 
     private suspend fun runRound(chatId: Long, bot: Bot): List<LucherColor> {

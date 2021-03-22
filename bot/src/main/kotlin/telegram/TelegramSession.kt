@@ -7,7 +7,7 @@ import models.User
 interface TelegramSession {
     val id: Long
     fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment)
-    fun start(user: User, chatId: Long, bot: Bot)
+    fun start(user: User, chatId: Long, adminBot: Bot, clientBot: Bot)
 }
 
 typealias OnEnded = (TelegramSession) -> Unit

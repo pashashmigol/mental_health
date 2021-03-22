@@ -1,6 +1,7 @@
 package mmpi.telegram
 
 import Gender
+import Settings.ADMIN_ID
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -32,19 +33,19 @@ open class MmpiSession(
 
     internal var onAnswer: OnAnswerReceived? = null
 
-    override fun start(user: User, chatId: Long, bot: Bot) {
+    override fun start(user: User, chatId: Long, adminBot: Bot, clientBot: Bot) {
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError(bot, user.id, "MmpiSession error", exception)
+            sendError(user.id, "MmpiSession error", exception)
         }
-        scope.launch(handler) { executeTesting(user, bot) }
+        scope.launch(handler) { executeTesting(user, adminBot, clientBot) }
     }
 
-    private suspend fun executeTesting(user: User, bot: Bot) {
+    private suspend fun executeTesting(user: User, adminBot: Bot, clientBot: Bot) {
         //using channel to wait until all colors are chosen
         val gChannel = Channel<Gender>(RENDEZVOUS)
 
         val messageId = askGender(
-            bot = bot,
+            bot = clientBot,
             userId = id,
             createGenderQuestion()
         )
@@ -63,19 +64,20 @@ open class MmpiSession(
                 MmpiProcess.Answer.byValue(answer.toInt())
             )
             if (ongoingProcess.hasNextQuestion()) {
-                sendNextQuestion(bot, messageId, ongoingProcess)
+                sendNextQuestion(clientBot, messageId, ongoingProcess)
             } else {
-                bot.deleteMessage(id, messageId)
-                finishTesting(ongoingProcess, user, bot)
+                clientBot.deleteMessage(id, messageId)
+                finishTesting(ongoingProcess, user, adminBot, clientBot)
             }
         }
-        sendNextQuestion(bot, messageId, ongoingProcess)
+        sendNextQuestion(clientBot, messageId, ongoingProcess)
     }
 
     private fun finishTesting(
         ongoingProcess: MmpiProcess,
         user: User,
-        bot: Bot
+        adminBot: Bot,
+        clientBot: Bot
     ) {
         val result = ongoingProcess.calculateResult()
 
@@ -91,9 +93,11 @@ open class MmpiSession(
             type = type
         )
         showResult(
-            bot = bot,
-            userId = id,
-            link = resultFolder
+            user = user,
+            adminId = ADMIN_ID,
+            resultLink = resultFolder,
+            adminBot,
+            clientBot
         )
         onEndedCallback(this)
     }
