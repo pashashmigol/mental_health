@@ -77,10 +77,10 @@ private fun loadScales(
         }.toMap()
 
     return MmpiProcess.Scales(
-        correctionScale = scalesMap["CorrectionScaleK"]!!,
-        liesScale = scalesMap["LiesScaleL"]!!,
-        credibilityScale = scalesMap["CredibilityScaleF"]!!,
-        introversionScale = scalesMap["IntroversionScale0"]!!,
+        correctionScaleK = scalesMap["CorrectionScaleK"]!!,
+        liesScaleL = scalesMap["LiesScaleL"]!!,
+        credibilityScaleF = scalesMap["CredibilityScaleF"]!!,
+        introversionScale0 = scalesMap["IntroversionScale0"]!!,
         overControlScale1 = scalesMap["OverControlScale1"]!!,
         passivityScale2 = scalesMap["PassivityScale2"]!!,
         labilityScale3 = scalesMap["LabilityScale3"]!!,

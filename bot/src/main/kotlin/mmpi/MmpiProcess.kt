@@ -100,10 +100,10 @@ class MmpiProcess(gender: Gender, val type: Type) {
     }
 
     data class Scales(
-        val correctionScale: Scale,
-        val liesScale: Scale,
-        val credibilityScale: Scale,
-        val introversionScale: Scale,
+        val correctionScaleK: Scale,
+        val liesScaleL: Scale,
+        val credibilityScaleF: Scale,
+        val introversionScale0: Scale,
         val overControlScale1: Scale,
         val passivityScale2: Scale,
         val labilityScale3: Scale,

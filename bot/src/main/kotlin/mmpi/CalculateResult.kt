@@ -4,13 +4,13 @@ import kotlin.math.roundToInt
 
 fun calculate(answers: List<MmpiProcess.Answer?>, scales: MmpiProcess.Scales): MmpiProcess.Result {
 
-    val correction = scales.correctionScale.calculate(answers).raw
+    val correction = scales.correctionScaleK.calculate(answers).raw
 
     return MmpiProcess.Result(
-        liesScaleL = scales.liesScale.calculate(answers, correction),
-        credibilityScaleF = scales.credibilityScale.calculate(answers, correction),
-        correctionScaleK = scales.correctionScale.calculate(answers, correction),
-        introversionScale0 = scales.introversionScale.calculate(answers, correction),
+        liesScaleL = scales.liesScaleL.calculate(answers, correction),
+        credibilityScaleF = scales.credibilityScaleF.calculate(answers, correction),
+        correctionScaleK = scales.correctionScaleK.calculate(answers, correction),
+        introversionScale0 = scales.introversionScale0.calculate(answers, correction),
         overControlScale1 = scales.overControlScale1.calculate(answers, correction),
         passivityScale2 = scales.passivityScale2.calculate(answers, correction),
         labilityScale3 = scales.labilityScale3.calculate(answers, correction),
@@ -37,7 +37,7 @@ class Scale(
 
         val rawScore = rawScore(answers)
         val rawScoreCorrected = rawScoreCorrected(rawScore, correctionValue)
-        val finalScore = (rawScoreCorrected * tA + tB).toInt()
+        val finalScore = finalScore(rawScoreCorrected)
 
         val description = segments.firstOrNull {
             it.range.contains(finalScore)
@@ -50,6 +50,8 @@ class Scale(
             raw = rawScoreCorrected
         )
     }
+
+    internal fun finalScore(rawScoreCorrected: Int) = (rawScoreCorrected * tA + tB).toInt()
 
     private fun rawScore(answers: List<MmpiProcess.Answer?>): Int {
         val numberOfYes = yes.filter { answers[it - 1] == MmpiProcess.Answer.Agree }.size
