@@ -12,7 +12,7 @@ import storage.CentralDataStorage
 import telegram.helpers.showUsersList
 
 
-fun launchBots(mode: LaunchMode): Map<String, Bot> {
+fun launchBots(mode: LaunchMode) {
 
     val adminBotToken: String
     val clientBotToken: String
@@ -32,8 +32,6 @@ fun launchBots(mode: LaunchMode): Map<String, Bot> {
 
     BotsKeeper.adminBot = adminBot
     BotsKeeper.clientBot = clientBot
-
-    return mapOf(adminBotToken to adminBot, clientBotToken to clientBot)
 }
 
 private fun launchAdminBot(mode: LaunchMode, token: String): Bot {

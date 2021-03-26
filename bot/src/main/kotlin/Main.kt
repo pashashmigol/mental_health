@@ -1,9 +1,12 @@
+import Settings.ADMIN_BOT_TOKEN
+import Settings.CLIENT_BOT_TOKEN
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import storage.CentralDataStorage
+import telegram.BotsKeeper
 import telegram.LaunchMode
 import telegram.launchBots
 
@@ -16,16 +19,20 @@ fun Application.main() {
     CentralDataStorage.init(launchMode.rootPath)
     CentralDataStorage.reload()
 
-    val token = Settings.OLD_BOT_TOKEN
-    val bots = launchBots(mode = LaunchMode.APP_ENGINE)
+    launchBots(mode = LaunchMode.APP_ENGINE)
 
     routing {
         get("/status") {
             call.respond("Server is running!")
         }
-        post("/$token") {
+        post("/$ADMIN_BOT_TOKEN") {
             val response = call.receiveText()
-            bots[token]?.processUpdate(response)
+            BotsKeeper.adminBot.processUpdate(response)
+            call.respond(HttpStatusCode.OK)
+        }
+        post("/$CLIENT_BOT_TOKEN") {
+            val response = call.receiveText()
+            BotsKeeper.clientBot.processUpdate(response)
             call.respond(HttpStatusCode.OK)
         }
     }
