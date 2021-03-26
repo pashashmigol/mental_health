@@ -56,12 +56,16 @@ object TelegramRoom {
 
         sessions.remove(personId)
         sessions[personId] = MmpiSession(personId, Type.Mmpi566) { sessions.remove(it.id) }
-        sessions[personId]!!.start(
-            env.ourUser()!!,
-            env.message.chat.id,
-            BotsKeeper.adminBot,
-            BotsKeeper.clientBot
-        )
+
+        val user = env.ourUser()
+        user?.apply {
+            sessions[personId]!!.start(
+                user,
+                env.message.chat.id,
+                BotsKeeper.adminBot,
+                BotsKeeper.clientBot
+            )
+        }
 
     } catch (e: Exception) {
         sendError(userId = env.message.from?.id!!, exception = e)

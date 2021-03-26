@@ -1,7 +1,9 @@
 package telegram
 
 import Settings.ADMIN_BOT_TOKEN
+import Settings.ADMIN_BOT_TOKEN_TESTING
 import Settings.CLIENT_BOT_TOKEN
+import Settings.CLIENT_BOT_TOKEN_TESTING
 import Settings.SERVER_HOSTNAME
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.bot
@@ -23,8 +25,8 @@ fun launchBots(mode: LaunchMode) {
             clientBotToken = CLIENT_BOT_TOKEN
         }
         LaunchMode.LOCAL, LaunchMode.TESTS -> {
-            adminBotToken = ADMIN_BOT_TOKEN
-            clientBotToken = CLIENT_BOT_TOKEN
+            adminBotToken = ADMIN_BOT_TOKEN_TESTING
+            clientBotToken = CLIENT_BOT_TOKEN_TESTING
         }
     }
     val adminBot = launchAdminBot(mode, adminBotToken)
