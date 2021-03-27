@@ -19,7 +19,7 @@ import com.google.firebase.database.*
 class GoogleDriveConnection(projectRoot: String) {
 
     val driveService: Drive
-    val sheets: Sheets
+    private val sheets: Sheets
     internal val database: FirebaseDatabase
 
     init {
@@ -40,6 +40,10 @@ class GoogleDriveConnection(projectRoot: String) {
         println("Folder ID: $database")
     }
 
+    fun clear(){
+        database.app.delete()
+    }
+
     private fun initFireBaseDatabase(credentials: GoogleCredentials): FirebaseDatabase {
         val auth = mapOf("uid" to "my-service-worker")
 
@@ -48,11 +52,15 @@ class GoogleDriveConnection(projectRoot: String) {
             .setDatabaseUrl(FIREBASE_DATABASE_URL)
             .setDatabaseAuthVariableOverride(auth)
             .build()
-        FirebaseApp.initializeApp(options)
+
+        try {
+            FirebaseApp.initializeApp(options)
+        } catch (e: Throwable){
+            println("FirebaseApp.initializeApp(): $e")
+        }
 
         return FirebaseDatabase.getInstance()
     }
-
 
     fun loadDataFromFile(fileId: String, page: String): List<Map<String, String>>? {
         val request = sheets.spreadsheets()

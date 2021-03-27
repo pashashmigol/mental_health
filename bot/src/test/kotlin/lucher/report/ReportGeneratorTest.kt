@@ -1,6 +1,9 @@
 package lucher.report
 
-import lucher.*
+import lucher.LucherAnswers
+import lucher.LucherColor
+import lucher.calculateResult
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -22,32 +25,32 @@ internal class ReportGeneratorTest {
     @Test
     fun generateReport() {
         val answers = LucherAnswers(
-                firstRound = listOf(
-                        LucherColor.Black,
-                        LucherColor.Red,
-                        LucherColor.Blue,
-                        LucherColor.Brown,
-                        LucherColor.Gray,
-                        LucherColor.Green,
-                        LucherColor.Violet,
-                        LucherColor.Yellow
-                ),
-                secondRound = listOf(
-                        LucherColor.Green,
-                        LucherColor.Blue,
-                        LucherColor.Red,
-                        LucherColor.Yellow,
-                        LucherColor.Black,
-                        LucherColor.Brown,
-                        LucherColor.Gray,
-                        LucherColor.Violet
-                )
+            firstRound = listOf(
+                LucherColor.Black,
+                LucherColor.Red,
+                LucherColor.Blue,
+                LucherColor.Brown,
+                LucherColor.Gray,
+                LucherColor.Green,
+                LucherColor.Violet,
+                LucherColor.Yellow
+            ),
+            secondRound = listOf(
+                LucherColor.Green,
+                LucherColor.Blue,
+                LucherColor.Red,
+                LucherColor.Yellow,
+                LucherColor.Black,
+                LucherColor.Brown,
+                LucherColor.Gray,
+                LucherColor.Violet
+            )
         )
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
         val report = generateReport(
-                userId = "Pasha",
-                answers = answers,
-                result = result
+            userId = "Pasha",
+            answers = answers,
+            result = result
         )
         println(report)
     }
