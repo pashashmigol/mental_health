@@ -12,8 +12,8 @@ fun sendError(
         chatId = userId,
         text = text
     )
-    BotsKeeper.adminBot.sendMessage(
-        chatId = userId,
-        text = text
-    )
+//    BotsKeeper.clientBot.sendMessage(
+//        chatId = userId,
+//        text = text
+//    )
 }

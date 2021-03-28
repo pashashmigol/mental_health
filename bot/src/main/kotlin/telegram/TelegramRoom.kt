@@ -129,7 +129,8 @@ object TelegramRoom {
     }
 
     fun callbackQuery(env: CallbackQueryHandlerEnvironment) = try {
-        val session = sessions[env.callbackQuery.from.id]
+        val userId = env.callbackQuery.from.id
+        val session = sessions[userId]
 
         if (session != null) {
             session.onCallbackFromUser(env)
@@ -137,7 +138,9 @@ object TelegramRoom {
             launchTest(env)
         }
     } catch (e: Exception) {
-        sendError(userId = env.update.callbackQuery!!.from.id, exception = e)
+        val userId = env.callbackQuery.from.id
+        sessions.remove(userId)
+        sendError(userId, exception = e)
     }
 
     private fun launchTest(env: CallbackQueryHandlerEnvironment) {

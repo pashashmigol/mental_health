@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val compileKotlin: KotlinCompile by tasks
+
 plugins {
     kotlin("jvm")
     id("com.google.cloud.tools.appengine")
@@ -48,8 +51,8 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "11"
 }
 
 tasks {
