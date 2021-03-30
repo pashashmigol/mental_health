@@ -1,15 +1,7 @@
 package models
 
-enum class Type(private val index: Int) {
-    Mmpi566(0), Mmpi377(1), Lucher(2);
-
-    companion object {
-        fun of(index: String): Type {
-            return values().first {
-                it.index == index.toInt()
-            }
-        }
-    }
+enum class Type {
+    Mmpi566, Mmpi377, Lucher;
 }
 
 val Type.size: Int

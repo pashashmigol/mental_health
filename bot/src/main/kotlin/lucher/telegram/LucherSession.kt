@@ -2,8 +2,6 @@ package lucher.telegram
 
 import Settings.ADMIN_ID
 import Settings.LUCHER_TEST_TIMEOUT
-import com.github.kotlintelegrambot.Bot
-import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
@@ -11,15 +9,16 @@ import kotlinx.coroutines.launch
 import lucher.*
 import models.User
 import storage.CentralDataStorage
-import telegram.OnEnded
-import telegram.TelegramSession
+import storage.CentralDataStorage.string
+import telegram.*
 import telegram.helpers.showResult
-import telegram.sendError
 
-typealias OnUserChoseColor = (env: CallbackQueryHandlerEnvironment, String) -> Unit
+typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
 
 data class LucherSession(
     override val id: Long,
+    val clientConnection: UserConnection,
+    val adminConnection: UserConnection,
     val onEndedCallback: OnEnded
 ) : TelegramSession {
     companion object {
@@ -28,24 +27,24 @@ data class LucherSession(
 
     private var onColorChosen: OnUserChoseColor? = null
 
-    override fun start(user: User, chatId: Long, adminBot: Bot, clientBot: Bot) {
+    override fun start(user: User, chatId: Long) {
         val userId = user.id
 
         val handler = CoroutineExceptionHandler { _, exception ->
             sendError(userId, "LucherSession error", exception)
         }
-        scope.launch(handler) { executeTesting(user, chatId, adminBot, clientBot) }
+        scope.launch(handler) { executeTesting(user, chatId) }
     }
 
-    override fun onCallbackFromUser(env: CallbackQueryHandlerEnvironment) {
-        val answer = env.callbackQuery.data
-        onColorChosen?.invoke(env, answer)
+    override fun onCallbackFromUser(messageId: Long, data: String) {
+        onColorChosen?.invoke(clientConnection, messageId, data)
     }
 
-    private suspend fun executeTesting(user: User, chatId: Long, adminBot: Bot, clientBot: Bot) {
-        val firstRoundAnswers = runRound(chatId, clientBot)
-        askUserToWaitBeforeSecondRound(chatId, clientBot, minutes = LUCHER_TEST_TIMEOUT)
-        val secondRoundAnswers = runRound(chatId, clientBot)
+    private suspend fun executeTesting(user: User, chatId: Long) {
+        val firstRoundAnswers = runRound(chatId, this.clientConnection)
+
+        askUserToWaitBeforeSecondRound(chatId, minutes = LUCHER_TEST_TIMEOUT, clientConnection)
+        val secondRoundAnswers = runRound(chatId, this.clientConnection)
 
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
@@ -56,34 +55,44 @@ data class LucherSession(
             result = result
         )
         onEndedCallback(this)
-        showResult(user, ADMIN_ID, folderLink, adminBot, clientBot)
+        showResult(user, ADMIN_ID, folderLink, clientConnection, adminConnection)
     }
 
-    private suspend fun runRound(chatId: Long, bot: Bot): List<LucherColor> {
+    private suspend fun runRound(chatId: Long, userConnection: UserConnection): List<LucherColor> {
 
-        val shownColors = showAllColors(chatId, bot)
-        val shownOptions = createReplyOptions()
-        askUserToChooseColor(chatId, bot, shownOptions)
+        showAllColors(chatId, userConnection)
+        val shownOptions: MutableList<Button> = createReplyOptions()
 
-        val answers = mutableListOf<String>()
+        userConnection.sendMessageWithButtons(
+            chatId = chatId,
+            text = string("choose_color"),
+            buttons = shownOptions,
+            placeButtonsVertically = true
+        )
+
+        val answers = mutableListOf<LucherColor>()
         val channel = Channel<Unit>(0)//using channel to wait until all colors are chosen
 
-        onColorChosen = { callbackEnv, answer: String ->
-            removePressedButton(answer, callbackEnv, shownOptions)
-            removeChosenColor(callbackEnv, answer, shownColors)
 
-            answers.add(answer)
+        onColorChosen = { connection: UserConnection, messageId: Long, answer: String ->
+
+            shownOptions.removeIf { it.data == answer }
+            connection.setButtonsForMessage(
+                chatId = chatId, messageId = messageId, options = shownOptions
+            )
+
+            answers.add(LucherColor.of(answer))
 
             if (allColorsChosen(answers)) {
-                answers.add(shownColors.first()!!.caption!!)
-                cleanUp(callbackEnv, shownColors, shownOptions)
-
+                val lastShownOption: String = shownOptions.first().data
+                answers.add(LucherColor.of(lastShownOption))
+                connection.cleanUp()
                 channel.offer(Unit)
             }
         }
         channel.receive()
         assert(answers.size == LucherColor.values().size) { "wrong answers number" }
 
-        return answers.map { LucherColor.of(it) }
+        return answers
     }
 }

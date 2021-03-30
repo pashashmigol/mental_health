@@ -6,33 +6,39 @@ import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironmen
 import models.User
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
+import telegram.ChatInfo
+import telegram.UserConnection
 
 fun showResult(
     user: User,
     adminId: Long,
     resultLink: String,
-    adminBot: Bot,
-    clientBot: Bot
+    clientConnection: UserConnection,
+    adminConnection: UserConnection
 ) {
-    clientBot.sendMessage(
+    clientConnection.sendMessage(
         chatId = user.id,
         text = string("your_results", resultLink)
     )
-    adminBot.sendMessage(
+    adminConnection.sendMessage(
         chatId = adminId,
         text = string("user_completed_test", user.name, resultLink)
     )
 }
 
-fun CommandHandlerEnvironment.ourUser(): User? {
-    val id = message.from?.id!!
-    return CentralDataStorage.users.get(id)
-}
+fun CommandHandlerEnvironment.chatInfo() = ChatInfo(
+    userId = message.from!!.id,
+    userName = message.from!!.firstName + " " + message.from!!.lastName,
+    chatId = message.chat.id,
+    messageId = message.messageId
+)
 
-fun CallbackQueryHandlerEnvironment.ourUser(): User? {
-    val id = callbackQuery.from.id
-    return CentralDataStorage.users.get(id)
-}
+fun CallbackQueryHandlerEnvironment.chatInfo() = ChatInfo(
+    userId = callbackQuery.from.id,
+    userName = callbackQuery.from.firstName + " " + callbackQuery.from.lastName,
+    chatId = callbackQuery.message!!.chat.id,
+    messageId = callbackQuery.message!!.messageId
+)
 
 fun showUsersList(
     bot: Bot,

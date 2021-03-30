@@ -11,6 +11,7 @@ import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.*
 import com.github.kotlintelegrambot.webhook
 import storage.CentralDataStorage
+import telegram.helpers.chatInfo
 import telegram.helpers.showUsersList
 
 
@@ -49,18 +50,35 @@ private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
         dispatch {
             command("mmpi566") {
                 println("mmpi566")
-                TelegramRoom.launchMmpi566Test(this)
+                TelegramRoom.launchMmpi566Test(
+                    chatInfo(),
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot)
+                )
             }
             command("mmpi377") {
                 println("mmpi377")
-                TelegramRoom.launchMmpi377Test(this)
+                TelegramRoom.launchMmpi377Test(
+                    chatInfo(),
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot)
+                )
             }
             command("mmpiTest") {
                 println("mmpiTest")
-                TelegramRoom.launchMmpiMockTest(this)
+                TelegramRoom.launchMmpiMockTest(
+                    chatInfo(),
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot)
+                )
             }
             command("lucher") {
-                TelegramRoom.launchLucherTest(this)
+
+                TelegramRoom.launchLucherTest(
+                    chatInfo = chatInfo(),
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot)
+                )
             }
             command("users") {
                 showUsersList(bot, message.from!!.id)
@@ -69,7 +87,12 @@ private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
                 CentralDataStorage.reload()
             }
             callbackQuery {
-                TelegramRoom.callbackQuery(this)
+                TelegramRoom.callbackQuery(
+                    chatInfo = chatInfo(),
+                    data = this.callbackQuery.data,
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot)
+                )
             }
         }
     }.apply {
@@ -94,20 +117,33 @@ private fun launchClientBot(mode: LaunchMode, token: String): Bot {
         dispatch {
             command("mmpi566") {
                 println("mmpi566")
-                TelegramRoom.launchMmpi566Test(this)
+                TelegramRoom.launchMmpi566Test(chatInfo(),
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot))
             }
             command("mmpi377") {
                 println("mmpi377")
-                TelegramRoom.launchMmpi377Test(this)
+                TelegramRoom.launchMmpi377Test(chatInfo(),
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot))
             }
             command("lucher") {
-                TelegramRoom.launchLucherTest(this)
+                TelegramRoom.launchLucherTest(
+                    chatInfo = chatInfo(),
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot)
+                )
             }
             command("start") {
-                TelegramRoom.welcomeNewUser(this)
+                TelegramRoom.welcomeNewUser(chatInfo(), TelegramUserConnection(this))
             }
             callbackQuery {
-                TelegramRoom.callbackQuery(this)
+                TelegramRoom.callbackQuery(
+                    chatInfo = chatInfo(),
+                    data = this.callbackQuery.data,
+                    TelegramUserConnection(BotsKeeper.clientBot),
+                    TelegramUserConnection(BotsKeeper.adminBot)
+                )
             }
         }
     }.apply {

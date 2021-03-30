@@ -1,6 +1,7 @@
 package lucher
 
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import telegram.Button
 
 enum class LucherColor(val index: Int) {
     Gray(index = 0),
@@ -32,5 +33,5 @@ fun LucherColor.url(): String = when (this) {
 
 
 fun LucherColor.callbackData() =
-    InlineKeyboardButton.CallbackData(text = index.toString(), callbackData = index.toString())
+    Button(text = index.toString(), data = index.toString())
 

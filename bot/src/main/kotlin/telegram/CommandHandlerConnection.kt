@@ -1,0 +1,7 @@
+package telegram
+
+import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
+import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
+import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
+import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import storage.CentralDataStorage

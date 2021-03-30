@@ -1,19 +1,14 @@
 package telegram
 
-import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
-import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
-import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
-import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import lucher.telegram.LucherSession
-import lucher.telegram.removeMessage
 import mmpi.telegram.MmpiSession
 import mmpi.telegram.MmpiTestingSession
 import models.Type
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
-import telegram.helpers.ourUser
+
 
 object TelegramRoom {
     private const val TAG = "telegram.WorkSpace"
@@ -21,162 +16,199 @@ object TelegramRoom {
     private val scope = GlobalScope
 
 
-    fun welcomeNewUser(env: CommandHandlerEnvironment) = scope.launch {
-        val userId = env.message.from!!.id
-        val userName = listOf(env.message.from?.firstName, env.message.from?.lastName)
-            .joinToString(separator = " ")
+    fun welcomeNewUser(
+        chatInfo: ChatInfo,
+        userConnection: UserConnection
+    ) = scope.launch {
+        CentralDataStorage.createUser(chatInfo.userId, chatInfo.userName)
 
-        CentralDataStorage.createUser(userId, userName)
-
-        env.bot.sendMessage(
-            chatId = env.message.chat.id,
+        userConnection.sendMessageWithButtons(
+            chatInfo.chatId,
             text = string("choose_test"),
-            replyMarkup = InlineKeyboardMarkup.create(
-                listOf(
-                    listOf(
-                        InlineKeyboardButton.CallbackData(
-                            string("lucher"), Type.Lucher.name
-                        )
-                    ),
-                    listOf(
-                        InlineKeyboardButton.CallbackData(
-                            string("mmpi_566"), Type.Mmpi566.name
-                        )
-                    ),
-                    listOf(
-                        InlineKeyboardButton.CallbackData(
-                            string("mmpi_377"), Type.Mmpi377.name
-                        )
-                    )
-                )
+            buttons = listOf(
+                Button(string("lucher"), Type.Lucher.name),
+                Button(string("mmpi_566"), Type.Mmpi566.name),
+                Button(string("mmpi_377"), Type.Mmpi377.name)
             )
         )
     }
 
-    fun launchMmpi566Test(env: CommandHandlerEnvironment) = scope.launch {
+    fun launchMmpi566Test(
+        chatInfo: ChatInfo,
+        clientConnection: UserConnection,
+        adminConnection: UserConnection
+    ) = scope.launch {
         try {
             println("$TAG: launchMmpi566Test();")
-            val personId = env.message.from?.id!!
 
-            sessions.remove(personId)
-            sessions[personId] = MmpiSession(personId, Type.Mmpi566) { sessions.remove(it.id) }
+            val userId = chatInfo.userId
 
-            val user = env.ourUser()
+            sessions.remove(userId)
+            sessions[userId] = MmpiSession(
+                userId,
+                Type.Mmpi566,
+                clientConnection,
+                adminConnection,
+                onEndedCallback = { sessions.remove(it.id) }
+            )
+
+            val user = CentralDataStorage.users.get(userId)
+
             user?.apply {
-                sessions[personId]!!.start(
-                    user,
-                    env.message.chat.id,
-                    BotsKeeper.adminBot,
-                    BotsKeeper.clientBot
+                sessions[userId]!!.start(
+                    user = user,
+                    chatId = chatInfo.chatId
                 )
             }
-
         } catch (e: Exception) {
-            sendError(userId = env.message.from?.id!!, exception = e)
+            sendError(userId = chatInfo.userId, exception = e)
         }
     }
 
-    fun launchMmpi377Test(env: CommandHandlerEnvironment) = scope.launch {
+    fun launchMmpi377Test(
+        chatInfo: ChatInfo,
+        clientConnection: UserConnection,
+        adminConnection: UserConnection
+    ) = scope.launch {
         try {
             println("$TAG: launchMmpi377Test();")
-            val personId = env.message.from?.id!!
+            val userId = chatInfo.userId
+            val user = CentralDataStorage.users.get(userId)!!
 
-            sessions.remove(personId)
-            sessions[personId] = MmpiSession(personId, Type.Mmpi377) { sessions.remove(it.id) }
-            sessions[personId]!!.start(
-                env.ourUser()!!,
-                env.message.chat.id,
-                BotsKeeper.adminBot,
-                BotsKeeper.clientBot
+            sessions.remove(userId)
+            sessions[userId] = MmpiSession(
+                userId,
+                Type.Mmpi377,
+                clientConnection,
+                adminConnection
+            ) { sessions.remove(it.id) }
+
+            sessions[userId]!!.start(
+                user = user,
+                chatId = chatInfo.chatId
             )
-
         } catch (e: Exception) {
             sendError(
-                userId = env.message.from?.id!!,
+                userId = chatInfo.userId,
                 exception = e
             )
         }
     }
 
-    fun launchMmpiMockTest(env: CommandHandlerEnvironment) = scope.launch {
+    fun launchMmpiMockTest(
+        chatInfo: ChatInfo,
+        clientConnection: UserConnection,
+        adminConnection: UserConnection
+    ) = scope.launch {
         try {
             println("$TAG: launchMmpiTest();")
-            val personId = env.message.from?.id!!
+            val userId = chatInfo.userId
+            val user = CentralDataStorage.users.get(userId)!!
 
-            sessions.remove(personId)
-            sessions[personId] = MmpiTestingSession(personId) { sessions.remove(it.id) }
-            sessions[personId]!!.start(
-                env.ourUser()!!,
-                env.message.chat.id,
-                BotsKeeper.adminBot,
-                BotsKeeper.clientBot
+            sessions.remove(userId)
+            sessions[userId] = MmpiTestingSession(
+                userId,
+                clientConnection,
+                adminConnection
+            ) { sessions.remove(it.id) }
+
+            sessions[userId]!!.start(
+                user = user,
+                chatId = chatInfo.chatId
             )
-
         } catch (e: Exception) {
-            sendError(
-                userId = env.message.from?.id!!,
-                exception = e
-            )
+            sendError(userId = chatInfo.userId, exception = e)
         }
     }
 
-    fun launchLucherTest(env: CommandHandlerEnvironment) = scope.launch {
+    fun launchLucherTest(
+        chatInfo: ChatInfo,
+        clientConnection: UserConnection,
+        adminConnection: UserConnection
+    ) = scope.launch {
         try {
             println("$TAG: launchLucherTest();")
-            val personId = env.message.from?.id!!
+            val userId = chatInfo.userId
+            val user = CentralDataStorage.users.get(userId)!!
 
-            sessions.remove(personId)
-            sessions[personId] = LucherSession(personId) { sessions.remove(it.id) }
-            sessions[personId]!!.start(
-                env.ourUser()!!,
-                env.message.chat.id,
-                BotsKeeper.adminBot,
-                BotsKeeper.clientBot
+            sessions.remove(userId)
+            sessions[userId] = LucherSession(
+                userId,
+                clientConnection,
+                adminConnection
+            ) { sessions.remove(it.id) }
+
+            sessions[userId]!!.start(
+                user = user,
+                chatId = chatInfo.chatId
             )
 
         } catch (e: Exception) {
-            sendError(userId = env.message.from?.id!!, exception = e)
+            sendError(userId = chatInfo.userId, exception = e)
         }
     }
 
-    fun callbackQuery(env: CallbackQueryHandlerEnvironment) = scope.launch {
+    fun callbackQuery(
+        chatInfo: ChatInfo,
+        data: String,
+        clientConnection: UserConnection,
+        adminConnection: UserConnection
+    ) = scope.launch {
         try {
-            val userId = env.callbackQuery.from.id
+            val userId = chatInfo.userId
             val session = sessions[userId]
 
             if (session != null) {
-                session.onCallbackFromUser(env)
+                session.onCallbackFromUser(
+                    messageId = chatInfo.messageId,
+                    data = data
+                )
             } else {
-                launchTest(env)
+                launchTest(
+                    chatInfo = chatInfo,
+                    data = data,
+                    clientConnection = clientConnection,
+                    adminConnection = adminConnection
+                )
             }
         } catch (e: Exception) {
-            val userId = env.callbackQuery.from.id
+            val userId = chatInfo.userId
             sessions.remove(userId)
             sendError(userId, exception = e)
         }
     }
 
-    private fun launchTest(env: CallbackQueryHandlerEnvironment) {
-        val type = Type.valueOf(env.callbackQuery.data)
-        val personId = env.callbackQuery.from.id
-        val chatId = env.callbackQuery.message!!.chat.id
-        val messageId = env.callbackQuery.message!!.messageId
+    private fun launchTest(
+        chatInfo: ChatInfo,
+        data: String,
+        clientConnection: UserConnection,
+        adminConnection: UserConnection
+    ) {
+        val type = Type.valueOf(data)
+        val userId = chatInfo.userId
+        val chatId = chatInfo.chatId
+        val messageId = chatInfo.messageId
+        val user = CentralDataStorage.users.get(userId)!!
 
-        removeMessage(chatId, env.bot, messageId)
+      clientConnection.removeMessage(chatId, messageId)
 
-        sessions[personId] = when (type) {
-            Type.Mmpi566, Type.Mmpi377 -> MmpiSession(personId, type) { sessions.remove(it.id) }
-            Type.Lucher -> LucherSession(personId) { sessions.remove(it.id) }
+        sessions[userId] = when (type) {
+            Type.Mmpi566, Type.Mmpi377 -> MmpiSession(
+                userId,
+                type,
+                clientConnection,
+                adminConnection
+            ) { sessions.remove(it.id) }
+
+            Type.Lucher -> LucherSession(
+                userId,
+                clientConnection,
+                adminConnection
+            ) { sessions.remove(it.id) }
         }
-        sessions[personId]!!.start(
-            env.ourUser()!!,
-            chatId,
-            BotsKeeper.adminBot,
-            BotsKeeper.clientBot
+        sessions[userId]!!.start(
+            user = user,
+            chatId = chatId
         )
     }
 }
-
-
-
-
