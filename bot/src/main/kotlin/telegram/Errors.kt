@@ -1,15 +1,18 @@
 package telegram
 
 fun sendError(
-    userId: Long,
+    to: Long,
     message: String? = null,
     exception: Throwable? = null
 ) {
-    val text = message + "\n\n" + exception?.message +
-            "\n\n" + exception?.stackTrace.contentToString()
+    val text = listOfNotNull(
+        message,
+        exception?.message,
+        exception?.stackTrace?.contentToString()
+    ).joinToString(separator = "\n\n")
 
     BotsKeeper.adminBot.sendMessage(
-        chatId = userId,
+        chatId = to,
         text = text
     )
 //    BotsKeeper.clientBot.sendMessage(

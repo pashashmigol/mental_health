@@ -49,7 +49,11 @@ data class ChatInfo(
     val userName: String,
     val chatId: Long,
     val messageId: Long
-)
+){
+    override fun toString(): String {
+        return "ChatInfo(userId=$userId, userName='$userName', chatId=$chatId, messageId=$messageId)"
+    }
+}
 
 data class Button(
     val text: String,
