@@ -35,9 +35,9 @@ object TelegramRoom {
             chatInfo.chatId,
             text = string("choose_test"),
             buttons = listOf(
-                Button(string("lucher"), Type.Lucher.name),
-                Button(string("mmpi_566"), Type.Mmpi566.name),
-                Button(string("mmpi_377"), Type.Mmpi377.name)
+//                Button(string("lucher"), Type.Lucher.name),
+//                Button(string("mmpi_566"), Type.Mmpi566.name),
+//                Button(string("mmpi_377"), Type.Mmpi377.name)
             )
         )
     }
@@ -174,65 +174,64 @@ object TelegramRoom {
             val userId = chatInfo.userId
             val session = sessions[userId]
 
-            val sessionStr = sessions.entries.joinToString(
-                ",", "[", "]"
-            ) { "${it.key}" }
-
-            sendError(message = "callbackQuery(); userId = $userId, sessions = $sessionStr")
-
             if (session != null) {
                 session.onCallbackFromUser(
                     messageId = chatInfo.messageId,
                     data = data
                 )
             } else {
-                launchTest(
-                    chatInfo = chatInfo,
-                    data = data,
-                    clientConnection = clientConnection,
-                    adminConnection = adminConnection
-                )
+                val sessionStr = sessions.entries.joinToString(
+                    ",", "[", "]"
+                ) { "${it.key}" }
+                sendError(message = "no session with id $userId, just $sessionStr")
+//                launchTest(
+//                    chatInfo = chatInfo,
+//                    data = data,
+//                    clientConnection = clientConnection,
+//                    adminConnection = adminConnection
+//                )
             }
         } catch (e: Exception) {
             val userId = chatInfo.userId
-            removeSession(userId)
             sendError(exception = e)
+            removeSession(userId)
+            clientConnection.cleanUp()
         }
     }
 
-    private fun launchTest(
-        chatInfo: ChatInfo,
-        data: String,
-        clientConnection: UserConnection,
-        adminConnection: UserConnection
-    ) {
-        val type = Type.valueOf(data)
-        val userId = chatInfo.userId
-        val chatId = chatInfo.chatId
-        val messageId = chatInfo.messageId
-        val user = CentralDataStorage.users.get(userId)!!
-
-        clientConnection.removeMessage(chatId, messageId)
-
-        sessions[userId] = when (type) {
-            Type.Mmpi566, Type.Mmpi377 -> MmpiSession(
-                userId,
-                type,
-                clientConnection,
-                adminConnection
-            ) { removeSession(it.id) }
-
-            Type.Lucher -> LucherSession(
-                userId,
-                clientConnection,
-                adminConnection
-            ) { removeSession(it.id) }
-        }
-        sessions[userId]!!.start(
-            user = user,
-            chatId = chatId
-        )
-    }
+//    private fun launchTest(
+//        chatInfo: ChatInfo,
+//        data: String,
+//        clientConnection: UserConnection,
+//        adminConnection: UserConnection
+//    ) {
+//        val type = Type.valueOf(data)
+//        val userId = chatInfo.userId
+//        val chatId = chatInfo.chatId
+//        val messageId = chatInfo.messageId
+//        val user = CentralDataStorage.users.get(userId)!!
+//
+//        clientConnection.removeMessage(chatId, messageId)
+//
+//        sessions[userId] = when (type) {
+//            Type.Mmpi566, Type.Mmpi377 -> MmpiSession(
+//                userId,
+//                type,
+//                clientConnection,
+//                adminConnection
+//            ) { removeSession(it.id) }
+//
+//            Type.Lucher -> LucherSession(
+//                userId,
+//                clientConnection,
+//                adminConnection
+//            ) { removeSession(it.id) }
+//        }
+//        sessions[userId]!!.start(
+//            user = user,
+//            chatId = chatId
+//        )
+//    }
 
     private fun removeSession(userId: Long) {
         sendError(message = "sessions.remove($userId)")
