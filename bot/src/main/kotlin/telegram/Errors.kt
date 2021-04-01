@@ -1,7 +1,9 @@
 package telegram
 
+import Settings
+
+
 fun sendError(
-    to: Long,
     message: String? = null,
     exception: Throwable? = null
 ) {
@@ -12,7 +14,7 @@ fun sendError(
     ).joinToString(separator = "\n\n")
 
     BotsKeeper.adminBot.sendMessage(
-        chatId = to,
+        chatId = Settings.ADMIN_ID,
         text = text
     )
 //    BotsKeeper.clientBot.sendMessage(

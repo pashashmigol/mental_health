@@ -36,7 +36,7 @@ open class MmpiSession(
 
     override fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError(user.id, "MmpiSession error", exception)
+            sendError("MmpiSession error", exception)
         }
         scope.launch(handler) { executeTesting(user) }
     }

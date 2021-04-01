@@ -10,11 +10,16 @@ import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
 
+private const val TAG = "telegram.WorkSpace"
+
 object TelegramRoom {
-    private const val TAG = "telegram.WorkSpace"
     private val sessions = mutableMapOf<Long, TelegramSession>()
     private val scope = GlobalScope
 
+
+    init {
+        sendError(message = "TelegramRoom; init{}")
+    }
 
     fun welcomeNewUser(
         chatInfo: ChatInfo,
@@ -23,7 +28,6 @@ object TelegramRoom {
         CentralDataStorage.createUser(chatInfo.userId, chatInfo.userName)
 
         sendError(
-            to = chatInfo.userId,
             message = "welcomeNewUser(); chatInfo = $chatInfo"
         )
 
@@ -47,19 +51,18 @@ object TelegramRoom {
             println("$TAG: launchMmpi566Test();")
 
             sendError(
-                to = chatInfo.userId,
                 message = "launchMmpi566Test(); chatInfo = $chatInfo"
             )
 
             val userId = chatInfo.userId
 
-            sessions.remove(userId)
+            removeSession(userId)
             sessions[userId] = MmpiSession(
                 userId,
                 Type.Mmpi566,
                 clientConnection,
                 adminConnection,
-                onEndedCallback = { sessions.remove(it.id) }
+                onEndedCallback = { removeSession(it.id) }
             )
 
             val user = CentralDataStorage.users.get(userId)
@@ -71,7 +74,7 @@ object TelegramRoom {
                 )
             }
         } catch (e: Exception) {
-            sendError(to = chatInfo.userId, exception = e)
+            sendError(exception = e)
         }
     }
 
@@ -85,28 +88,22 @@ object TelegramRoom {
             val userId = chatInfo.userId
             val user = CentralDataStorage.users.get(userId)!!
 
-            sendError(
-                to = userId,
-                message = "launchMmpi377Test(); chatInfo = $chatInfo"
-            )
+            sendError(message = "launchMmpi377Test(); chatInfo = $chatInfo")
 
-            sessions.remove(userId)
+            removeSession(userId)
             sessions[userId] = MmpiSession(
                 userId,
                 Type.Mmpi377,
                 clientConnection,
                 adminConnection
-            ) { sessions.remove(it.id) }
+            ) { removeSession(it.id) }
 
             sessions[userId]!!.start(
                 user = user,
                 chatId = chatInfo.chatId
             )
         } catch (e: Exception) {
-            sendError(
-                to = chatInfo.userId,
-                exception = e
-            )
+            sendError(exception = e)
         }
     }
 
@@ -120,24 +117,21 @@ object TelegramRoom {
             val userId = chatInfo.userId
             val user = CentralDataStorage.users.get(userId)!!
 
-            sendError(
-                to = userId,
-                message = "launchMmpiMockTest(); chatInfo = $chatInfo"
-            )
+            sendError(message = "launchMmpiMockTest(); chatInfo = $chatInfo")
 
-            sessions.remove(userId)
+            removeSession(userId)
             sessions[userId] = MmpiTestingSession(
                 userId,
                 clientConnection,
                 adminConnection
-            ) { sessions.remove(it.id) }
+            ) { removeSession(it.id) }
 
             sessions[userId]!!.start(
                 user = user,
                 chatId = chatInfo.chatId
             )
         } catch (e: Exception) {
-            sendError(to = chatInfo.userId, exception = e)
+            sendError(exception = e)
         }
     }
 
@@ -151,17 +145,14 @@ object TelegramRoom {
             val userId = chatInfo.userId
             val user = CentralDataStorage.users.get(userId)!!
 
-            sendError(
-                to = userId,
-                message = "launchLucherTest(); chatInfo = $chatInfo"
-            )
+            sendError(message = "launchLucherTest(); chatInfo = $chatInfo")
 
-            sessions.remove(userId)
+            removeSession(userId)
             sessions[userId] = LucherSession(
                 userId,
                 clientConnection,
                 adminConnection
-            ) { sessions.remove(it.id) }
+            ) { removeSession(it.id) }
 
             sessions[userId]!!.start(
                 user = user,
@@ -169,7 +160,7 @@ object TelegramRoom {
             )
 
         } catch (e: Exception) {
-            sendError(to = chatInfo.userId, exception = e)
+            sendError(exception = e)
         }
     }
 
@@ -187,10 +178,7 @@ object TelegramRoom {
                 ",", "[", "]"
             ) { "${it.key}" }
 
-            sendError(
-                to = userId,
-                message = "callbackQuery(); userId = $userId, sessions = $sessionStr",
-            )
+            sendError(message = "callbackQuery(); userId = $userId, sessions = $sessionStr")
 
             if (session != null) {
                 session.onCallbackFromUser(
@@ -207,8 +195,8 @@ object TelegramRoom {
             }
         } catch (e: Exception) {
             val userId = chatInfo.userId
-            sessions.remove(userId)
-            sendError(userId, exception = e)
+            removeSession(userId)
+            sendError(exception = e)
         }
     }
 
@@ -232,17 +220,22 @@ object TelegramRoom {
                 type,
                 clientConnection,
                 adminConnection
-            ) { sessions.remove(it.id) }
+            ) { removeSession(it.id) }
 
             Type.Lucher -> LucherSession(
                 userId,
                 clientConnection,
                 adminConnection
-            ) { sessions.remove(it.id) }
+            ) { removeSession(it.id) }
         }
         sessions[userId]!!.start(
             user = user,
             chatId = chatId
         )
+    }
+
+    private fun removeSession(userId: Long) {
+        sendError(message = "sessions.remove($userId)")
+        sessions.remove(userId)
     }
 }

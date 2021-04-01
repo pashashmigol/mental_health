@@ -31,7 +31,7 @@ data class LucherSession(
         val userId = user.id
 
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError(userId, "LucherSession error", exception)
+            sendError("LucherSession error", exception)
         }
         scope.launch(handler) { executeTesting(user, chatId) }
     }
