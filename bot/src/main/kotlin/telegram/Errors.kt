@@ -3,7 +3,7 @@ package telegram
 import Settings
 
 
-fun sendError(
+fun notifyAdmin(
     message: String? = null,
     exception: Throwable? = null
 ) {

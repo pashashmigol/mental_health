@@ -39,6 +39,10 @@ fun launchBots(mode: LaunchMode) {
 
 private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
     return bot {
+        val telegramRoom = TelegramRoom(
+            TelegramUserConnection(BotsKeeper.clientBot),
+            TelegramUserConnection(BotsKeeper.adminBot)
+        )
         this.token = token
         if (mode == LaunchMode.APP_ENGINE) {
             webhook {
@@ -50,35 +54,18 @@ private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
         dispatch {
             command("mmpi566") {
                 println("mmpi566")
-                TelegramRoom.launchMmpi566Test(
-                    chatInfo(),
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot)
-                )
+                telegramRoom.launchMmpi566Test(chatInfo())
             }
             command("mmpi377") {
                 println("mmpi377")
-                TelegramRoom.launchMmpi377Test(
-                    chatInfo(),
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot)
-                )
+                telegramRoom.launchMmpi377Test(chatInfo())
             }
             command("mmpiTest") {
                 println("mmpiTest")
-                TelegramRoom.launchMmpiMockTest(
-                    chatInfo(),
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot)
-                )
+                telegramRoom.launchMmpiMockTest(chatInfo())
             }
             command("lucher") {
-
-                TelegramRoom.launchLucherTest(
-                    chatInfo = chatInfo(),
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot)
-                )
+                telegramRoom.launchLucherTest(chatInfo())
             }
             command("users") {
                 showUsersList(bot, message.from!!.id)
@@ -87,11 +74,9 @@ private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
                 CentralDataStorage.reload()
             }
             callbackQuery {
-                TelegramRoom.callbackQuery(
+                telegramRoom.callbackQuery(
                     chatInfo = chatInfo(),
-                    data = this.callbackQuery.data,
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot)
+                    data = this.callbackQuery.data
                 )
             }
         }
@@ -106,6 +91,10 @@ private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
 
 private fun launchClientBot(mode: LaunchMode, token: String): Bot {
     return bot {
+        val telegramRoom = TelegramRoom(
+            TelegramUserConnection(BotsKeeper.clientBot),
+            TelegramUserConnection(BotsKeeper.adminBot)
+        )
         this.token = token
         if (mode == LaunchMode.APP_ENGINE) {
             webhook {
@@ -117,32 +106,29 @@ private fun launchClientBot(mode: LaunchMode, token: String): Bot {
         dispatch {
             command("mmpi566") {
                 println("mmpi566")
-                TelegramRoom.launchMmpi566Test(chatInfo(),
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot))
+                telegramRoom.launchMmpi566Test(
+                    chatInfo()
+                )
             }
             command("mmpi377") {
                 println("mmpi377")
-                TelegramRoom.launchMmpi377Test(chatInfo(),
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot))
-            }
-            command("lucher") {
-                TelegramRoom.launchLucherTest(
-                    chatInfo = chatInfo(),
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot)
+                telegramRoom.launchMmpi377Test(
+                    chatInfo()
                 )
             }
+            command("lucher") {
+                telegramRoom.launchLucherTest(chatInfo())
+            }
             command("start") {
-                TelegramRoom.welcomeNewUser(chatInfo(), TelegramUserConnection(this))
+                telegramRoom.welcomeNewUser(
+                    chatInfo(),
+                    TelegramUserConnection(this)
+                )
             }
             callbackQuery {
-                TelegramRoom.callbackQuery(
+                telegramRoom.callbackQuery(
                     chatInfo = chatInfo(),
-                    data = this.callbackQuery.data,
-                    TelegramUserConnection(BotsKeeper.clientBot),
-                    TelegramUserConnection(BotsKeeper.adminBot)
+                    data = this.callbackQuery.data
                 )
             }
         }

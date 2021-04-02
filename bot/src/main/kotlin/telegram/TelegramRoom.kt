@@ -12,13 +12,15 @@ import storage.CentralDataStorage.string
 
 private const val TAG = "telegram.WorkSpace"
 
-object TelegramRoom {
+class TelegramRoom(
+    private val clientConnection: UserConnection,
+    private val adminConnection: UserConnection
+) {
     private val sessions = mutableMapOf<Long, TelegramSession>()
     private val scope = GlobalScope
 
-
     init {
-        sendError(message = "TelegramRoom; init{}")
+        notifyAdmin(message = "TelegramRoom; init{}")
     }
 
     fun welcomeNewUser(
@@ -27,7 +29,7 @@ object TelegramRoom {
     ) = scope.launch {
         CentralDataStorage.createUser(chatInfo.userId, chatInfo.userName)
 
-        sendError(
+        notifyAdmin(
             message = "welcomeNewUser(); chatInfo = $chatInfo"
         )
 
@@ -35,22 +37,20 @@ object TelegramRoom {
             chatInfo.chatId,
             text = string("choose_test"),
             buttons = listOf(
-//                Button(string("lucher"), Type.Lucher.name),
-//                Button(string("mmpi_566"), Type.Mmpi566.name),
-//                Button(string("mmpi_377"), Type.Mmpi377.name)
+                Button(string("lucher"), Type.Lucher.name),
+                Button(string("mmpi_566"), Type.Mmpi566.name),
+                Button(string("mmpi_377"), Type.Mmpi377.name)
             )
         )
     }
 
     fun launchMmpi566Test(
-        chatInfo: ChatInfo,
-        clientConnection: UserConnection,
-        adminConnection: UserConnection
+        chatInfo: ChatInfo
     ) = scope.launch {
         try {
             println("$TAG: launchMmpi566Test();")
 
-            sendError(
+            notifyAdmin(
                 message = "launchMmpi566Test(); chatInfo = $chatInfo"
             )
 
@@ -74,21 +74,19 @@ object TelegramRoom {
                 )
             }
         } catch (e: Exception) {
-            sendError(exception = e)
+            notifyAdmin(exception = e)
         }
     }
 
     fun launchMmpi377Test(
-        chatInfo: ChatInfo,
-        clientConnection: UserConnection,
-        adminConnection: UserConnection
+        chatInfo: ChatInfo
     ) = scope.launch {
         try {
             println("$TAG: launchMmpi377Test();")
             val userId = chatInfo.userId
             val user = CentralDataStorage.users.get(userId)!!
 
-            sendError(message = "launchMmpi377Test(); chatInfo = $chatInfo")
+            notifyAdmin(message = "launchMmpi377Test(); chatInfo = $chatInfo")
 
             removeSession(userId)
             sessions[userId] = MmpiSession(
@@ -103,21 +101,19 @@ object TelegramRoom {
                 chatId = chatInfo.chatId
             )
         } catch (e: Exception) {
-            sendError(exception = e)
+            notifyAdmin(exception = e)
         }
     }
 
     fun launchMmpiMockTest(
-        chatInfo: ChatInfo,
-        clientConnection: UserConnection,
-        adminConnection: UserConnection
+        chatInfo: ChatInfo
     ) = scope.launch {
         try {
             println("$TAG: launchMmpiTest();")
             val userId = chatInfo.userId
             val user = CentralDataStorage.users.get(userId)!!
 
-            sendError(message = "launchMmpiMockTest(); chatInfo = $chatInfo")
+            notifyAdmin(message = "launchMmpiMockTest(); chatInfo = $chatInfo")
 
             removeSession(userId)
             sessions[userId] = MmpiTestingSession(
@@ -131,21 +127,19 @@ object TelegramRoom {
                 chatId = chatInfo.chatId
             )
         } catch (e: Exception) {
-            sendError(exception = e)
+            notifyAdmin(exception = e)
         }
     }
 
     fun launchLucherTest(
-        chatInfo: ChatInfo,
-        clientConnection: UserConnection,
-        adminConnection: UserConnection
+        chatInfo: ChatInfo
     ) = scope.launch {
         try {
             println("$TAG: launchLucherTest();")
             val userId = chatInfo.userId
             val user = CentralDataStorage.users.get(userId)!!
 
-            sendError(message = "launchLucherTest(); chatInfo = $chatInfo")
+            notifyAdmin(message = "launchLucherTest(); chatInfo = $chatInfo")
 
             removeSession(userId)
             sessions[userId] = LucherSession(
@@ -160,15 +154,13 @@ object TelegramRoom {
             )
 
         } catch (e: Exception) {
-            sendError(exception = e)
+            notifyAdmin(exception = e)
         }
     }
 
     fun callbackQuery(
         chatInfo: ChatInfo,
-        data: String,
-        clientConnection: UserConnection,
-        adminConnection: UserConnection
+        data: String
     ) = scope.launch {
         try {
             val userId = chatInfo.userId
@@ -183,58 +175,54 @@ object TelegramRoom {
                 val sessionStr = sessions.entries.joinToString(
                     ",", "[", "]"
                 ) { "${it.key}" }
-                sendError(message = "no session with id $userId, just $sessionStr")
-//                launchTest(
-//                    chatInfo = chatInfo,
-//                    data = data,
-//                    clientConnection = clientConnection,
-//                    adminConnection = adminConnection
-//                )
+                notifyAdmin(message = "no session with id $userId, just $sessionStr")
+                launchTest(
+                    chatInfo = chatInfo,
+                    data = data
+                )
             }
         } catch (e: Exception) {
             val userId = chatInfo.userId
-            sendError(exception = e)
+            notifyAdmin(exception = e)
             removeSession(userId)
             clientConnection.cleanUp()
         }
     }
 
-//    private fun launchTest(
-//        chatInfo: ChatInfo,
-//        data: String,
-//        clientConnection: UserConnection,
-//        adminConnection: UserConnection
-//    ) {
-//        val type = Type.valueOf(data)
-//        val userId = chatInfo.userId
-//        val chatId = chatInfo.chatId
-//        val messageId = chatInfo.messageId
-//        val user = CentralDataStorage.users.get(userId)!!
-//
-//        clientConnection.removeMessage(chatId, messageId)
-//
-//        sessions[userId] = when (type) {
-//            Type.Mmpi566, Type.Mmpi377 -> MmpiSession(
-//                userId,
-//                type,
-//                clientConnection,
-//                adminConnection
-//            ) { removeSession(it.id) }
-//
-//            Type.Lucher -> LucherSession(
-//                userId,
-//                clientConnection,
-//                adminConnection
-//            ) { removeSession(it.id) }
-//        }
-//        sessions[userId]!!.start(
-//            user = user,
-//            chatId = chatId
-//        )
-//    }
+    private fun launchTest(
+        chatInfo: ChatInfo,
+        data: String
+    ) {
+        val type = Type.valueOf(data)
+        val userId = chatInfo.userId
+        val chatId = chatInfo.chatId
+        val messageId = chatInfo.messageId
+        val user = CentralDataStorage.users.get(userId)!!
+
+        clientConnection.removeMessage(chatId, messageId)
+
+        sessions[userId] = when (type) {
+            Type.Mmpi566, Type.Mmpi377 -> MmpiSession(
+                userId,
+                type,
+                clientConnection,
+                adminConnection
+            ) { removeSession(it.id) }
+
+            Type.Lucher -> LucherSession(
+                userId,
+                clientConnection,
+                adminConnection
+            ) { removeSession(it.id) }
+        }
+        sessions[userId]!!.start(
+            user = user,
+            chatId = chatId
+        )
+    }
 
     private fun removeSession(userId: Long) {
-        sendError(message = "sessions.remove($userId)")
+        notifyAdmin(message = "sessions.remove($userId)")
         sessions.remove(userId)
     }
 }

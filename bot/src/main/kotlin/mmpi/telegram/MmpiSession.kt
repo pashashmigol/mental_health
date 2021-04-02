@@ -16,7 +16,7 @@ import telegram.OnEnded
 import telegram.TelegramSession
 import telegram.UserConnection
 import telegram.helpers.showResult
-import telegram.sendError
+import telegram.notifyAdmin
 
 
 typealias OnAnswerReceived = (answer: String) -> Unit
@@ -36,7 +36,7 @@ open class MmpiSession(
 
     override fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
-            sendError("MmpiSession error", exception)
+            notifyAdmin("MmpiSession error", exception)
         }
         scope.launch(handler) { executeTesting(user) }
     }
