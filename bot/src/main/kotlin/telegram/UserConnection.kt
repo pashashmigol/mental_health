@@ -1,7 +1,6 @@
 package telegram
 
 import com.github.kotlintelegrambot.Bot
-import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
@@ -60,9 +59,7 @@ data class Button(
     val data: String
 )
 
-class TelegramUserConnection(val bot: Bot) : UserConnection {
-    constructor(commandHandler: CommandHandlerEnvironment) : this(commandHandler.bot)
-//    constructor(callbackQueryHandler: CallbackQueryHandlerEnvironment) : this(callbackQueryHandler.bot)
+class TelegramUserConnection(private val bot: ()->Bot) : UserConnection {
 
     private val sentMessages = mutableSetOf<Message>()
 
@@ -79,7 +76,7 @@ class TelegramUserConnection(val bot: Bot) : UserConnection {
                 buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
             }
 
-        val result = bot.sendMessage(
+        val result = bot().sendMessage(
             chatId = chatId,
             text = text,
             replyMarkup = InlineKeyboardMarkup.create(options)
@@ -92,7 +89,7 @@ class TelegramUserConnection(val bot: Bot) : UserConnection {
     }
 
     override fun sendMessage(chatId: Long, text: String) {
-        val result = bot.sendMessage(
+        val result = bot().sendMessage(
             chatId = chatId,
             text = text
         )
@@ -103,19 +100,19 @@ class TelegramUserConnection(val bot: Bot) : UserConnection {
 
     override fun cleanUp() {
         sentMessages.forEach {
-            bot.deleteMessage(it.chat.id, it.messageId)
+            bot().deleteMessage(it.chat.id, it.messageId)
         }
     }
 
     override fun removeMessage(chatId: Long, messageId: Long) {
-        bot.deleteMessage(chatId, messageId)
+        bot().deleteMessage(chatId, messageId)
     }
 
     override fun sendMessageWithPicture(
         chatId: Long,
         color: LucherColor
     ) {
-        val result = bot.sendPhoto(
+        val result = bot().sendPhoto(
             caption = color.name,
             disableNotification = true,
             chatId = chatId,
@@ -130,7 +127,7 @@ class TelegramUserConnection(val bot: Bot) : UserConnection {
         val markup = options.map {
             InlineKeyboardButton.CallbackData(it.text, it.data)
         }
-        bot.editMessageReplyMarkup(
+        bot().editMessageReplyMarkup(
             chatId = chatId,
             messageId = messageId,
             replyMarkup = InlineKeyboardMarkup.create(markup)
@@ -146,7 +143,7 @@ class TelegramUserConnection(val bot: Bot) : UserConnection {
         val markup = buttons.map {
             InlineKeyboardButton.CallbackData(it.text, it.data)
         }
-        val result = bot.editMessageText(
+        val result = bot().editMessageText(
             chatId = chatId,
             messageId = messageId,
             text = text,
