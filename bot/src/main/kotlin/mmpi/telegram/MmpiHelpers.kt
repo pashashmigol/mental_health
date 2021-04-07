@@ -14,23 +14,21 @@ fun askGender(
     return connection.sendMessageWithButtons(
         chatId = userId,
         text = string("choose_your_sex"),
-        buttons = genderButtons(question)
+        buttons = buttons(question)
     )
 }
 
 fun createGenderQuestion() = Question(
+    index = -1,
     text = string("choose_your_sex"),
-    options = listOf(string("male"), string("female"))
+    options = listOf(
+        Question.Option(text = Gender.Male.title, tag = Gender.Male.name),
+        Question.Option(text = Gender.Female.title, tag = Gender.Female.name)
+    )
 )
 
-fun mmpiButtons(question: Question): List<Button> {
-    return question.options.mapIndexed { i, text ->
-        Button(text = text, data = i.toString())
-    }
-}
-
-fun genderButtons(question: Question): List<Button> {
-    return question.options.mapIndexed { i: Int, s: String ->
-        Button(text = s, data = i.toString())
+fun buttons(question: Question): List<Button> {
+    return question.options.map {
+        Button(text = it.text, data = it.tag)
     }
 }

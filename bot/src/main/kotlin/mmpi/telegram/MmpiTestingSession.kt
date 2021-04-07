@@ -14,12 +14,12 @@ class MmpiTestingSession(
 ) : MmpiSession(id, Type.Mmpi377, clientConnection, adminConnection, onEndedCallback) {
 
     override fun sendNextQuestion(
-        messageId: Long,
         ongoingProcess: MmpiProcess,
         userConnection: UserConnection
-    ) {
+    ): Pair<Long, Int> {
         repeat(CentralDataStorage.mmpi566Data.questionsForMen.size) {
-            onAnswer?.invoke("0")
+            onAnswer?.invoke(it.toLong(), MmpiProcess.Answer.Agree.name)
         }
+        return Pair(0, 0)
     }
 }

@@ -60,10 +60,6 @@ private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
                 println("mmpi377")
                 telegramRoom.launchMmpi377Test(chatInfo())
             }
-            command("mmpiTest") {
-                println("mmpiTest")
-                telegramRoom.launchMmpiMockTest(chatInfo())
-            }
             command("lucher") {
                 telegramRoom.launchLucherTest(chatInfo())
             }
@@ -109,6 +105,10 @@ private fun launchClientBot(mode: LaunchMode, token: String): Bot {
                 telegramRoom.launchMmpi566Test(
                     chatInfo()
                 )
+            }
+            command("mmpiTest") {
+                println("mmpiTest")
+                telegramRoom.launchMmpiMockTest(chatInfo())
             }
             command("mmpi377") {
                 println("mmpi377")

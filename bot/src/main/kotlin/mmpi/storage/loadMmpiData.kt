@@ -52,7 +52,9 @@ private fun reloadQuestions(
     val questions = connection.loadDataFromFile(
         fileId = fileId,
         page = questionsPage
-    )?.map { it.toQuestion(answerOptions) }
+    )?.mapIndexed { index, map ->
+        map.toQuestion(index, answerOptions)
+    }
 
     val size = questions?.size
     return questions?.mapIndexed { i: Int, question: Question ->
@@ -150,9 +152,17 @@ private fun createSegment(range: String?, description: String?): Segment? {
     return Segment(IntRange(min, max), description)
 }
 
-private fun Map<String, Any>.toQuestion(answerOptions: List<String>) = Question(
+private fun Map<String, Any>.toQuestion(index: Int, answerOptions: List<String>) = Question(
+    index = index,
     text = stringFor("question"),
-    options = answerOptions
+    options = answerOptions.mapIndexed { i, answer ->
+        val tag = when (i) {
+            0 -> MmpiProcess.Answer.Agree.name
+            1 -> MmpiProcess.Answer.Disagree.name
+            else -> MmpiProcess.Answer.Agree.name
+        }
+        Question.Option(answer, tag)
+    }
 )
 
 private fun Map<String, Any>.stringFor(key: String) = (this[key] as? String) ?: ""

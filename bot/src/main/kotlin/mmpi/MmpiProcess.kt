@@ -10,21 +10,19 @@ import storage.CentralDataStorage.string
 class MmpiProcess(gender: Gender, val type: Type) {
 
     internal data class State(
-        val currentQuestionIndex: Int,// = 0,
-        val questions: List<Question>,// = CurrentQuestionsProvider.MmpiProcessQuestions,
-        val answers: List<Answer>,// = arrayOfNulls<Answer>(NUMBER_OF_QUESTIONS)
+        val currentQuestionIndex: Int = -1,
+        val questions: List<Question>,
+        val answers: List<Answer>,
         val scales: Scales?
     )
 
     private var state = when (type) {
         Type.Mmpi566 -> State(
-            currentQuestionIndex = 0,
             questions = CentralDataStorage.mmpi566Data.questions(gender),
             answers = emptyList(),
             scales = CentralDataStorage.mmpi566Data.scales(gender)
         )
         Type.Mmpi377 -> State(
-            currentQuestionIndex = 0,
             questions = CentralDataStorage.mmpi377Data.questions(gender),
             answers = emptyList(),
             scales = CentralDataStorage.mmpi377Data.scales(gender)
@@ -37,8 +35,14 @@ class MmpiProcess(gender: Gender, val type: Type) {
     val questions
         get() = state.questions
 
-    fun submitAnswer(answer: Answer) {
-        state = submitAnswer(state, answer)
+
+    fun isItLastAskedQuestion(index: Int?): Boolean {
+        index ?: return true
+        return index == state.currentQuestionIndex
+    }
+
+    fun submitAnswer(index: Int, answer: Answer) {
+        state = submitAnswer(state, index, answer)
     }
 
     fun hasNextQuestion(): Boolean = hasNextQuestion(state, type)
@@ -51,14 +55,9 @@ class MmpiProcess(gender: Gender, val type: Type) {
 
     fun calculateResult() = calculateResult(state, type)
 
-    enum class Answer(val option: Int) {
-        Agree(0),
-        Disagree(4);
-
-        companion object {
-            private val VALUES = values()
-            fun byValue(value: Int) = VALUES.firstOrNull { it.option == value } ?: Disagree
-        }
+    enum class Answer {
+        Agree,
+        Disagree;
 
         val text
             get() = when (this) {
@@ -122,11 +121,20 @@ class MmpiProcess(gender: Gender, val type: Type) {
 
 private fun submitAnswer(
     state: MmpiProcess.State,
+    index: Int,
     answer: MmpiProcess.Answer
 ): MmpiProcess.State {
-    val newIndex = state.currentQuestionIndex + 1
-    val answers = state.answers + answer
-    return state.copy(currentQuestionIndex = newIndex, answers = answers)
+    val answers = state.answers.toMutableList()
+
+    if (answers.lastIndex < index) {
+        answers.add(index, answer)
+    } else {
+        answers[index] = answer
+    }
+
+    return state.copy(
+        answers = answers.toList()
+    )
 }
 
 private fun hasNextQuestion(state: MmpiProcess.State, type: Type): Boolean {
@@ -135,8 +143,11 @@ private fun hasNextQuestion(state: MmpiProcess.State, type: Type): Boolean {
 
 private fun nextQuestion(state: MmpiProcess.State):
         Pair<MmpiProcess.State, Question> {
-    val question = state.questions[state.currentQuestionIndex]
-    return Pair(state, question)
+
+    val newState = state.copy(currentQuestionIndex = state.currentQuestionIndex + 1)
+    val question = state.questions[newState.currentQuestionIndex]
+
+    return Pair(newState, question)
 }
 
 private fun calculateResult(state: MmpiProcess.State, type: Type): MmpiProcess.Result {

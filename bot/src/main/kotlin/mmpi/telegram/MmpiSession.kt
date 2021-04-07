@@ -18,8 +18,7 @@ import telegram.UserConnection
 import telegram.helpers.showResult
 import telegram.notifyAdmin
 
-
-typealias OnAnswerReceived = (answer: String) -> Unit
+typealias OnAnswerReceived = (messageId: Long, answer: String) -> Unit
 
 open class MmpiSession(
     override val id: Long,
@@ -45,33 +44,45 @@ open class MmpiSession(
         //using channel to wait until all colors are chosen
         val gChannel = Channel<Gender>(RENDEZVOUS)
 
-        val messageId = askGender(
+        askGender(
             userId = id,
-            createGenderQuestion(),
+            question = createGenderQuestion(),
             connection = clientConnection
         )
-        onAnswer = { answer: String ->
-            val gender = Gender.byValue(answer.toInt())
+        onAnswer = { messageId: Long, answer: String ->
+            clientConnection.highlightAnswer(messageId, answer)
+
+            val gender = Gender.valueOf(answer)
             gChannel.offer(gender)
         }
 
         val gender = gChannel.receive()
         val ongoingProcess = MmpiProcess(gender, type)
 
-        onAnswer = { answer: String ->
+        val mesIdToIndex = mutableMapOf<Long, Int>()
+
+        onAnswer = { mesId: Long, answer: String ->
             println("executeTesting.onAnswer($answer);")
 
-            ongoingProcess.submitAnswer(
-                MmpiProcess.Answer.byValue(answer.toInt())
-            )
+            clientConnection.highlightAnswer(mesId, answer)
+
             if (ongoingProcess.hasNextQuestion()) {
-                sendNextQuestion(messageId, ongoingProcess, clientConnection)
+                if (ongoingProcess.isItLastAskedQuestion(mesIdToIndex[mesId])) {
+                    sendNextQuestion(ongoingProcess, clientConnection).apply {
+                        mesIdToIndex[first] = second
+                    }
+                }
             } else {
-                clientConnection.removeMessage(id, messageId)
+                clientConnection.cleanUp()
                 finishTesting(ongoingProcess, user, clientConnection, adminConnection)
             }
+            ongoingProcess.submitAnswer(
+                mesIdToIndex[mesId]!!, MmpiProcess.Answer.valueOf(answer)
+            )
         }
-        sendNextQuestion(messageId, ongoingProcess, clientConnection)
+        sendNextQuestion(ongoingProcess, clientConnection).apply {
+            mesIdToIndex[first] = second
+        }
     }
 
     private fun finishTesting(
@@ -97,26 +108,26 @@ open class MmpiSession(
             user = user,
             adminId = ADMIN_ID,
             resultLink = resultFolder,
-            clientConnection,
-            adminConnection
+            clientConnection = clientConnection,
+            adminConnection = adminConnection
         )
         onEndedCallback(this)
     }
 
     internal open fun sendNextQuestion(
-        messageId: Long,
         ongoingProcess: MmpiProcess,
         userConnection: UserConnection
-    ) {
-        userConnection.updateMessage(
+    ): Pair<Long, Int> {
+        val question = ongoingProcess.nextQuestion()
+        val messageId = userConnection.sendMessageWithButtons(
             chatId = id,
-            messageId = messageId,
-            text = ongoingProcess.nextQuestion().text,
-            buttons = mmpiButtons(ongoingProcess.nextQuestion())
+            text = question.text,
+            buttons = buttons(question)
         )
+        return Pair(messageId, question.index)
     }
 
     override fun onCallbackFromUser(messageId: Long, data: String) {
-        onAnswer?.invoke(data)
+        onAnswer?.invoke(messageId, data)
     }
 }

@@ -1,8 +1,11 @@
-enum class Gender(val option: Int) {
-    Male(0), Female(1);
+import storage.CentralDataStorage.string
 
-    companion object {
-        private val VALUES = values()
-        fun byValue(value: Int) = VALUES.firstOrNull { it.option == value } ?: Male
-    }
+enum class Gender {
+    Male, Female;
+
+    val title:String
+        get() = when(this){
+            Male -> string("male")
+            Female -> string("female")
+        }
 }

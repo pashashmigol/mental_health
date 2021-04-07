@@ -19,10 +19,6 @@ class TelegramRoom(
     private val sessions = mutableMapOf<Long, TelegramSession>()
     private val scope = GlobalScope
 
-//    init {
-//        notifyAdmin(message = "TelegramRoom; init{}")
-//    }
-
     fun welcomeNewUser(
         chatInfo: ChatInfo,
         userConnection: UserConnection
