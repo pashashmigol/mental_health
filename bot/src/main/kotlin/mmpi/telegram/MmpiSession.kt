@@ -2,11 +2,7 @@ package mmpi.telegram
 
 import Gender
 import Settings.ADMIN_ID
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
-import kotlinx.coroutines.launch
 import mmpi.*
 import mmpi.report.generateReport
 import models.Type
@@ -17,23 +13,32 @@ import telegram.TelegramSession
 import telegram.UserConnection
 import telegram.helpers.showResult
 import telegram.notifyAdmin
+import Result
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 
-typealias OnAnswerReceived = (messageId: Long, answer: String) -> Unit
+private typealias OnAnswerReceived = (messageId: Long, answer: String) -> Result<Int>
+private typealias OnFinishedForTestingOnly = ((answers: List<MmpiProcess.Answer>) -> Unit)?
 
-open class MmpiSession(
+class MmpiSession(
     override val id: Long,
     private val type: Type,
-    open val clientConnection: UserConnection,
-    open val adminConnection: UserConnection,
-    open val onEndedCallback: OnEnded
-) : TelegramSession {
+    val clientConnection: UserConnection,
+    val adminConnection: UserConnection,
+    val onEndedCallback: OnEnded
+) : TelegramSession<Int> {
     companion object {
         val scope = GlobalScope
     }
 
-    internal var onAnswer: OnAnswerReceived? = null
+    internal var testingCallback: OnFinishedForTestingOnly = null
 
-    override fun start(user: User, chatId: Long) {
+    private var onAnswer: OnAnswerReceived? = null
+
+
+    override suspend fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
             notifyAdmin("MmpiSession error", exception)
         }
@@ -41,47 +46,67 @@ open class MmpiSession(
     }
 
     private suspend fun executeTesting(user: User) {
-        //using channel to wait until all colors are chosen
-        val gChannel = Channel<Gender>(RENDEZVOUS)
-
         askGender(
             userId = id,
             question = createGenderQuestion(),
             connection = clientConnection
         )
-        onAnswer = { messageId: Long, answer: String ->
-            clientConnection.highlightAnswer(messageId, answer)
-
-            val gender = Gender.valueOf(answer)
-            gChannel.offer(gender)
-        }
-
-        val gender = gChannel.receive()
+        val gender = waitForGenderChosen()
         val ongoingProcess = MmpiProcess(gender, type)
 
-        val mesIdToIndex = mutableMapOf<Long, Int>()
+        collectAllAnswers(ongoingProcess, user)
+    }
+
+    private suspend fun waitForGenderChosen(): Gender {
+        val gChannel = Channel<Gender>(1)
+        onAnswer = { messageId: Long, answer: String ->
+            onAnswer = null
+
+            if (Gender.names.contains(answer)) {
+                clientConnection.highlightAnswer(messageId, answer)
+                val gender = Gender.valueOf(answer)
+                gChannel.offer(gender)
+                Result.Success(0)
+            } else {
+                Result.Error("\"$answer\" is not gender")
+            }
+        }
+        return gChannel.receive()
+    }
+
+    private fun collectAllAnswers(ongoingProcess: MmpiProcess, user: User) {
+        val mesIdToIndex = ConcurrentHashMap<Long, Int>()
+
+        sendFirstQuestion(ongoingProcess, clientConnection).apply {
+            mesIdToIndex[first] = second
+        }
 
         onAnswer = { mesId: Long, answer: String ->
-            println("executeTesting.onAnswer($answer);")
+            val index = mesIdToIndex[mesId]
 
-            clientConnection.highlightAnswer(mesId, answer)
+            if (index != null) {
+                clientConnection.highlightAnswer(mesId, answer)
 
-            if (ongoingProcess.hasNextQuestion()) {
-                if (ongoingProcess.isItLastAskedQuestion(mesIdToIndex[mesId])) {
+                ongoingProcess.submitAnswer(
+                    index, MmpiProcess.Answer.valueOf(answer)
+                )
+
+                if (ongoingProcess.hasNextQuestion()
+                    && ongoingProcess.isItLastAskedQuestion(index)
+                ) {
                     sendNextQuestion(ongoingProcess, clientConnection).apply {
                         mesIdToIndex[first] = second
                     }
                 }
+                if (ongoingProcess.allQuestionsAreAnswered()) {
+                    clientConnection.cleanUp()
+                    finishTesting(ongoingProcess, user, clientConnection, adminConnection)
+                }
+
+                Result.Success(index)
             } else {
-                clientConnection.cleanUp()
-                finishTesting(ongoingProcess, user, clientConnection, adminConnection)
+                Result.Error("No message with id $mesId")
             }
-            ongoingProcess.submitAnswer(
-                mesIdToIndex[mesId]!!, MmpiProcess.Answer.valueOf(answer)
-            )
-        }
-        sendNextQuestion(ongoingProcess, clientConnection).apply {
-            mesIdToIndex[first] = second
         }
     }
 
@@ -91,6 +116,7 @@ open class MmpiSession(
         clientConnection: UserConnection,
         adminConnection: UserConnection,
     ) {
+        onAnswer = null
         val result = ongoingProcess.calculateResult()
 
         val report = generateReport(
@@ -112,9 +138,13 @@ open class MmpiSession(
             adminConnection = adminConnection
         )
         onEndedCallback(this)
+        testingCallback?.invoke(ongoingProcess.answers)
     }
 
-    internal open fun sendNextQuestion(
+    private fun sendFirstQuestion(ongoingProcess: MmpiProcess, userConnection: UserConnection) =
+        sendNextQuestion(ongoingProcess, userConnection)
+
+    private fun sendNextQuestion(
         ongoingProcess: MmpiProcess,
         userConnection: UserConnection
     ): Pair<Long, Int> {
@@ -127,7 +157,13 @@ open class MmpiSession(
         return Pair(messageId, question.index)
     }
 
-    override fun onCallbackFromUser(messageId: Long, data: String) {
-        onAnswer?.invoke(messageId, data)
+    private val mutex = Mutex()
+    override suspend fun onCallbackFromUser(messageId: Long, data: String): Result<Int> {
+        mutex.withLock {
+            while (onAnswer == null) {
+                delay(1)
+            }
+            return onAnswer?.invoke(messageId, data) ?: Result.Error("onAnswer is null")
+        }
     }
 }

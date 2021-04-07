@@ -18,8 +18,6 @@ internal class ReportGeneratorTest {
     fun init() {
         val launchMode = LaunchMode.TESTS
         CentralDataStorage.init(launchMode.rootPath)
-        CentralDataStorage.reload()
-
     }
 
     @Test

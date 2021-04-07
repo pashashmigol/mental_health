@@ -106,10 +106,6 @@ private fun launchClientBot(mode: LaunchMode, token: String): Bot {
                     chatInfo()
                 )
             }
-            command("mmpiTest") {
-                println("mmpiTest")
-                telegramRoom.launchMmpiMockTest(chatInfo())
-            }
             command("mmpi377") {
                 println("mmpi377")
                 telegramRoom.launchMmpi377Test(

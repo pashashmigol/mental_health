@@ -16,7 +16,6 @@ internal class CalculateResultKtTest {
     @BeforeAll
     fun setup() {
         CentralDataStorage.init(rootPath = "src/main/webapp/")
-        CentralDataStorage.reload()
 
         scalesM = CentralDataStorage.mmpi566Data.scales(Gender.Male)
         scalesF = CentralDataStorage.mmpi566Data.scales(Gender.Female)
@@ -26,8 +25,8 @@ internal class CalculateResultKtTest {
     fun agree_with_everything() {
         val test = MmpiProcess(Gender.Male, Type.Mmpi566)
 
-        allAgree566.forEach {
-            test.submitAnswer(it)
+        allAgree566.forEachIndexed {index, answer ->
+            test.submitAnswer(index, answer)
         }
         val result = test.calculateResult()
         assertNotNull(result)
@@ -38,8 +37,8 @@ internal class CalculateResultKtTest {
         val test = MmpiProcess(Gender.Male, Type.Mmpi566)
 
         Assertions.assertThrows(RuntimeException::class.java) {
-            justFewAnswers.forEach { answer ->
-                test.submitAnswer(answer)
+            justFewAnswers.forEachIndexed { index, answer ->
+                test.submitAnswer(index, answer)
             }
             test.calculateResult()
         }
@@ -49,8 +48,8 @@ internal class CalculateResultKtTest {
     fun oneAfterOneTest() {
         val test = MmpiProcess(Gender.Male, Type.Mmpi377)
 
-        oneAfterOne377.forEach {
-            test.submitAnswer(it)
+        oneAfterOne377.forEachIndexed { index, answer ->
+            test.submitAnswer(index, answer)
         }
         val result = test.calculateResult()
 
@@ -454,8 +453,8 @@ private fun calculateScale(
     val answers = answers(size, agree, disagree)
     val test = MmpiProcess(gender, Type.Mmpi566)
 
-    answers.forEach {
-        test.submitAnswer(it)
+    answers.forEachIndexed { index, answer ->
+        test.submitAnswer(index, answer)
     }
     return test.calculateResult()
 }

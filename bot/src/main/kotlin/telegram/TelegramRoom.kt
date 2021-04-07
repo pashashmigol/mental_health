@@ -1,10 +1,10 @@
 package telegram
 
+import io.ktor.util.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import lucher.telegram.LucherSession
 import mmpi.telegram.MmpiSession
-import mmpi.telegram.MmpiTestingSession
 import models.Type
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
@@ -16,7 +16,7 @@ class TelegramRoom(
     private val clientConnection: UserConnection,
     private val adminConnection: UserConnection
 ) {
-    private val sessions = mutableMapOf<Long, TelegramSession>()
+    private val sessions = mutableMapOf<Long, TelegramSession<*>>()
     private val scope = GlobalScope
 
     fun welcomeNewUser(
@@ -101,32 +101,6 @@ class TelegramRoom(
         }
     }
 
-    fun launchMmpiMockTest(
-        chatInfo: ChatInfo
-    ) = scope.launch {
-        try {
-            println("$TAG: launchMmpiTest();")
-            val userId = chatInfo.userId
-            val user = CentralDataStorage.users.get(userId)!!
-
-            notifyAdmin(message = "launchMmpiMockTest(); chatInfo = $chatInfo")
-
-            removeSession(userId)
-            sessions[userId] = MmpiTestingSession(
-                userId,
-                clientConnection,
-                adminConnection
-            ) { removeSession(it.id) }
-
-            sessions[userId]!!.start(
-                user = user,
-                chatId = chatInfo.chatId
-            )
-        } catch (e: Exception) {
-            notifyAdmin(exception = e)
-        }
-    }
-
     fun launchLucherTest(
         chatInfo: ChatInfo
     ) = scope.launch {
@@ -185,7 +159,7 @@ class TelegramRoom(
         }
     }
 
-    private fun launchTest(
+    private suspend fun launchTest(
         chatInfo: ChatInfo,
         data: String
     ) {

@@ -8,4 +8,8 @@ enum class Gender {
             Male -> string("male")
             Female -> string("female")
         }
+
+    companion object{
+        val names = values().map { it.name }
+    }
 }

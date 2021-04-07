@@ -2,18 +2,21 @@ package storage
 
 import com.google.firebase.database.*
 import models.User
+import java.util.concurrent.ConcurrentHashMap
 
 
 class Users(database: FirebaseDatabase) {
     private val usersRef: DatabaseReference = database.reference.child("users")
 
     @Volatile
-    private var users = mapOf<Long, User>()
+    private var users = ConcurrentHashMap<Long, User>()
 
     init {
         usersRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot?) {
-                users = parseToMap(snapshot)
+                users.clear()
+                users.putAll(parseToMap(snapshot))
+
                 println("onDataChange(): $users")
             }
 
@@ -33,8 +36,19 @@ class Users(database: FirebaseDatabase) {
     fun allUsers(): List<User> = users.values.toList()
 
     fun add(user: User) {
+        users[user.id] = user
+
         usersRef.push()
-        usersRef.child(user.id.toString()).setValue(user) { error: DatabaseError, ref: DatabaseReference ->
+        usersRef.child(user.id.toString()).setValue(user) { error: DatabaseError?, ref: DatabaseReference ->
+            println("add($user) ref: $ref, error: $error")
+        }
+    }
+
+    fun clear() {
+        users.clear()
+        usersRef.push()
+
+        usersRef.removeValue { error: DatabaseError?, ref: DatabaseReference ->
             println("onCancelled() ref: $ref, error: $error")
         }
     }

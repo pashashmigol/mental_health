@@ -12,6 +12,7 @@ import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 import telegram.*
 import telegram.helpers.showResult
+import Result
 
 typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
 
@@ -20,24 +21,28 @@ data class LucherSession(
     val clientConnection: UserConnection,
     val adminConnection: UserConnection,
     val onEndedCallback: OnEnded
-) : TelegramSession {
+) : TelegramSession<Unit> {
     companion object {
         val scope = GlobalScope
     }
 
     private var onColorChosen: OnUserChoseColor? = null
 
-    override fun start(user: User, chatId: Long) {
-        val userId = user.id
-
+    override suspend fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
             notifyAdmin("LucherSession error", exception)
         }
         scope.launch(handler) { executeTesting(user, chatId) }
     }
 
-    override fun onCallbackFromUser(messageId: Long, data: String) {
-        onColorChosen?.invoke(clientConnection, messageId, data)
+    override suspend fun onCallbackFromUser(messageId: Long, data: String): Result<Unit> {
+        val chosen = onColorChosen
+        return if (chosen == null) {
+            Result.Error("onAnswer is null")
+        } else {
+            chosen.invoke(clientConnection, messageId, data)
+            Result.Success(data = Unit)
+        }
     }
 
     private suspend fun executeTesting(user: User, chatId: Long) {
@@ -78,7 +83,7 @@ data class LucherSession(
 
             shownOptions.removeIf { it.data == answer }
             connection.setButtonsForMessage(
-                chatId = chatId, messageId = messageId, options = shownOptions
+                chatId = chatId, messageId = messageId, buttons = shownOptions
             )
 
             answers.add(LucherColor.of(answer))

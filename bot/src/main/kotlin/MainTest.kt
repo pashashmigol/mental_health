@@ -8,6 +8,5 @@ import telegram.launchBots
 fun main() {
     val launchMode = LaunchMode.LOCAL
     CentralDataStorage.init(launchMode.rootPath)
-    CentralDataStorage.reload()
     launchBots(mode = launchMode)
 }

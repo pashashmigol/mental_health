@@ -1,14 +1,15 @@
 package telegram
 
-import com.github.kotlintelegrambot.Bot
 import models.User
+import Result
 
-interface TelegramSession {
+
+interface TelegramSession<out T> {
     val id: Long
-    fun onCallbackFromUser(messageId: Long, data: String)
-    fun start(user: User, chatId: Long)
+    suspend fun onCallbackFromUser(messageId: Long, data: String): Result<T>
+    suspend fun start(user: User, chatId: Long)
 }
 
-typealias OnEnded = (TelegramSession) -> Unit
+typealias OnEnded = (TelegramSession<Any>) -> Unit
 
 

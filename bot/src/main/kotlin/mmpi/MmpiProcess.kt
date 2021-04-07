@@ -36,13 +36,17 @@ class MmpiProcess(gender: Gender, val type: Type) {
         get() = state.questions
 
 
-    fun isItLastAskedQuestion(index: Int?): Boolean {
-        index ?: return true
+    fun isItLastAskedQuestion(index: Int): Boolean {
         return index == state.currentQuestionIndex
     }
 
+    fun allQuestionsAreAnswered(): Boolean {
+        return state.answers.size == state.questions.size
+    }
+
     fun submitAnswer(index: Int, answer: Answer) {
-        state = submitAnswer(state, index, answer)
+        if (index < questions.size)
+            state = submitAnswer(state, index, answer)
     }
 
     fun hasNextQuestion(): Boolean = hasNextQuestion(state, type)
@@ -138,7 +142,7 @@ private fun submitAnswer(
 }
 
 private fun hasNextQuestion(state: MmpiProcess.State, type: Type): Boolean {
-    return state.currentQuestionIndex < type.size
+    return state.currentQuestionIndex < type.size - 1
 }
 
 private fun nextQuestion(state: MmpiProcess.State):

@@ -71,8 +71,8 @@ class TelegramUserConnection(private val bot: () -> Bot) : UserConnection {
         }
     }
 
-    override fun setButtonsForMessage(chatId: Long, messageId: Long, options: MutableList<Button>) {
-        val markup = options.map {
+    override fun setButtonsForMessage(chatId: Long, messageId: Long, buttons: MutableList<Button>) {
+        val markup = buttons.map {
             InlineKeyboardButton.CallbackData(it.text, it.data)
         }
         bot().editMessageReplyMarkup(

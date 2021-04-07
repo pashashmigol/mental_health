@@ -21,7 +21,6 @@ import telegram.notifyAdmin
 fun Application.main() {
     val launchMode = LaunchMode.APP_ENGINE
     CentralDataStorage.init(launchMode.rootPath)
-    CentralDataStorage.reload()
 
     launchBots(mode = LaunchMode.APP_ENGINE)
 

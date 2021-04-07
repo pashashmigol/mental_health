@@ -1,3 +1,5 @@
+@file:Suppress("UnnecessaryVariable")
+
 package mmpi.report
 
 import kotlinx.html.*
