@@ -81,6 +81,22 @@ internal class CalculateResultKtTest {
         assertEquals(55.0, result.anxietyScale7.score.toDouble(), 2.0)
         assertEquals(97.0, result.individualismScale8.score.toDouble(), 2.0)
         assertEquals(61.0, result.optimismScale9.score.toDouble(), 2.0)
+
+        assertEquals("достоверные результаты", result.liesScaleL.description)
+
+        assertEquals(true, result.liesScaleL.useRawValuesForDescription)
+        assertEquals(false, result.credibilityScaleF.useRawValuesForDescription)
+        assertEquals(false, result.correctionScaleK.useRawValuesForDescription)
+        assertEquals(false, result.introversionScale0.useRawValuesForDescription)
+        assertEquals(false, result.overControlScale1.useRawValuesForDescription)
+        assertEquals(false, result.passivityScale2.useRawValuesForDescription)
+        assertEquals(false, result.labilityScale3.useRawValuesForDescription)
+        assertEquals(false, result.impulsivenessScale4.useRawValuesForDescription)
+        assertEquals(false, result.masculinityScale5.useRawValuesForDescription)
+        assertEquals(false, result.rigidityScale6.useRawValuesForDescription)
+        assertEquals(false, result.anxietyScale7.useRawValuesForDescription)
+        assertEquals(false, result.individualismScale8.useRawValuesForDescription)
+        assertEquals(false, result.optimismScale9.useRawValuesForDescription)
     }
 
     @Test
@@ -115,7 +131,6 @@ internal class CalculateResultKtTest {
         val resF = calculateScale(agree, disagree, Gender.Female)
         assertEquals(30, resF.correctionScaleK.raw)
         assertEquals(84, resF.correctionScaleK.score)
-
 
         assertEquals(36, scalesM.correctionScaleK.finalScore(5))
         assertEquals(74, scalesM.correctionScaleK.finalScore(25))

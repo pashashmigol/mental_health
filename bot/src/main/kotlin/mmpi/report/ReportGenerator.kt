@@ -24,8 +24,13 @@ fun generateReport(
 
             dl {
                 result.scalesToShow.forEach { scale ->
+                    val score = if (scale.useRawValuesForDescription) {
+                        scale.score
+                    } else {
+                        scale.raw
+                    }
                     dt {
-                        b { text("${scale.name}: ${scale.score}") }
+                        b { text("${scale.name}: $score") }
                     }
                     dd { text("\n" + scale.description) }
                 }

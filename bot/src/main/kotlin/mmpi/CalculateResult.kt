@@ -7,7 +7,7 @@ fun calculate(answers: List<MmpiProcess.Answer?>, scales: MmpiProcess.Scales): M
     val correction = scales.correctionScaleK.calculate(answers).raw
 
     return MmpiProcess.Result(
-        liesScaleL = scales.liesScaleL.calculate(answers, correction),
+        liesScaleL = scales.liesScaleL.calculate(answers, correction, useRawValuesForDescription = true),
         credibilityScaleF = scales.credibilityScaleF.calculate(answers, correction),
         correctionScaleK = scales.correctionScaleK.calculate(answers, correction),
         introversionScale0 = scales.introversionScale0.calculate(answers, correction),
@@ -33,21 +33,31 @@ class Scale(
     val tB: Float,
     private val segments: List<Segment>
 ) {
-    fun calculate(answers: List<MmpiProcess.Answer?>, correctionValue: Int = 0): Result {
+    fun calculate(
+        answers: List<MmpiProcess.Answer?>,
+        correctionValue: Int = 0,
+        useRawValuesForDescription: Boolean = false
+    ): Result {
 
         val rawScore = rawScore(answers)
         val rawScoreCorrected = rawScoreCorrected(rawScore, correctionValue)
         val finalScore = finalScore(rawScoreCorrected)
 
-        val description = segments.firstOrNull {
-            it.range.contains(finalScore)
-        }?.description ?: ""
-
+        val description = if (useRawValuesForDescription) {
+            segments.firstOrNull {
+                it.range.contains(rawScore)
+            }?.description ?: ""
+        } else {
+            segments.firstOrNull {
+                it.range.contains(finalScore)
+            }?.description ?: ""
+        }
         return Result(
             name = title,
             score = finalScore,
             description = description,
-            raw = rawScoreCorrected
+            raw = rawScoreCorrected,
+            useRawValuesForDescription = useRawValuesForDescription
         )
     }
 
@@ -68,7 +78,13 @@ class Scale(
         return "$id(yes=$yes, no=$no)"
     }
 
-    data class Result(val name: String, val score: Int, val description: String, val raw: Int)
+    data class Result(
+        val name: String,
+        val score: Int,
+        val description: String,
+        val raw: Int,
+        val useRawValuesForDescription: Boolean = false
+    )
 }
 
 data class Segment(val range: IntRange, val description: String)
