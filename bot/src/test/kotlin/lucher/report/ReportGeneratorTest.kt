@@ -24,24 +24,24 @@ internal class ReportGeneratorTest {
     fun generateReport() {
         val answers = LucherAnswers(
             firstRound = listOf(
-                LucherColor.Black,
                 LucherColor.Red,
                 LucherColor.Blue,
+                LucherColor.Green,
+                LucherColor.Yellow,
                 LucherColor.Brown,
                 LucherColor.Gray,
-                LucherColor.Green,
                 LucherColor.Violet,
-                LucherColor.Yellow
+                LucherColor.Black,
             ),
             secondRound = listOf(
                 LucherColor.Green,
-                LucherColor.Blue,
                 LucherColor.Red,
+                LucherColor.Blue,
                 LucherColor.Yellow,
-                LucherColor.Black,
                 LucherColor.Brown,
                 LucherColor.Gray,
-                LucherColor.Violet
+                LucherColor.Violet,
+                LucherColor.Black,
             )
         )
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)

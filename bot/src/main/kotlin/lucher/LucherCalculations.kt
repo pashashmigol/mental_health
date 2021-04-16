@@ -31,17 +31,17 @@ fun calculateResult(answers: LucherAnswers, meanings: Map<String, String>): Luch
 
     val stable = pairs.stablePairs
         .map { it to (meanings[it.toString()] ?: "") }
-        .filter { it.second.isEmpty() }
+        .filter { it.second.isNotEmpty() }
         .toMap()
 
     val broken = pairs.brokenPairs
         .map { it to (meanings[it.toString()] ?: "") }
-        .filter { it.second.isEmpty() }
+        .filter { it.second.isNotEmpty() }
         .toMap()
 
     val contraversed = pairs.contraversedPairs
         .map { it to (meanings[it.toString()] ?: "") }
-        .filter { it.second.isEmpty() }
+        .filter { it.second.isNotEmpty() }
         .toMap()
 
     return LucherResult(
