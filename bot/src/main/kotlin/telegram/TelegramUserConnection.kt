@@ -3,6 +3,11 @@ package telegram
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.Message
+import com.github.kotlintelegrambot.entities.TelegramFile
+import com.github.kotlintelegrambot.entities.inputmedia.GroupableMedia
+import com.github.kotlintelegrambot.entities.inputmedia.InputMediaPhoto
+import com.github.kotlintelegrambot.entities.inputmedia.InputMediaTypes
+import com.github.kotlintelegrambot.entities.inputmedia.MediaGroup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import lucher.LucherColor
 import lucher.url
@@ -19,9 +24,9 @@ class TelegramUserConnection(private val bot: () -> Bot) : UserConnection {
     ): Long {
         val options =
             if (placeButtonsVertically) {
-                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
-            } else {
                 buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
+            } else {
+                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
             }
 
         val result = bot().sendMessage(
@@ -56,12 +61,12 @@ class TelegramUserConnection(private val bot: () -> Bot) : UserConnection {
         bot().deleteMessage(chatId, messageId)
     }
 
-    override fun sendMessageWithPicture(
+    override fun sendMessageWithLucherColor(
         chatId: Long,
         color: LucherColor
     ) {
         val result = bot().sendPhoto(
-            caption = color.name,
+            caption = "${color.index} - ${color.name}",
             disableNotification = true,
             chatId = chatId,
             photo = color.url(),
@@ -71,14 +76,47 @@ class TelegramUserConnection(private val bot: () -> Bot) : UserConnection {
         }
     }
 
-    override fun setButtonsForMessage(chatId: Long, messageId: Long, buttons: MutableList<Button>) {
-        val markup = buttons.map {
-            InlineKeyboardButton.CallbackData(it.text, it.data)
+    override fun sendMessageWithLucherColors(
+        chatId: Long,
+        colors: Array<LucherColor>
+    ) {
+        val allOptions = colors.map { color ->
+            InputMediaPhoto(
+                caption = "${color.index} - ${color.name}",
+                media = TelegramFile.ByUrl(color.url()),
+            )
+        }.toTypedArray<GroupableMedia>()
+
+        val mediaGroup = MediaGroup.from(*allOptions)
+
+        val result = bot().sendMediaGroup(
+            chatId = chatId,
+            disableNotification = true,
+            mediaGroup = mediaGroup,
+        )
+
+        result.first?.body()?.result?.let { messages ->
+            sentMessages.putAll(messages.map { it.messageId to it })
         }
+    }
+
+    override fun setButtonsForMessage(
+        chatId: Long,
+        messageId: Long,
+        buttons: MutableList<Button>,
+        placeButtonsVertically: Boolean
+    ) {
+        val options =
+            if (placeButtonsVertically) {
+                buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
+            } else {
+                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
+            }
+
         bot().editMessageReplyMarkup(
             chatId = chatId,
             messageId = messageId,
-            replyMarkup = InlineKeyboardMarkup.create(markup)
+            replyMarkup = InlineKeyboardMarkup.create(options)
         )
     }
 

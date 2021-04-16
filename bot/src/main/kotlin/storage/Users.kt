@@ -35,6 +35,8 @@ class Users(database: FirebaseDatabase) {
 
     fun allUsers(): List<User> = users.values.toList()
 
+    fun hasUserWithId(userId: Long) = users.containsKey(userId)
+
     fun add(user: User) {
         users[user.id] = user
 

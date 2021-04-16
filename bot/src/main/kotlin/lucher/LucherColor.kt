@@ -33,5 +33,5 @@ fun LucherColor.url(): String = when (this) {
 
 
 fun LucherColor.callbackData() =
-    Button(text = index.toString(), data = index.toString())
+    Button(text = "$index - $name", data = name)
 

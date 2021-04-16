@@ -7,7 +7,7 @@ interface UserConnection {
         chatId: Long,
         text: String,
         buttons: List<Button>,
-        placeButtonsVertically: Boolean = false
+        placeButtonsVertically: Boolean = true
     ): Long = 0
 
     fun sendMessage(
@@ -29,11 +29,12 @@ interface UserConnection {
     fun setButtonsForMessage(
         chatId: Long,
         messageId: Long,
-        buttons: MutableList<Button>
+        buttons: MutableList<Button>,
+        placeButtonsVertically: Boolean = true
     ) {
     }
 
-    fun sendMessageWithPicture(
+    fun sendMessageWithLucherColor(
         chatId: Long,
         color: LucherColor
     ) {
@@ -42,6 +43,8 @@ interface UserConnection {
     fun cleanUp() {}
 
     fun highlightAnswer(messageId: Long, answer: String) {}
+
+    fun sendMessageWithLucherColors(chatId: Long, colors: Array<LucherColor>) {}
 }
 
 data class ChatInfo(

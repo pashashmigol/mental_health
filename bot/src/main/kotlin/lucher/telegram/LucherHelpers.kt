@@ -31,14 +31,8 @@ fun askUserToWait(
 
 fun allColorsChosen(answers: List<LucherColor>) = answers.size == LucherColor.values().size - 1
 
-fun showAllColors(chatId: Long, connection: UserConnection){
-    LucherColor.values().forEach { color ->
-        connection.sendMessageWithPicture(chatId, color)
-    }
-}
-
-fun createReplyOptions(): MutableList<Button> {
+fun createReplyOptions(colors: List<LucherColor>): MutableList<Button> {
     val options = mutableListOf<Button>()
-    options.addAll(LucherColor.values().map { it.callbackData() })
+    options.addAll(colors.map { it.callbackData() })
     return options
 }

@@ -33,7 +33,7 @@ class StubUserConnection : UserConnection {
         println("### setButtonsForMessage(chatId: $chatId, messageId: $messageId, buttons: $buttons)")
     }
 
-    override fun sendMessageWithPicture(chatId: Long, color: LucherColor) {
+    override fun sendMessageWithLucherColor(chatId: Long, color: LucherColor) {
         println("### sendMessageWithPicture(chatId: $chatId, color: ${color.name})")
     }
 

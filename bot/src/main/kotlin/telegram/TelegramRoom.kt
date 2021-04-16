@@ -2,6 +2,7 @@ package telegram
 
 import io.ktor.util.*
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import lucher.telegram.LucherSession
 import mmpi.telegram.MmpiSession
@@ -22,22 +23,28 @@ class TelegramRoom(
     fun welcomeNewUser(
         chatInfo: ChatInfo,
         userConnection: UserConnection
-    ) = scope.launch {
-        CentralDataStorage.createUser(chatInfo.userId, chatInfo.userName)
+    ): Job {
+        return scope.launch {
+            val userId = chatInfo.userId
 
-        notifyAdmin(
-            message = "welcomeNewUser(); chatInfo = $chatInfo"
-        )
+            if (!CentralDataStorage.users.hasUserWithId(userId)) {
+                CentralDataStorage.createUser(userId, chatInfo.userName)
 
-        userConnection.sendMessageWithButtons(
-            chatInfo.chatId,
-            text = string("choose_test"),
-            buttons = listOf(
-                Button(string("lucher"), Type.Lucher.name),
-                Button(string("mmpi_566"), Type.Mmpi566.name),
-                Button(string("mmpi_377"), Type.Mmpi377.name)
+                notifyAdmin(
+                    message = "welcomeNewUser(); chatInfo = $chatInfo"
+                )
+            }
+
+            userConnection.sendMessageWithButtons(
+                chatInfo.chatId,
+                text = string("choose_test"),
+                buttons = listOf(
+                    Button(string("lucher"), Type.Lucher.name),
+                    Button(string("mmpi_566"), Type.Mmpi566.name),
+                    Button(string("mmpi_377"), Type.Mmpi377.name)
+                )
             )
-        )
+        }
     }
 
     fun launchMmpi566Test(

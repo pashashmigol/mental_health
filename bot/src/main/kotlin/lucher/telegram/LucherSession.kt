@@ -64,33 +64,30 @@ data class LucherSession(
     }
 
     private suspend fun runRound(chatId: Long, userConnection: UserConnection): List<LucherColor> {
-
-        showAllColors(chatId, userConnection)
-        val shownOptions: MutableList<Button> = createReplyOptions()
+        val shownOptions: MutableList<LucherColor> = LucherColor.values().toMutableList()
+        userConnection.sendMessageWithLucherColors(chatId, LucherColor.values())
 
         userConnection.sendMessageWithButtons(
             chatId = chatId,
             text = string("choose_color"),
-            buttons = shownOptions,
-            placeButtonsVertically = true
+            buttons = createReplyOptions(shownOptions),
         )
 
         val answers = mutableListOf<LucherColor>()
         val channel = Channel<Unit>(0)//using channel to wait until all colors are chosen
 
-
         onColorChosen = { connection: UserConnection, messageId: Long, answer: String ->
+            shownOptions.removeIf { it.name == answer }
 
-            shownOptions.removeIf { it.data == answer }
             connection.setButtonsForMessage(
-                chatId = chatId, messageId = messageId, buttons = shownOptions
+                chatId = chatId, messageId = messageId, buttons = createReplyOptions(shownOptions)
             )
 
-            answers.add(LucherColor.of(answer))
+            answers.add(LucherColor.valueOf(answer))
 
             if (allColorsChosen(answers)) {
-                val lastShownOption: String = shownOptions.first().data
-                answers.add(LucherColor.of(lastShownOption))
+                val lastShownOption = shownOptions.first()
+                answers.add(lastShownOption)
                 connection.cleanUp()
                 channel.offer(Unit)
             }
