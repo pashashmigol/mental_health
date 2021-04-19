@@ -116,7 +116,7 @@ private fun launchClientBot(mode: LaunchMode, token: String): Bot {
                 telegramRoom.launchLucherTest(chatInfo())
             }
             command("start") {
-                telegramRoom.welcomeNewUser(
+                telegramRoom.welcomeUser(
                     chatInfo(),
                     TelegramUserConnection { this.bot }
                 )

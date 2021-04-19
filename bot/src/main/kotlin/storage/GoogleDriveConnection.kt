@@ -40,10 +40,6 @@ class GoogleDriveConnection(projectRoot: String) {
         println("Folder ID: $database")
     }
 
-    fun clear(){
-        database.app.delete()
-    }
-
     private fun initFireBaseDatabase(credentials: GoogleCredentials): FirebaseDatabase {
         val auth = mapOf("uid" to "my-service-worker")
 

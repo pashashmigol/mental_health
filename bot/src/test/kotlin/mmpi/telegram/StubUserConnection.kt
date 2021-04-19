@@ -29,7 +29,12 @@ class StubUserConnection : UserConnection {
         println("### removeMessage(chatId: $chatId, messageId: $messageId)")
     }
 
-    override fun setButtonsForMessage(chatId: Long, messageId: Long, buttons: MutableList<Button>) {
+    override fun setButtonsForMessage(
+        chatId: Long,
+        messageId: Long,
+        buttons: MutableList<Button>,
+        placeButtonsVertically: Boolean
+    ) {
         println("### setButtonsForMessage(chatId: $chatId, messageId: $messageId, buttons: $buttons)")
     }
 

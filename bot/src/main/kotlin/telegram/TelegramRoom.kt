@@ -20,18 +20,28 @@ class TelegramRoom(
     private val sessions = mutableMapOf<Long, TelegramSession<*>>()
     private val scope = GlobalScope
 
-    fun welcomeNewUser(
+    fun welcomeUser(
         chatInfo: ChatInfo,
         userConnection: UserConnection
     ): Job {
         return scope.launch {
             val userId = chatInfo.userId
 
-            if (!CentralDataStorage.users.hasUserWithId(userId)) {
-                CentralDataStorage.createUser(userId, chatInfo.userName)
+            notifyAdmin(
+                message = "welcomeUser(); chatInfo = $chatInfo"
+            )
+            if (CentralDataStorage.users.hasUserWithId(userId)) {
+                val user = CentralDataStorage.users.get(userId)
 
                 notifyAdmin(
-                    message = "welcomeNewUser(); chatInfo = $chatInfo"
+                    message = "user already exists: $user"
+                )
+            } else {
+                CentralDataStorage.createUser(userId, chatInfo.userName)
+                val user = CentralDataStorage.users.get(userId)
+
+                notifyAdmin(
+                    message = "user created: $user"
                 )
             }
 

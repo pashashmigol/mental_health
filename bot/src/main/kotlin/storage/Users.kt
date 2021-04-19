@@ -45,13 +45,4 @@ class Users(database: FirebaseDatabase) {
             println("add($user) ref: $ref, error: $error")
         }
     }
-
-    fun clear() {
-        users.clear()
-        usersRef.push()
-
-        usersRef.removeValue { error: DatabaseError?, ref: DatabaseReference ->
-            println("onCancelled() ref: $ref, error: $error")
-        }
-    }
 }

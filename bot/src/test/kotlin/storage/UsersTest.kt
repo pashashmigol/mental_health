@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package storage
 
 import kotlinx.coroutines.delay
@@ -15,7 +17,6 @@ internal class UsersTest {
     @BeforeAll
     fun init() {
         CentralDataStorage.init(LaunchMode.TESTS.rootPath)
-        CentralDataStorage.users.clear()
     }
 
     @Test
@@ -29,18 +30,17 @@ internal class UsersTest {
 
         CentralDataStorage.createUser(userId, userName)
 
-        val user = CentralDataStorage.users.get(userId)
+        checkUser(userId, userName)
+        CentralDataStorage.reload()
 
+        delay(1000)
+        checkUser(userId, userName)
+    }
+
+    private fun checkUser(userId: Long, userName: String) {
+        val user = CentralDataStorage.users.get(userId)
         assert(user != null)
         assertEquals(user?.id, userId)
         assertEquals(user?.name, userName)
-
-        assertEquals(1, CentralDataStorage.users.allUsers().size)
-
-        CentralDataStorage.users.clear()
-
-        assert(CentralDataStorage.users.allUsers().isEmpty())
-        delay(1000)
-        assert(CentralDataStorage.users.allUsers().isEmpty())
     }
 }
