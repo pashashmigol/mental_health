@@ -2,7 +2,7 @@ package telegram
 
 import com.github.kotlintelegrambot.Bot
 
-object BotsKeeper {
+class BotsKeeper {
     lateinit var adminBot: Bot
     lateinit var clientBot: Bot
 }

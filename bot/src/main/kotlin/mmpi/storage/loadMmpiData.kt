@@ -35,14 +35,16 @@ private fun reloadQuestions(
         Gender.Female -> "'answer_options_women'"
     }
 
-    val answerOptions: List<String> =
+    val answerOptions: List<String>? =
         (connection.loadDataFromFile(
             fileId = fileId,
             page = answersPage
         ) ?: connection.loadDataFromFile(
             fileId = fileId,
             page = "'answer_options_men'"
-        ))!!.map { it["answer"].toString() }
+        ))?.map { it["answer"].toString() }
+
+    answerOptions!!
 
     val questionsPage = when (gender) {
         Gender.Male -> "'questions_men'"
@@ -75,7 +77,7 @@ private fun loadScales(
         .filter { it.isNotEmpty() }
         .map {
             val scale = toScale(it, gender)
-            return@map Pair(scale.id, scale)
+            Pair(scale.id, scale)
         }.toMap()
 
     return MmpiProcess.Scales(

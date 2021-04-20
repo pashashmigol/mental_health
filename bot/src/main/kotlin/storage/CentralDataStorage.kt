@@ -10,7 +10,6 @@ import java.text.MessageFormat
 
 
 object CentralDataStorage {
-    @Volatile
     private lateinit var connection: GoogleDriveConnection
 
     val lucherData get() = lucher
@@ -20,9 +19,10 @@ object CentralDataStorage {
     val reports get() = reportsRepository
 
     fun init(rootPath: String) {
-        connection = GoogleDriveConnection(rootPath)
-
-        reload()
+        if (!this::connection.isInitialized) {
+            connection = GoogleDriveConnection(rootPath)
+            reload()
+        }
     }
 
     private lateinit var lucher: LucherData

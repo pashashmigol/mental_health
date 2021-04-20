@@ -1,6 +1,5 @@
 package lucher.telegram
 
-import Settings.ADMIN_ID
 import Settings.LUCHER_TEST_TIMEOUT
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
@@ -18,8 +17,7 @@ typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data:
 
 data class LucherSession(
     override val id: Long,
-    val clientConnection: UserConnection,
-    val adminConnection: UserConnection,
+    val userConnection: UserConnection,
     val onEndedCallback: OnEnded
 ) : TelegramSession<Unit> {
     companion object {
@@ -30,7 +28,7 @@ data class LucherSession(
 
     override suspend fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
-            notifyAdmin("LucherSession error", exception)
+            userConnection.notifyAdmin("LucherSession error", exception)
         }
         scope.launch(handler) { executeTesting(user, chatId) }
     }
@@ -40,16 +38,16 @@ data class LucherSession(
         return if (chosen == null) {
             Result.Error("onAnswer is null")
         } else {
-            chosen.invoke(clientConnection, messageId, data)
+            chosen.invoke(userConnection, messageId, data)
             Result.Success(data = Unit)
         }
     }
 
     private suspend fun executeTesting(user: User, chatId: Long) {
-        val firstRoundAnswers = runRound(chatId, this.clientConnection)
+        val firstRoundAnswers = runRound(chatId, this.userConnection)
 
-        askUserToWaitBeforeSecondRound(chatId, minutes = LUCHER_TEST_TIMEOUT, clientConnection)
-        val secondRoundAnswers = runRound(chatId, this.clientConnection)
+        askUserToWaitBeforeSecondRound(chatId, minutes = LUCHER_TEST_TIMEOUT, userConnection)
+        val secondRoundAnswers = runRound(chatId, this.userConnection)
 
         val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
@@ -60,7 +58,7 @@ data class LucherSession(
             result = result
         )
         onEndedCallback(this)
-        showResult(user, ADMIN_ID, folderLink, clientConnection, adminConnection)
+        showResult(user, folderLink, userConnection)
     }
 
     private suspend fun runRound(chatId: Long, userConnection: UserConnection): List<LucherColor> {
@@ -80,7 +78,9 @@ data class LucherSession(
             shownOptions.removeIf { it.name == answer }
 
             connection.setButtonsForMessage(
-                chatId = chatId, messageId = messageId, buttons = createReplyOptions(shownOptions)
+                chatId = chatId,
+                messageId = messageId,
+                buttons = createReplyOptions(shownOptions)
             )
 
             answers.add(LucherColor.valueOf(answer))

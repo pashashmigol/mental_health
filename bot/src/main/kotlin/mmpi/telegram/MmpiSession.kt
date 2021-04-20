@@ -1,7 +1,6 @@
 package mmpi.telegram
 
 import Gender
-import Settings.ADMIN_ID
 import kotlinx.coroutines.channels.Channel
 import mmpi.*
 import mmpi.report.generateReport
@@ -12,7 +11,6 @@ import telegram.OnEnded
 import telegram.TelegramSession
 import telegram.UserConnection
 import telegram.helpers.showResult
-import telegram.notifyAdmin
 import Result
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -25,8 +23,7 @@ private typealias OnFinishedForTestingOnly = ((answers: List<MmpiProcess.Answer>
 class MmpiSession(
     override val id: Long,
     private val type: Type,
-    val clientConnection: UserConnection,
-    val adminConnection: UserConnection,
+    val userConnection: UserConnection,
     val onEndedCallback: OnEnded
 ) : TelegramSession<Int> {
     companion object {
@@ -34,13 +31,11 @@ class MmpiSession(
     }
 
     internal var testingCallback: OnFinishedForTestingOnly = null
-
     private var onAnswer: OnAnswerReceived? = null
-
 
     override suspend fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
-            notifyAdmin("MmpiSession error", exception)
+            userConnection.notifyAdmin("MmpiSession error", exception)
         }
         scope.launch(handler) { executeTesting(user) }
     }
@@ -49,7 +44,7 @@ class MmpiSession(
         askGender(
             userId = id,
             question = createGenderQuestion(),
-            connection = clientConnection
+            connection = userConnection
         )
         val gender = waitForGenderChosen()
         val ongoingProcess = MmpiProcess(gender, type)
@@ -63,7 +58,7 @@ class MmpiSession(
             onAnswer = null
 
             if (Gender.names.contains(answer)) {
-                clientConnection.highlightAnswer(messageId, answer)
+                userConnection.highlightAnswer(messageId, answer)
                 val gender = Gender.valueOf(answer)
                 gChannel.offer(gender)
                 Result.Success(0)
@@ -77,7 +72,7 @@ class MmpiSession(
     private fun collectAllAnswers(ongoingProcess: MmpiProcess, user: User) {
         val mesIdToIndex = ConcurrentHashMap<Long, Int>()
 
-        sendFirstQuestion(ongoingProcess, clientConnection).apply {
+        sendFirstQuestion(ongoingProcess, userConnection).apply {
             mesIdToIndex[first] = second
         }
 
@@ -85,7 +80,7 @@ class MmpiSession(
             val index = mesIdToIndex[mesId]
 
             if (index != null) {
-                clientConnection.highlightAnswer(mesId, answer)
+                userConnection.highlightAnswer(mesId, answer)
 
                 ongoingProcess.submitAnswer(
                     index, MmpiProcess.Answer.valueOf(answer)
@@ -94,13 +89,13 @@ class MmpiSession(
                 if (ongoingProcess.hasNextQuestion()
                     && ongoingProcess.isItLastAskedQuestion(index)
                 ) {
-                    sendNextQuestion(ongoingProcess, clientConnection).apply {
+                    sendNextQuestion(ongoingProcess, userConnection).apply {
                         mesIdToIndex[first] = second
                     }
                 }
                 if (ongoingProcess.allQuestionsAreAnswered()) {
-                    clientConnection.cleanUp()
-                    finishTesting(ongoingProcess, user, clientConnection, adminConnection)
+                    userConnection.cleanUp()
+                    finishTesting(ongoingProcess, user, userConnection)
                 }
 
                 Result.Success(index)
@@ -113,8 +108,7 @@ class MmpiSession(
     private fun finishTesting(
         ongoingProcess: MmpiProcess,
         user: User,
-        clientConnection: UserConnection,
-        adminConnection: UserConnection,
+        userConnection: UserConnection,
     ) {
         onAnswer = null
         val result = ongoingProcess.calculateResult()
@@ -132,10 +126,8 @@ class MmpiSession(
         )
         showResult(
             user = user,
-            adminId = ADMIN_ID,
             resultLink = resultFolder,
-            clientConnection = clientConnection,
-            adminConnection = adminConnection
+            userConnection = userConnection
         )
         onEndedCallback(this)
         testingCallback?.invoke(ongoingProcess.answers)

@@ -8,5 +8,5 @@ import telegram.launchBots
 fun main() {
     val launchMode = LaunchMode.LOCAL
     CentralDataStorage.init(launchMode.rootPath)
-    launchBots(mode = launchMode)
+    launchBots(mode = launchMode, tokens = TESTING_TOKENS)
 }

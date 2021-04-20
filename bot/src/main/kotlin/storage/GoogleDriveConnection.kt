@@ -65,6 +65,7 @@ class GoogleDriveConnection(projectRoot: String) {
         return try {
             request.execute().getValues().toRawEntries()
         } catch (e: Throwable) {
+            println("GoogleDriveConnection.loadDataFromFile(): $e")
             null
         }
     }

@@ -1,10 +1,7 @@
 package telegram
 
-import Settings.ADMIN_BOT_TOKEN
-import Settings.ADMIN_BOT_TOKEN_TESTING
-import Settings.CLIENT_BOT_TOKEN
-import Settings.CLIENT_BOT_TOKEN_TESTING
 import Settings.SERVER_HOSTNAME
+import Tokens
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
@@ -15,33 +12,24 @@ import telegram.helpers.chatInfo
 import telegram.helpers.showUsersList
 
 
-fun launchBots(mode: LaunchMode) {
+fun launchBots(mode: LaunchMode, tokens: Tokens): BotsKeeper {
+    val botsKeeper = BotsKeeper()
 
-    val adminBotToken: String
-    val clientBotToken: String
+    botsKeeper.adminBot = launchAdminBot(mode, tokens.ADMIN_ID, tokens.ADMIN, botsKeeper)
+    botsKeeper.clientBot = launchClientBot(mode, tokens.ADMIN_ID, tokens.CLIENT, botsKeeper)
 
-    when (mode) {
-        LaunchMode.APP_ENGINE -> {
-            adminBotToken = ADMIN_BOT_TOKEN
-            clientBotToken = CLIENT_BOT_TOKEN
-        }
-        LaunchMode.LOCAL, LaunchMode.TESTS -> {
-            adminBotToken = ADMIN_BOT_TOKEN_TESTING
-            clientBotToken = CLIENT_BOT_TOKEN_TESTING
-        }
-    }
-    val adminBot = launchAdminBot(mode, adminBotToken)
-    val clientBot = launchClientBot(mode, clientBotToken)
-
-    BotsKeeper.adminBot = adminBot
-    BotsKeeper.clientBot = clientBot
+    return botsKeeper
 }
 
-private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
+private fun launchAdminBot(
+    mode: LaunchMode,
+    adminId: Long,
+    token: String,
+    botsKeeper: BotsKeeper
+): Bot {
     return bot {
         val telegramRoom = TelegramRoom(
-            TelegramUserConnection { BotsKeeper.clientBot },
-            TelegramUserConnection { BotsKeeper.adminBot }
+            TelegramUserConnection(adminId) { botsKeeper.clientBot },
         )
         this.token = token
         if (mode == LaunchMode.APP_ENGINE) {
@@ -85,11 +73,15 @@ private fun launchAdminBot(mode: LaunchMode, token: String): Bot {
     }
 }
 
-private fun launchClientBot(mode: LaunchMode, token: String): Bot {
+private fun launchClientBot(
+    mode: LaunchMode,
+    adminId: Long,
+    token: String,
+    botsKeeper: BotsKeeper
+): Bot {
     return bot {
         val telegramRoom = TelegramRoom(
-            TelegramUserConnection { BotsKeeper.clientBot },
-            TelegramUserConnection { BotsKeeper.adminBot }
+            TelegramUserConnection(adminId) { botsKeeper.clientBot },
         )
         this.token = token
         if (mode == LaunchMode.APP_ENGINE) {
@@ -118,7 +110,7 @@ private fun launchClientBot(mode: LaunchMode, token: String): Bot {
             command("start") {
                 telegramRoom.welcomeUser(
                     chatInfo(),
-                    TelegramUserConnection { this.bot }
+                    TelegramUserConnection(adminId) { this.bot }
                 )
             }
             callbackQuery {

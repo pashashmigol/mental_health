@@ -21,10 +21,6 @@ internal class UsersTest {
 
     @Test
     fun `simple usage`() = runBlocking {
-        val users = CentralDataStorage.users.allUsers()
-
-        assert(users.isEmpty())
-
         val userName = "Pasha"
         val userId = 0L
 

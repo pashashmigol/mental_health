@@ -11,17 +11,14 @@ import telegram.UserConnection
 
 fun showResult(
     user: User,
-    adminId: Long,
     resultLink: String,
-    clientConnection: UserConnection,
-    adminConnection: UserConnection
+    userConnection: UserConnection
 ) {
-    clientConnection.sendMessage(
+    userConnection.sendMessage(
         chatId = user.id,
         text = string("your_results", resultLink)
     )
-    adminConnection.sendMessage(
-        chatId = adminId,
+    userConnection.notifyAdmin(
         text = string("user_completed_test", user.name, resultLink)
     )
 }

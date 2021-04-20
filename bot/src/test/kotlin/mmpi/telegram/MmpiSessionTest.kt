@@ -46,7 +46,7 @@ internal class MmpiSessionTest {
         session = MmpiSession(
             id = 0,
             type = Type.Mmpi566,
-            clientConnection = object : UserConnection {
+            userConnection = object : UserConnection {
 
                 override fun sendMessageWithButtons(
                     chatId: Long,
@@ -57,7 +57,6 @@ internal class MmpiSessionTest {
                     return questionsIds.next()
                 }
             },
-            adminConnection = object : UserConnection {},
         ) {
             assertEquals(session, it)
         }
@@ -97,7 +96,7 @@ internal class MmpiSessionTest {
         session = MmpiSession(
             id = 0,
             type = Type.Mmpi566,
-            clientConnection = object : UserConnection {
+            userConnection = object : UserConnection {
 
                 override fun sendMessageWithButtons(
                     chatId: Long,
@@ -108,7 +107,6 @@ internal class MmpiSessionTest {
                     return questionsIds.next()
                 }
             },
-            adminConnection = object : UserConnection {},
         ) {
             assertEquals(session, it)
         }
@@ -126,7 +124,6 @@ internal class MmpiSessionTest {
         }
 
         session.start(user = user, chatId = 2)
-
         val answersIds = generateSequence(0L) { it + 1 }.iterator()
 
         do {

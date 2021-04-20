@@ -6,13 +6,13 @@ import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.TelegramFile
 import com.github.kotlintelegrambot.entities.inputmedia.GroupableMedia
 import com.github.kotlintelegrambot.entities.inputmedia.InputMediaPhoto
-import com.github.kotlintelegrambot.entities.inputmedia.InputMediaTypes
 import com.github.kotlintelegrambot.entities.inputmedia.MediaGroup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import lucher.LucherColor
 import lucher.url
+import java.lang.Exception
 
-class TelegramUserConnection(private val bot: () -> Bot) : UserConnection {
+class TelegramUserConnection(private val adminId: Long, private val bot: () -> Bot) : UserConnection {
 
     private val sentMessages = mutableMapOf<Long, Message>()
 
@@ -49,6 +49,17 @@ class TelegramUserConnection(private val bot: () -> Bot) : UserConnection {
         result.first?.body()?.result?.let { message ->
             sentMessages[message.messageId] = message
         }
+    }
+
+    override fun notifyAdmin(
+        text: String,
+        exception: Throwable?
+    ) {
+        bot().notifyAdmin(
+            adminId = adminId,
+            message = text,
+            exception = exception
+        )
     }
 
     override fun cleanUp() {

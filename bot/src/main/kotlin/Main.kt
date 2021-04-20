@@ -1,5 +1,3 @@
-import Settings.ADMIN_BOT_TOKEN
-import Settings.CLIENT_BOT_TOKEN
 import com.google.appengine.api.LifecycleManager
 import io.ktor.application.*
 import io.ktor.http.*
@@ -22,31 +20,44 @@ fun Application.main() {
     val launchMode = LaunchMode.APP_ENGINE
     CentralDataStorage.init(launchMode.rootPath)
 
-    launchBots(mode = LaunchMode.APP_ENGINE)
-
-    environment.monitor.subscribe(ApplicationStarted) {
-        print("###(ApplicationStarted)")
-        notifyAdmin("environment.monitor.subscribe(ApplicationStarted)")
+    val botsKeepers = PRODUCTION_TOKENS.map { tokens ->
+        val botsKeeper = launchBots(mode = LaunchMode.APP_ENGINE, tokens)
+        Pair(botsKeeper, tokens)
     }
 
-    environment.monitor.subscribe(ApplicationStopPreparing) {
-        println("environment.monitor.subscribe(ApplicationStopPreparing)")
-        notifyAdmin("environment.monitor.subscribe(ApplicationStopPreparing)")
+    botsKeepers.forEach { (botsKeeper, tokens) ->
+        launch(botsKeeper, tokens)
     }
+}
 
-    environment.monitor.subscribe(ApplicationStopping) {
-        println("environment.monitor.subscribe(ApplicationStopping)")
-        notifyAdmin("environment.monitor.subscribe(ApplicationStopping)")
-    }
+private fun Application.launch(botsKeeper: BotsKeeper, tokens: Tokens) {
+    val adminBot = botsKeeper.adminBot
 
-    environment.monitor.subscribe(ApplicationStopped) {
-        println("environment.monitor.subscribe(ApplicationStopping)")
-        notifyAdmin("environment.monitor.subscribe(ApplicationStopped)")
-    }
+    environment.apply {
+        monitor.subscribe(ApplicationStarted) {
+            print("###(ApplicationStarted)")
+            adminBot.notifyAdmin(tokens.ADMIN_ID, "environment.monitor.subscribe(ApplicationStarted)")
+        }
 
-    LifecycleManager.getInstance().setShutdownHook {
-        print("###(setShutdownHook)")
-        notifyAdmin("LifecycleManager.getInstance().setShutdownHook")
+        monitor.subscribe(ApplicationStopPreparing) {
+            println("environment.monitor.subscribe(ApplicationStopPreparing)")
+            adminBot.notifyAdmin(tokens.ADMIN_ID, "environment.monitor.subscribe(ApplicationStopPreparing)")
+        }
+
+        monitor.subscribe(ApplicationStopping) {
+            println("environment.monitor.subscribe(ApplicationStopping)")
+            adminBot.notifyAdmin(tokens.ADMIN_ID, "environment.monitor.subscribe(ApplicationStopping)")
+        }
+
+        monitor.subscribe(ApplicationStopped) {
+            println("environment.monitor.subscribe(ApplicationStopping)")
+            adminBot.notifyAdmin(tokens.ADMIN_ID, "environment.monitor.subscribe(ApplicationStopped)")
+        }
+
+        LifecycleManager.getInstance().setShutdownHook {
+            print("###(setShutdownHook)")
+            adminBot.notifyAdmin(tokens.ADMIN_ID, "LifecycleManager.getInstance().setShutdownHook")
+        }
     }
 
     routing {
@@ -55,20 +66,20 @@ fun Application.main() {
         }
         get("/_ah/stop") {
             call.respond("Server is stopping!")
-            notifyAdmin("/_ah/stop is called")
+            adminBot.notifyAdmin(tokens.ADMIN_ID,"/_ah/stop is called")
         }
         get("/_ah/start") {
             call.respond("Server is starting!")
-            notifyAdmin("/_ah/start is called")
+            adminBot.notifyAdmin(tokens.ADMIN_ID,"/_ah/start is called")
         }
-        post("/$ADMIN_BOT_TOKEN") {
+        post("/${tokens.ADMIN}") {
             val response = call.receiveText()
-            BotsKeeper.adminBot.processUpdate(response)
+            botsKeeper.adminBot.processUpdate(response)
             call.respond(HttpStatusCode.OK)
         }
-        post("/$CLIENT_BOT_TOKEN") {
+        post("/${tokens.CLIENT}") {
             val response = call.receiveText()
-            BotsKeeper.clientBot.processUpdate(response)
+            botsKeeper.clientBot.processUpdate(response)
             call.respond(HttpStatusCode.OK)
         }
     }

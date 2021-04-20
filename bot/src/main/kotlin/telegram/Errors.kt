@@ -1,9 +1,11 @@
 package telegram
 
 import Settings
+import com.github.kotlintelegrambot.Bot
 
 
-fun notifyAdmin(
+fun Bot.notifyAdmin(
+    adminId: Long,
     message: String? = null,
     exception: Throwable? = null
 ) {
@@ -13,8 +15,8 @@ fun notifyAdmin(
         exception?.stackTrace?.contentToString()
     ).joinToString(separator = "\n\n")
 
-    BotsKeeper.adminBot.sendMessage(
-        chatId = Settings.ADMIN_ID,
+    sendMessage(
+        chatId = adminId,
         text = text
     )
 //    BotsKeeper.clientBot.sendMessage(

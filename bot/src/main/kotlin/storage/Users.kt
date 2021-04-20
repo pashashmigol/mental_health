@@ -26,10 +26,10 @@ class Users(database: FirebaseDatabase) {
         })
     }
 
-    private fun parseToMap(snapshot: DataSnapshot?) = snapshot!!.children.map {
+    private fun parseToMap(snapshot: DataSnapshot?) = snapshot!!.children.associate {
         val user = it.getValue(User::class.java)
         Pair(user.id, user)
-    }.toMap()
+    }
 
     fun get(id: Long) = users[id]
 
