@@ -29,7 +29,7 @@ private fun launchAdminBot(
 ): Bot {
     return bot {
         val telegramRoom = TelegramRoom(
-            TelegramUserConnection(adminId) { botsKeeper.clientBot },
+            TelegramUserConnection(adminId) { botsKeeper },
         )
         this.token = token
         if (mode == LaunchMode.APP_ENGINE) {
@@ -81,7 +81,7 @@ private fun launchClientBot(
 ): Bot {
     return bot {
         val telegramRoom = TelegramRoom(
-            TelegramUserConnection(adminId) { botsKeeper.clientBot },
+            TelegramUserConnection(adminId) { botsKeeper },
         )
         this.token = token
         if (mode == LaunchMode.APP_ENGINE) {
@@ -110,7 +110,7 @@ private fun launchClientBot(
             command("start") {
                 telegramRoom.welcomeUser(
                     chatInfo(),
-                    TelegramUserConnection(adminId) { this.bot }
+                    TelegramUserConnection(adminId) { botsKeeper }
                 )
             }
             callbackQuery {

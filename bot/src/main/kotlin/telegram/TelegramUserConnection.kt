@@ -1,6 +1,5 @@
 package telegram
 
-import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.TelegramFile
@@ -10,9 +9,11 @@ import com.github.kotlintelegrambot.entities.inputmedia.MediaGroup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import lucher.LucherColor
 import lucher.url
-import java.lang.Exception
 
-class TelegramUserConnection(private val adminId: Long, private val bot: () -> Bot) : UserConnection {
+class TelegramUserConnection(
+    private val adminId: Long,
+    private val botKeeper: () -> BotsKeeper
+) : UserConnection {
 
     private val sentMessages = mutableMapOf<Long, Message>()
 
@@ -29,7 +30,7 @@ class TelegramUserConnection(private val adminId: Long, private val bot: () -> B
                 listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
             }
 
-        val result = bot().sendMessage(
+        val result = botKeeper().clientBot.sendMessage(
             chatId = chatId,
             text = text,
             replyMarkup = InlineKeyboardMarkup.create(options)
@@ -42,7 +43,7 @@ class TelegramUserConnection(private val adminId: Long, private val bot: () -> B
     }
 
     override fun sendMessage(chatId: Long, text: String) {
-        val result = bot().sendMessage(
+        val result = botKeeper().clientBot.sendMessage(
             chatId = chatId,
             text = text
         )
@@ -55,7 +56,7 @@ class TelegramUserConnection(private val adminId: Long, private val bot: () -> B
         text: String,
         exception: Throwable?
     ) {
-        bot().notifyAdmin(
+        botKeeper().adminBot.notifyAdmin(
             adminId = adminId,
             message = text,
             exception = exception
@@ -64,19 +65,19 @@ class TelegramUserConnection(private val adminId: Long, private val bot: () -> B
 
     override fun cleanUp() {
         sentMessages.forEach {
-            bot().deleteMessage(it.value.chat.id, it.value.messageId)
+            botKeeper().clientBot.deleteMessage(it.value.chat.id, it.value.messageId)
         }
     }
 
     override fun removeMessage(chatId: Long, messageId: Long) {
-        bot().deleteMessage(chatId, messageId)
+        botKeeper().clientBot.deleteMessage(chatId, messageId)
     }
 
     override fun sendMessageWithLucherColor(
         chatId: Long,
         color: LucherColor
     ) {
-        val result = bot().sendPhoto(
+        val result = botKeeper().clientBot.sendPhoto(
             caption = "${color.index} - ${color.name}",
             disableNotification = true,
             chatId = chatId,
@@ -100,7 +101,7 @@ class TelegramUserConnection(private val adminId: Long, private val bot: () -> B
 
         val mediaGroup = MediaGroup.from(*allOptions)
 
-        val result = bot().sendMediaGroup(
+        val result = botKeeper().clientBot.sendMediaGroup(
             chatId = chatId,
             disableNotification = true,
             mediaGroup = mediaGroup,
@@ -124,7 +125,7 @@ class TelegramUserConnection(private val adminId: Long, private val bot: () -> B
                 listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
             }
 
-        bot().editMessageReplyMarkup(
+        botKeeper().clientBot.editMessageReplyMarkup(
             chatId = chatId,
             messageId = messageId,
             replyMarkup = InlineKeyboardMarkup.create(options)
@@ -150,7 +151,7 @@ class TelegramUserConnection(private val adminId: Long, private val bot: () -> B
                 }
             }
             buttons?.let {
-                bot().editMessageReplyMarkup(
+                botKeeper().clientBot.editMessageReplyMarkup(
                     chatId = mes.chat.id,
                     messageId = messageId,
                     replyMarkup = InlineKeyboardMarkup.create(buttons)
@@ -168,7 +169,7 @@ class TelegramUserConnection(private val adminId: Long, private val bot: () -> B
         val markup = buttons.map {
             InlineKeyboardButton.CallbackData(it.text, it.data)
         }
-        val result = bot().editMessageText(
+        val result = botKeeper().clientBot.editMessageText(
             chatId = chatId,
             messageId = messageId,
             text = text,
