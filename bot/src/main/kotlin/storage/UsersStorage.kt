@@ -16,6 +16,7 @@ import mmpi.MmpiProcess
 import models.Answers
 import models.TypeOfTest
 import models.User
+import quiz.DailyQuizAnswer
 import telegram.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
@@ -379,9 +380,10 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
 
                 val callback = when (type) {
                     Callback.Type.Gender -> Callback.GenderAnswer(Gender.valueOf(answer))
-                    Callback.Type.Mmpi -> Callback.MmpiAnswer(index!!, MmpiProcess.Answer.valueOf(answer))
-                    Callback.Type.Lucher -> Callback.LucherAnswer(LucherColor.valueOf(answer))
-                    Callback.Type.NewTestRequest -> Callback.NewTestRequest(TypeOfTest.valueOf(answer))
+                    Callback.Type.Mmpi -> Callback.Mmpi(index!!, MmpiProcess.Answer.valueOf(answer))
+                    Callback.Type.Lucher -> Callback.Lucher(LucherColor.valueOf(answer))
+                    Callback.Type.NewTestRequest -> Callback.NewTest(TypeOfTest.valueOf(answer))
+                    Callback.Type.DailyQuiz -> Callback.DailyQuiz(DailyQuizAnswer.valueOf(answer))
                 }
 
                 sessionState.addAnswer(callback)

@@ -106,7 +106,7 @@ class LucherSession(
         val channel = Channel<Unit>(0)//using channel to wait until all colors are chosen
 
         onColorChosen = { callback: Callback, messageId: MessageId? ->
-            callback as Callback.LucherAnswer
+            callback as Callback.Lucher
             val answer = callback.answer.name
             val index = callback.answer.index
 

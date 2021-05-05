@@ -17,6 +17,8 @@ import com.google.firebase.FirebaseOptions
 import com.google.firebase.database.*
 import telegram.LaunchMode
 
+import Result
+
 
 class GoogleDriveConnection(launchMode: LaunchMode, private val testingMode: Boolean) {
 
@@ -65,15 +67,16 @@ class GoogleDriveConnection(launchMode: LaunchMode, private val testingMode: Boo
         return FirebaseDatabase.getInstance()
     }
 
-    fun loadDataFromFile(fileId: String, page: String): List<Map<String, String>>? {
-        val request = sheets.spreadsheets()
-            .values().get(fileId, page)
+    fun loadDataFromFile(fileId: String, page: String): Result<List<Map<String, String>>> {
+
+        val request = sheets.spreadsheets().values().get(fileId, page)
 
         return try {
-            request.execute().getValues().toRawEntries()
+            val value = request.execute().getValues().toRawEntries()
+            Result.Success(value)
         } catch (e: Throwable) {
-            println("GoogleDriveConnection.loadDataFromFile(): $e")
-            null
+            println("GoogleDriveConnection.loadDataFromFile(): ${e.message}")
+            Result.Error(e.message ?: e.toString())
         }
     }
 }

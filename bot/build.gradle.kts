@@ -38,6 +38,7 @@ dependencies {
     implementation("com.soywiz.korlibs.klock:klock:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2")
     implementation("com.github.nwillc:ksvg:3.0.0")
+    implementation("org.junit.jupiter:junit-jupiter:5.7.0")
 
     implementation("net.sf.cssbox:pdf2dom:1.8")
     implementation("com.itextpdf:itextpdf:5.5.10")

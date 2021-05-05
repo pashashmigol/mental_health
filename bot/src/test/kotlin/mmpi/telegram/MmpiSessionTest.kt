@@ -72,7 +72,7 @@ internal class MmpiSessionTest {
 
         repeat(TypeOfTest.Mmpi566.size) {
             val answerResult = session.sendAnswer(
-                Callback.MmpiAnswer(
+                Callback.Mmpi(
                     index = it,
                     answer = MmpiProcess.Answer.Agree
                 )
@@ -126,7 +126,7 @@ internal class MmpiSessionTest {
         val index = answersIds.next()
 
         val res = session.sendAnswer(
-            Callback.MmpiAnswer(
+            Callback.Mmpi(
                 index = index,
                 answer = MmpiProcess.Answer.Agree
             )
@@ -135,7 +135,7 @@ internal class MmpiSessionTest {
 
         if (it % 2 == 0) {//edit given answer
             session.sendAnswer(
-                Callback.MmpiAnswer(
+                Callback.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Disagree
                 )

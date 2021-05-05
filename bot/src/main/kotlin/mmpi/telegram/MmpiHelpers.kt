@@ -24,7 +24,7 @@ fun mmpiButtons(question: Question): List<Button> {
     return question.options.map {
         Button(
             text = it.text,
-            callback = Callback.MmpiAnswer(
+            callback = Callback.Mmpi(
                 index = question.index,
                 answer = MmpiProcess.Answer.valueOf(it.tag)
             )

@@ -15,7 +15,6 @@ import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import telegram.*
-import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 444L
 
@@ -61,14 +60,14 @@ internal class LucherSessionTest {
         //complete first round
         LucherColor.values().forEach {
             lucherSession.sendAnswer(
-                Callback.LucherAnswer(it)
+                Callback.Lucher(it)
             )
         }
 
         //complete second round
         LucherColor.values().forEach {
             lucherSession.sendAnswer(
-                Callback.LucherAnswer(it)
+                Callback.Lucher(it)
             )
         }
         resultChannel.receive()

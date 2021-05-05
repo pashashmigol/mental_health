@@ -9,6 +9,8 @@ import mmpi.Segment
 import storage.CentralDataStorage.string
 import storage.GoogleDriveConnection
 
+import Result
+
 fun loadMmpiData(connection: GoogleDriveConnection, fileId: String): MmpiData {
 
     val questionsMen = reloadQuestions(connection, Gender.Male, fileId)
@@ -37,13 +39,9 @@ private fun reloadQuestions(
     }
 
     val answerOptions: List<String>? =
-        (connection.loadDataFromFile(
-            fileId = fileId,
-            page = answersPage
-        ) ?: connection.loadDataFromFile(
-            fileId = fileId,
-            page = "'answer_options_men'"
-        ))?.map { it["answer"].toString() }
+        ((connection.loadDataFromFile(fileId, answersPage) as? Result.Success)
+            ?: (connection.loadDataFromFile(fileId, "'answer_options_men'") as? Result.Success))
+            ?.data?.map { it["answer"].toString() }
 
     answerOptions!!
 
@@ -52,10 +50,10 @@ private fun reloadQuestions(
         Gender.Female -> "'questions_women'"
     }
 
-    val questions = connection.loadDataFromFile(
+    val questions = (connection.loadDataFromFile(
         fileId = fileId,
         page = questionsPage
-    )?.mapIndexed { index, map ->
+    ) as? Result.Success)?.data?.mapIndexed { index, map ->
         map.toQuestion(index, answerOptions)
     }
 
@@ -71,11 +69,12 @@ private fun loadScales(
     fileId: String
 ): MmpiProcess.Scales {
 
-    val scalesMap = connection.loadDataFromFile(
+    val scalesMap = (connection.loadDataFromFile(
         fileId = fileId,
         page = "'scales'"
-    )!!
-        .filter { it.isNotEmpty() }.associate {
+    ) as Result.Success).data
+        .filter { it.isNotEmpty() }
+        .associate {
             val scale = toScale(it, gender)
             Pair(scale.id, scale)
         }

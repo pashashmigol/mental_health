@@ -90,7 +90,7 @@ class MmpiSession(
             .apply { state.addMessageId(this) }
 
         onAnswer = { callback: Callback, messageId: MessageId? ->
-            callback as Callback.MmpiAnswer
+            callback as Callback.Mmpi
 
             val question = ongoingProcess.questions[callback.index]
 
@@ -123,7 +123,7 @@ class MmpiSession(
         super.applyState(state)
 
         val index: Int = state.answers
-            .filterIsInstance(Callback.MmpiAnswer::class.java)
+            .filterIsInstance(Callback.Mmpi::class.java)
             .maxOfOrNull { it.index } ?: 0
 
         ongoingProcess?.setNextQuestionIndex(index + 1)

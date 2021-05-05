@@ -23,13 +23,13 @@ internal class CallbackTest {
 
     @Test
     fun `makeString Mmpi`() {
-        val mmpiAnswer = Callback.MmpiAnswer(index = 5, answer = MmpiProcess.Answer.Agree)
+        val mmpiAnswer = Callback.Mmpi(index = 5, answer = MmpiProcess.Answer.Agree)
         assertEquals("Mmpi:Agree:5", mmpiAnswer.makeString())
     }
 
     @Test
     fun `fromString Mmpi`() {
-        val mmpiCallback = Callback.fromString("Mmpi:Agree:5") as Callback.MmpiAnswer
+        val mmpiCallback = Callback.fromString("Mmpi:Agree:5") as Callback.Mmpi
 
         assertEquals(
             MmpiProcess.Answer.Agree,
@@ -40,13 +40,13 @@ internal class CallbackTest {
 
     @Test
     fun `makeString Lucher`() {
-        val lucherAnswer = Callback.LucherAnswer(answer = LucherColor.Blue)
+        val lucherAnswer = Callback.Lucher(answer = LucherColor.Blue)
         assertEquals("Lucher:Blue:", lucherAnswer.makeString())
     }
 
     @Test
     fun `fromString Lucher`() {
-        val lucherCallback = Callback.fromString("Lucher:Blue:") as Callback.LucherAnswer
+        val lucherCallback = Callback.fromString("Lucher:Blue:") as Callback.Lucher
 
         assertEquals(
             LucherColor.Blue,
@@ -56,13 +56,13 @@ internal class CallbackTest {
 
     @Test
     fun `makeString NewTestRequest`() {
-        val newTestRequest = Callback.NewTestRequest(TypeOfTest.Mmpi566)
+        val newTestRequest = Callback.NewTest(TypeOfTest.Mmpi566)
         assertEquals("NewTestRequest:Mmpi566:", newTestRequest.makeString())
     }
 
     @Test
     fun `fromString NewTestRequest`() {
-        val newTestRequest = Callback.fromString("NewTestRequest:Mmpi566:") as Callback.NewTestRequest
+        val newTestRequest = Callback.fromString("NewTestRequest:Mmpi566:") as Callback.NewTest
 
         assertEquals(
             TypeOfTest.Mmpi566,

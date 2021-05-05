@@ -14,6 +14,8 @@ import models.Question
 import models.TypeOfTest
 import models.User
 import report.PdfFonts
+import quiz.DailyQuizData
+import quiz.loadDailyQuizData
 import java.util.*
 import java.text.MessageFormat
 import Result
@@ -31,6 +33,7 @@ object CentralDataStorage {
     val lucherData get() = lucher
     val mmpi566Data get() = mmpi566
     val mmpi377Data get() = mmpi377
+    val dailyQuizData get() = dailyQuiz
 
     val usersStorage get() = users
     private val reportsStorage get() = reports
@@ -48,15 +51,16 @@ object CentralDataStorage {
     private lateinit var lucher: LucherData
     private lateinit var mmpi566: MmpiData
     private lateinit var mmpi377: MmpiData
+    private lateinit var dailyQuiz: DailyQuizData
 
     private lateinit var users: UsersStorage
     private lateinit var reports: ReportsStorage
 
     fun reload() {
         lucher = loadLucherData(connection)
-
         mmpi566 = loadMmpiData(connection, Settings.MMPI_566_QUESTIONS_FILE_ID)
         mmpi377 = loadMmpiData(connection, Settings.MMPI_377_QUESTIONS_FILE_ID)
+        dailyQuiz = loadDailyQuizData(connection, Settings.DAILY_QUESTIONS_FILE_ID)
 
         users = UsersStorage(connection.database)
         reports = ReportsStorage(connection, testingMode)

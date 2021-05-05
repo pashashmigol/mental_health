@@ -155,21 +155,21 @@ internal class UsersStorageTest {
 
             mmpi566.saveMessageId(index + 1L)
             mmpi566.saveAnswer(
-                Callback.MmpiAnswer(
+                Callback.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 )
             )
             mmpi377.saveMessageId(index * 2 + 1L)
             mmpi377.saveAnswer(
-                Callback.MmpiAnswer(
+                Callback.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 )
             )
             lucher.saveMessageId(index * 3 + 1L)
             lucher.saveAnswer(
-                Callback.LucherAnswer(
+                Callback.Lucher(
                     answer = LucherColor.Gray
                 )
             )

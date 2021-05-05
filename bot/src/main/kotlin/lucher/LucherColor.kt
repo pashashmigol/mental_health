@@ -43,5 +43,5 @@ fun LucherColor.toARGB(): Int = when (this) {
 }
 
 fun LucherColor.callbackData() =
-    Button(text = "$index - $name", callback = Callback.LucherAnswer(this))
+    Button(text = "$index - $name", callback = Callback.Lucher(this))
 

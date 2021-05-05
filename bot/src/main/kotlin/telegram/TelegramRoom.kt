@@ -13,8 +13,8 @@ import Result
 import io.ktor.util.*
 import io.ktor.util.collections.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
 import models.TypeOfTest
+import quiz.DailyQuizSession
 
 
 private const val TAG = "telegram.WorkSpace"
@@ -27,28 +27,7 @@ class TelegramRoom(
     internal val sessions = ConcurrentMap<Long, TelegramSession<*>>()
     private val scope = GlobalScope
 
-//    private val mutex = Mutex()
-//    fun saveState() = runBlocking {
-//        mutex.lock()
-//        try {
-//            val sessionsStates = sessions.map { it.value.state }
-//
-//            CentralDataStorage.usersStorage.saveAllSessions(sessionsStates)
-//                .dealWithError {
-//                    userConnection.notifyAdmin(
-//                        "saveState(); error = ${it.message}",
-//                        it.exception
-//                    )
-//                    return@runBlocking
-//                }
-//        } finally {
-//            mutex.unlock()
-//        }
-//    }
-
     fun restoreState() = runBlocking {
-//        mutex.lock()
-//        try {
             val storedSessionStates = CentralDataStorage.usersStorage.takeAllSessions()
 
             val storedSessions = (storedSessionStates as Result.Success).data
@@ -60,9 +39,6 @@ class TelegramRoom(
                     Pair(session.sessionId, session)
                 }
             sessions.putAll(storedSessions)
-//        } finally {
-//            mutex.unlock()
-//        }
     }
 
     private suspend fun restoreSession(sessionState: SessionState): TelegramSession<Any> {
@@ -79,6 +55,13 @@ class TelegramRoom(
                 onEndedCallback = { removeSession(it.sessionId) }
             )
             Lucher -> LucherSession(
+                user = user,
+                roomId = roomId,
+                chatId = sessionState.chatId,
+                userConnection = userConnection,
+                onEndedCallback = { removeSession(it.sessionId) }
+            )
+            DailyQuiz -> DailyQuizSession(
                 user = user,
                 roomId = roomId,
                 chatId = sessionState.chatId,
@@ -113,9 +96,10 @@ class TelegramRoom(
                 )
             }
 
-            val lucher = Callback.NewTestRequest(typeOfTest = Lucher)
-            val mmpi566 = Callback.NewTestRequest(typeOfTest = Mmpi566)
-            val mmpi377 = Callback.NewTestRequest(typeOfTest = Mmpi377)
+            val lucher = Callback.NewTest(typeOfTest = Lucher)
+            val mmpi566 = Callback.NewTest(typeOfTest = Mmpi566)
+            val mmpi377 = Callback.NewTest(typeOfTest = Mmpi377)
+            val dailyQuiz = Callback.NewTest(typeOfTest = Mmpi377)
 
             userConnection.sendMessageWithButtons(
                 chatInfo.chatId,
@@ -123,7 +107,8 @@ class TelegramRoom(
                 buttons = listOf(
                     Button(string("lucher"), lucher),
                     Button(string("mmpi_566"), mmpi566),
-                    Button(string("mmpi_377"), mmpi377)
+                    Button(string("mmpi_377"), mmpi377),
+                    Button(string("daily_quiz_on"), dailyQuiz)
                 )
             )
         }
@@ -221,10 +206,10 @@ class TelegramRoom(
 
         try {
             when (val callback = Callback.fromString(data)) {
-                is Callback.GenderAnswer, is Callback.LucherAnswer, is Callback.MmpiAnswer -> {
+                is Callback.GenderAnswer, is Callback.Lucher, is Callback.Mmpi -> {
                     session?.sendAnswer(callback, messageId)
                 }
-                is Callback.NewTestRequest -> {
+                is Callback.NewTest -> {
                     userConnection.notifyAdmin("no session with id $userId, just ${formatSessionsList()}")
                     launchTest(
                         chatInfo = chatInfo,
@@ -273,6 +258,7 @@ class TelegramRoom(
                 chatId = chatId,
                 userConnection = userConnection,
             ) { removeSession(it.sessionId) }
+            DailyQuiz -> TODO()
         }
         sessions[userId]!!.start()
     }
