@@ -3,7 +3,7 @@ package mmpi
 fun agreeTo(vararg i: Int): List<MmpiProcess.Answer> {
     val answers = i.toSet()
     return (0..565).map {
-        if (it in answers)
+        if (it + 1 in answers)
             MmpiProcess.Answer.Agree
         else
             MmpiProcess.Answer.Disagree
@@ -13,7 +13,7 @@ fun agreeTo(vararg i: Int): List<MmpiProcess.Answer> {
 fun disagreeTo(vararg i: Int): List<MmpiProcess.Answer> {
     val answers = i.toSet()
     return (0..565).map {
-        if (it in answers)
+        if (it + 1 in answers)
             MmpiProcess.Answer.Disagree
         else
             MmpiProcess.Answer.Agree

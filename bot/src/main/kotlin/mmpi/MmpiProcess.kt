@@ -89,7 +89,6 @@ class MmpiProcess(gender: Gender, val type: Type) {
             liesScaleL,
             credibilityScaleF,
             correctionScaleK,
-            introversionScale0,
             overControlScale1,
             passivityScale2,
             labilityScale3,
@@ -98,7 +97,8 @@ class MmpiProcess(gender: Gender, val type: Type) {
             rigidityScale6,
             anxietyScale7,
             individualismScale8,
-            optimismScale9
+            optimismScale9,
+            introversionScale0
         )
     }
 

@@ -30,7 +30,7 @@ fun generateReport(
                         scale.raw
                     }
                     dt {
-                        b { text("${scale.name}: $score") }
+                        b { text("${scale.name}: ${scale.score}") }
                     }
                     dd { text("\n" + scale.description) }
                 }

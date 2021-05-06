@@ -53,7 +53,7 @@ class Scale(
             }?.description ?: ""
         }
         return Result(
-            name = title,
+            name = "$title(${id.last()})",
             score = finalScore,
             description = description,
             raw = rawScoreCorrected,
