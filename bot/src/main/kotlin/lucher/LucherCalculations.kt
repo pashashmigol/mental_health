@@ -1,6 +1,7 @@
 package lucher
 
 import com.google.common.collect.Lists
+import models.User
 
 
 data class LucherResult(
@@ -12,6 +13,8 @@ data class LucherResult(
 )
 
 class LucherAnswers(
+    val user: User,
+    val dateString: String,
     val firstRound: List<LucherColor>,
     val secondRound: List<LucherColor>
 )

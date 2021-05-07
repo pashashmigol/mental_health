@@ -9,22 +9,23 @@ import lucher.LucherAnswers
 import lucher.LucherResult
 import lucher.report.generateReport
 import models.Type
+import models.User
 
 class Reports(private val connection: GoogleDriveConnection) {
 
     fun saveLucher(
-        userId: String,
+        user: User,
         answers: LucherAnswers,
         result: LucherResult
     ): String {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
         val fileName = CentralDataStorage.string("lusher_result_filename", date)
 
-        val report = generateReport(userId, answers, result)
+        val report = generateReport(user.name, answers, result)
 
         val parentFolderLink = saveFile(
             fileName = fileName,
-            folderName = userId,
+            folderName = user.name,
             textContent = report
         )
         println("saveLucher(); report saved to : $parentFolderLink")
@@ -32,7 +33,7 @@ class Reports(private val connection: GoogleDriveConnection) {
     }
 
     fun saveMmpi(
-        userId: String,
+        userId: Long,
         report: String,
         type: Type
     ): String {
@@ -45,7 +46,7 @@ class Reports(private val connection: GoogleDriveConnection) {
 
         val parentFolderLink = saveFile(
             fileName = fileName,
-            folderName = userId,
+            folderName = userId.toString(),
             textContent = report
         )
         println("saveMmpi(); report saved to : $parentFolderLink")

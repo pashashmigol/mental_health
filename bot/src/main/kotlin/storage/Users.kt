@@ -1,6 +1,8 @@
 package storage
 
 import com.google.firebase.database.*
+import lucher.LucherAnswers
+import mmpi.MmpiProcess
 import models.User
 import java.util.concurrent.ConcurrentHashMap
 
@@ -44,5 +46,13 @@ class Users(database: FirebaseDatabase) {
         usersRef.child(user.id.toString()).setValue(user) { error: DatabaseError?, ref: DatabaseReference ->
             println("add($user) ref: $ref, error: $error")
         }
+    }
+
+    fun saveAnswers(user: User, answers: List<MmpiProcess.Answer>) {
+
+    }
+
+    fun saveAnswers(user: User, answers: LucherAnswers) {
+
     }
 }

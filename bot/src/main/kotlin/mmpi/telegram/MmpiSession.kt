@@ -3,7 +3,6 @@ package mmpi.telegram
 import Gender
 import kotlinx.coroutines.channels.Channel
 import mmpi.*
-import mmpi.report.generateReport
 import models.Type
 import models.User
 import storage.CentralDataStorage
@@ -113,16 +112,12 @@ class MmpiSession(
         onAnswer = null
         val result = ongoingProcess.calculateResult()
 
-        val report = generateReport(
-            userId = user.name,
+        val resultFolder = CentralDataStorage.saveMmpi(
+            user = user,
+            type = type,
             questions = ongoingProcess.questions,
             answers = ongoingProcess.answers,
             result = result
-        )
-        val resultFolder = CentralDataStorage.reports.saveMmpi(
-            userId = user.name,
-            report = report,
-            type = type
         )
         showResult(
             user = user,

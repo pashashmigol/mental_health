@@ -2,8 +2,8 @@ package mmpi.reports
 
 import mmpi.MmpiProcess
 import mmpi.Scale
-import mmpi.report.chartFor
 import mmpi.report.generateReport
+import models.User
 import org.junit.jupiter.api.Test
 
 
@@ -26,10 +26,9 @@ internal class ReportHelpersTest {
             individualismScale8 = Scale.Result(name = "individualism", score = 50, description = "", raw = 0),
             optimismScale9 = Scale.Result(name = "optimism", score = 50, description = "", raw = 0)
         )
-//        val chartSvg = chartFor(mmpiResult)
 
         val report = generateReport(
-            userId = "Pasha Shmyhol",
+            user = User(id = 0, name = "Pasha Shmyhol"),
             questions = listOf(),
             answers = listOf(),
             result = mmpiResult

@@ -8,6 +8,9 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import storage.CentralDataStorage
 
+import mmpi.report.generateReport
+import models.User
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LenaTest {
 
@@ -30,7 +33,7 @@ internal class LenaTest {
             scales = CentralDataStorage.mmpi377Data.scales(Gender.Female)
         )
         val report = generateReport(
-            userId = "Елена Жебрикова",
+            user = User(id = 0, name = "Елена Жебрикова", googleDriveFolder = ""),
             questions = CentralDataStorage.mmpi377Data.questions(Gender.Female),
             answers = answers,
             result = result

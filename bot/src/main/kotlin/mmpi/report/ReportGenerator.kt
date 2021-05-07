@@ -7,9 +7,10 @@ import kotlinx.html.stream.appendHTML
 import mmpi.MmpiProcess
 import models.Question
 import mmpi.reports.chart
+import models.User
 
 fun generateReport(
-    userId: String,
+    user: User,
     questions: List<Question>,
     answers: List<MmpiProcess.Answer>,
     result: MmpiProcess.Result
@@ -17,7 +18,7 @@ fun generateReport(
     val answerItems = questions.zip(answers)
 
     val html = StringBuilder().appendHTML().apply {
-        h1 { text(userId) }
+        h1 { text(user.name) }
 
         body {
             chart(chartFor(result))

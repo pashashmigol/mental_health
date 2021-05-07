@@ -1,9 +1,15 @@
 package storage
 
+import lucher.LucherAnswers
 import lucher.LucherData
+import lucher.LucherResult
 import lucher.loadLucherData
 import mmpi.MmpiData
+import mmpi.MmpiProcess
+import mmpi.report.generateReport
 import mmpi.storage.loadMmpiData
+import models.Question
+import models.Type
 import models.User
 import java.util.*
 import java.text.MessageFormat
@@ -59,8 +65,40 @@ object CentralDataStorage {
             id = userId,
             name = userName,
             googleDriveFolder = reportsFolderLink
-
         )
         usersRepository.add(user)
+    }
+
+    fun saveMmpi(
+        user: User,
+        type: Type,
+        questions: List<Question>,
+        answers: List<MmpiProcess.Answer>,
+        result: MmpiProcess.Result
+    ): String {
+        users.saveAnswers(user, answers)
+
+        val report = generateReport(
+            user = user,
+            questions = questions,
+            answers = answers,
+            result = result
+        )
+        return reports.saveMmpi(user.id, report, type)
+    }
+
+    fun saveLucher(
+        user: User,
+        answers: LucherAnswers,
+        result: LucherResult
+    ): String {
+
+        users.saveAnswers(user, answers)
+
+        return reports.saveLucher(
+            user = user,
+            answers = answers,
+            result = result
+        )
     }
 }

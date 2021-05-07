@@ -12,6 +12,7 @@ import storage.CentralDataStorage.string
 import telegram.*
 import telegram.helpers.showResult
 import Result
+import java.time.Instant.now
 
 typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
 
@@ -49,11 +50,16 @@ data class LucherSession(
         askUserToWaitBeforeSecondRound(chatId, minutes = LUCHER_TEST_TIMEOUT, userConnection)
         val secondRoundAnswers = runRound(chatId, this.userConnection)
 
-        val answers = LucherAnswers(firstRoundAnswers, secondRoundAnswers)
+        val answers = LucherAnswers(
+            user = user,
+            dateString = now().toString(),
+            firstRound = firstRoundAnswers,
+            secondRound = secondRoundAnswers
+        )
         val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
 
-        val folderLink = CentralDataStorage.reports.saveLucher(
-            userId = user.name,
+        val folderLink = CentralDataStorage.saveLucher(
+            user = user,
             answers = answers,
             result = result
         )

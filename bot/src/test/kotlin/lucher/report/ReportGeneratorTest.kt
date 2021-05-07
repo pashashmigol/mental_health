@@ -3,13 +3,12 @@ package lucher.report
 import lucher.LucherAnswers
 import lucher.LucherColor
 import lucher.calculateResult
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import storage.CentralDataStorage
 import telegram.LaunchMode
-
+import models.User
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ReportGeneratorTest {
@@ -23,6 +22,8 @@ internal class ReportGeneratorTest {
     @Test
     fun generateReport() {
         val answers = LucherAnswers(
+            user = User(id = 0),
+            dateString = "test date",
             firstRound = listOf(
                 LucherColor.Red,
                 LucherColor.Blue,
