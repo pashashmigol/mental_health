@@ -1,7 +1,6 @@
 package lucher
 
 import com.google.common.collect.Lists
-import models.User
 
 
 data class LucherResult(
@@ -10,13 +9,6 @@ data class LucherResult(
     val contraversedPairs: Map<Element, String>,
     val firstRoundAnxiety: Int,
     val secondRoundAnxiety: Int
-)
-
-class LucherAnswers(
-    val user: User,
-    val dateString: String,
-    val firstRound: List<LucherColor>,
-    val secondRound: List<LucherColor>
 )
 
 data class AllPairs(

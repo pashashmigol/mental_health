@@ -1,5 +1,6 @@
 package lucher.report
 
+import com.soywiz.klock.DateTime
 import lucher.LucherAnswers
 import lucher.LucherColor
 import lucher.calculateResult
@@ -23,7 +24,7 @@ internal class ReportGeneratorTest {
     fun generateReport() {
         val answers = LucherAnswers(
             user = User(id = 0),
-            dateString = "test date",
+            dateTime = DateTime.now(),
             firstRound = listOf(
                 LucherColor.Red,
                 LucherColor.Blue,

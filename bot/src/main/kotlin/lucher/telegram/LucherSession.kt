@@ -12,7 +12,7 @@ import storage.CentralDataStorage.string
 import telegram.*
 import telegram.helpers.showResult
 import Result
-import java.time.Instant.now
+import com.soywiz.klock.DateTime
 
 typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
 
@@ -52,7 +52,7 @@ data class LucherSession(
 
         val answers = LucherAnswers(
             user = user,
-            dateString = now().toString(),
+            dateTime = DateTime.now(),
             firstRound = firstRoundAnswers,
             secondRound = secondRoundAnswers
         )

@@ -4,6 +4,7 @@ import lucher.LucherAnswers
 import lucher.LucherData
 import lucher.LucherResult
 import lucher.loadLucherData
+import mmpi.MmpiAnswers
 import mmpi.MmpiData
 import mmpi.MmpiProcess
 import mmpi.report.generateReport
@@ -13,6 +14,7 @@ import models.Type
 import models.User
 import java.util.*
 import java.text.MessageFormat
+import java.time.LocalDateTime.now
 
 
 object CentralDataStorage {
@@ -22,11 +24,11 @@ object CentralDataStorage {
     val mmpi566Data get() = mmpi566
     val mmpi377Data get() = mmpi377
     val users get() = usersRepository
-    val reports get() = reportsRepository
+    private val reports get() = reportsRepository
 
-    fun init(rootPath: String) {
+    fun init(rootPath: String, testingMode: Boolean = false) {
         if (!this::connection.isInitialized) {
-            connection = GoogleDriveConnection(rootPath)
+            connection = GoogleDriveConnection(rootPath, testingMode)
             reload()
         }
     }
@@ -76,7 +78,12 @@ object CentralDataStorage {
         answers: List<MmpiProcess.Answer>,
         result: MmpiProcess.Result
     ): String {
-        users.saveAnswers(user, answers)
+        val mmpiAnswers = MmpiAnswers(
+            user = user,
+            date = now().toString(),
+            answers = listOf()
+        )
+        users.saveAnswers(user, mmpiAnswers)
 
         val report = generateReport(
             user = user,

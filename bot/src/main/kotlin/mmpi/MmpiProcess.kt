@@ -1,9 +1,7 @@
 package mmpi
 
 import Gender
-import models.Question
-import models.Type
-import models.size
+import models.*
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 

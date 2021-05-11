@@ -2,6 +2,7 @@ package storage
 
 import Settings.FIREBASE_CREDENTIALS_FILE_NAME
 import Settings.FIREBASE_DATABASE_URL
+import Settings.FIREBASE_TEST_DATABASE_URL
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.drive.Drive
@@ -16,7 +17,7 @@ import com.google.firebase.FirebaseOptions
 import com.google.firebase.database.*
 
 
-class GoogleDriveConnection(projectRoot: String) {
+class GoogleDriveConnection(projectRoot: String, private val testingMode: Boolean) {
 
     val driveService: Drive
     private val sheets: Sheets
@@ -42,16 +43,17 @@ class GoogleDriveConnection(projectRoot: String) {
 
     private fun initFireBaseDatabase(credentials: GoogleCredentials): FirebaseDatabase {
         val auth = mapOf("uid" to "my-service-worker")
+        val databaseUrl = if (testingMode) FIREBASE_TEST_DATABASE_URL else FIREBASE_DATABASE_URL
 
         val options: FirebaseOptions = FirebaseOptions.builder()
             .setCredentials(credentials)
-            .setDatabaseUrl(FIREBASE_DATABASE_URL)
+            .setDatabaseUrl(databaseUrl)
             .setDatabaseAuthVariableOverride(auth)
             .build()
 
         try {
             FirebaseApp.initializeApp(options)
-        } catch (e: Throwable){
+        } catch (e: Throwable) {
             println("FirebaseApp.initializeApp(): $e")
         }
 
