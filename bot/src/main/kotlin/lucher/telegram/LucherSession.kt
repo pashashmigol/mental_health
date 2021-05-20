@@ -29,7 +29,7 @@ data class LucherSession(
 
     override suspend fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
-            userConnection.notifyAdmin("LucherSession error", exception)
+            userConnection.notifyAdmin("LucherSession error: ${exception.message}", exception)
         }
         scope.launch(handler) { executeTesting(user, chatId) }
     }

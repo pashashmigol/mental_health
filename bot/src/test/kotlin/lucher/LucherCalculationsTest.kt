@@ -1,6 +1,7 @@
 package lucher
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class LucherCalculationsTest {
@@ -66,7 +67,7 @@ internal class LucherCalculationsTest {
 
         assertEquals(expectedBroken, actualBroken)
 
-        val expectedContra = listOf( "+3-2", "+3-7", "+3-5").sorted()
+        val expectedContra = listOf("+3-2", "+3-7", "+3-5").sorted()
         val actualContra = findPairs(firstRound, secondRound)
             .contraversedPairs.map { it.toString() }.sorted()
 
@@ -88,6 +89,35 @@ internal class LucherCalculationsTest {
             )
         )
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `find broken pairs on equal sets`() {
+        val firstRound = listOf(
+            LucherColor.Blue,
+            LucherColor.Yellow,
+            LucherColor.Red,
+            LucherColor.Green,
+            LucherColor.Brown,
+            LucherColor.Violet,
+            LucherColor.Gray,
+            LucherColor.Black
+        ).map { it.index.toString() }
+
+        val secondRound = listOf(
+            LucherColor.Blue,
+            LucherColor.Yellow,
+            LucherColor.Red,
+            LucherColor.Green,
+            LucherColor.Brown,
+            LucherColor.Violet,
+            LucherColor.Gray,
+            LucherColor.Black
+        ).map { it.index.toString() }
+
+        val actual = findBrokenPairs(firstRound, secondRound)
+
+        assertTrue(actual.isEmpty())
     }
 
     @Test

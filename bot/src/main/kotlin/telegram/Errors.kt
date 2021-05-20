@@ -1,6 +1,5 @@
 package telegram
 
-import Settings
 import com.github.kotlintelegrambot.Bot
 
 
@@ -8,19 +7,17 @@ fun Bot.notifyAdmin(
     adminId: Long,
     message: String? = null,
     exception: Throwable? = null
-) {
-    val text = listOfNotNull(
+) = sendMessage(
+    chatId = adminId,
+    text = formatMessage(message, exception)
+)
+
+internal fun formatMessage(message: String?, exception: Throwable?): String {
+    return listOfNotNull(
         message,
         exception?.message,
         exception?.stackTrace?.contentToString()
     ).joinToString(separator = "\n\n")
-
-    sendMessage(
-        chatId = adminId,
-        text = text
-    )
-//    BotsKeeper.clientBot.sendMessage(
-//        chatId = userId,
-//        text = text
-//    )
 }
+
+
