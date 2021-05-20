@@ -93,7 +93,6 @@ class MmpiSession(
                     }
                 }
                 if (ongoingProcess.allQuestionsAreAnswered()) {
-                    userConnection.cleanUp()
                     finishTesting(ongoingProcess, user, userConnection)
                 }
 
@@ -119,6 +118,7 @@ class MmpiSession(
             answers = ongoingProcess.answers,
             result = result
         )
+        userConnection.cleanUp()
         showResult(
             user = user,
             resultLink = resultFolder,

@@ -1,5 +1,6 @@
 package storage
 
+import com.soywiz.klock.DateTime
 import lucher.LucherAnswers
 import lucher.LucherData
 import lucher.LucherResult
@@ -80,7 +81,7 @@ object CentralDataStorage {
     ): String {
         val mmpiAnswers = MmpiAnswers(
             user = user,
-            date = now().toString(),
+            dateTime = DateTime.now(),
             answers = listOf()
         )
         users.saveAnswers(user, mmpiAnswers)

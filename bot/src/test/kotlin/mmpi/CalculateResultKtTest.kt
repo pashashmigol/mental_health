@@ -6,6 +6,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import storage.CentralDataStorage
+import telegram.LaunchMode
 import kotlin.math.roundToInt
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -15,7 +16,7 @@ internal class CalculateResultKtTest {
 
     @BeforeAll
     fun setup() {
-        CentralDataStorage.init(rootPath = "src/main/webapp/")
+        CentralDataStorage.init(LaunchMode.TESTS.rootPath)
 
         scalesM = CentralDataStorage.mmpi566Data.scales(Gender.Male)
         scalesF = CentralDataStorage.mmpi566Data.scales(Gender.Female)

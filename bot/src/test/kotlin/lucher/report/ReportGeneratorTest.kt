@@ -16,8 +16,7 @@ internal class ReportGeneratorTest {
 
     @BeforeAll
     fun init() {
-        val launchMode = LaunchMode.TESTS
-        CentralDataStorage.init(launchMode.rootPath)
+        CentralDataStorage.init(LaunchMode.TESTS.rootPath)
     }
 
     @Test

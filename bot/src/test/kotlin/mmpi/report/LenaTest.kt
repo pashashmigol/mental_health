@@ -10,13 +10,14 @@ import storage.CentralDataStorage
 
 import mmpi.report.generateReport
 import models.User
+import telegram.LaunchMode
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LenaTest {
 
     @BeforeAll
     fun setup() {
-        CentralDataStorage.init(rootPath = "src/main/webapp/")
+        CentralDataStorage.init(LaunchMode.TESTS.rootPath)
     }
 
     @Test

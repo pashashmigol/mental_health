@@ -135,7 +135,7 @@ private fun parseMmpiAnswers(user: User, snapshot: DataSnapshot?): List<Answers>
         }
         MmpiAnswers(
             user = user,
-            date = entry.key,
+            dateString = entry.key,
             answers = answers
         )
     }

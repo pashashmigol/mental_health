@@ -4,7 +4,6 @@ import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTime
 import com.soywiz.klock.parseUtc
 import models.Answers
-import models.Type
 import models.User
 
 class MmpiAnswers(
@@ -15,9 +14,9 @@ class MmpiAnswers(
 
     constructor(
         user: User,
-        date: String,
+        dateString: String,
         answers: List<MmpiProcess.Answer>,
-    ) : this(user, DateFormat.FORMAT1.parseUtc(date), answers)
+    ) : this(user, DateFormat.FORMAT1.parseUtc(dateString), answers)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
