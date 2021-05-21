@@ -68,7 +68,15 @@ class Users(database: FirebaseDatabase) {
         userAnswersRef
             .child(user.id.toString())
             .child(answers.dateString)
-            .setValue(answers.answers) { error, ref ->
+            .setValue(answers.data) { error, ref ->
+                println("add($user) ref: $ref, error: $error")
+            }
+    }
+
+    fun clearUser(user: User) {
+        usersMmpiAnswersRef
+            .child(user.id.toString())
+            .setValue(null) { error, ref ->
                 println("add($user) ref: $ref, error: $error")
             }
     }
@@ -129,7 +137,7 @@ private fun parseMmpiAnswers(user: User, snapshot: DataSnapshot?): List<Answers>
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
-    return snapshot!!.getValue(typeIndicator).map { entry ->
+    return snapshot?.getValue(typeIndicator)?.map { entry ->
         val answers = (entry.value as List<*>).map {
             MmpiProcess.Answer.valueOf(it as String)
         }
@@ -138,16 +146,15 @@ private fun parseMmpiAnswers(user: User, snapshot: DataSnapshot?): List<Answers>
             dateString = entry.key,
             answers = answers
         )
-    }
+    } ?: return emptyList()
 }
 
 private fun parseLucherAnswers(user: User, snapshot: DataSnapshot?): List<Answers> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
-    return snapshot!!.getValue(typeIndicator).map { entry ->
-
-        val answers = (entry.value as HashMap<String, List<String>>)
+    return snapshot?.getValue(typeIndicator)?.map { entry ->
+        val answers = entry.value as Map<String, List<String>>
 
         val firstRound = answers["firstRound"]!!.map { LucherColor.valueOf(it) }
         val secondRound = answers["secondRound"]!!.map { LucherColor.valueOf(it) }
@@ -158,7 +165,7 @@ private fun parseLucherAnswers(user: User, snapshot: DataSnapshot?): List<Answer
             firstRound = firstRound,
             secondRound = secondRound
         )
-    }
+    } ?: return emptyList()
 }
 
 private fun parseUsers(snapshot: DataSnapshot?): Map<Long, User> {

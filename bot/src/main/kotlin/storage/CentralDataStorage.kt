@@ -81,7 +81,7 @@ object CentralDataStorage {
         val mmpiAnswers = MmpiAnswers(
             user = user,
             dateTime = DateTime.now(),
-            answers = listOf()
+            data = answers
         )
         users.saveAnswers(user, mmpiAnswers)
 

@@ -7,7 +7,7 @@ abstract class Answers(
     val user: User,
     val date: DateTime
 ) {
-    abstract val answers: Any
+    abstract val data: Any
 
     val dateString: String = date.toString(DateFormat.FORMAT1)
 

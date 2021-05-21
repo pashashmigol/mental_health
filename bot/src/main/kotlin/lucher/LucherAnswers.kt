@@ -22,7 +22,7 @@ class LucherAnswers(
         secondRound: List<LucherColor>
     ) : this(user, DateFormat.FORMAT1.parseUtc(date), firstRound, secondRound)
 
-    override val answers: Any = mapOf(
+    override val data: Any = mapOf(
         "firstRound" to firstRound,
         "secondRound" to secondRound
     )

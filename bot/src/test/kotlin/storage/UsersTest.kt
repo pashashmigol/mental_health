@@ -18,7 +18,6 @@ import lucher.LucherAnswers
 import lucher.roundAnswers
 import mmpi.MmpiAnswers
 import mmpi.justFewAnswers
-import models.Type
 import org.junit.jupiter.api.Timeout
 import java.util.concurrent.TimeUnit
 
@@ -87,7 +86,7 @@ internal class UsersTest {
         return MmpiAnswers(
             user = user,
             dateTime = DateTime.EPOCH.plus(DateTimeSpan(seconds = 1)),
-            answers = justFewAnswers
+            data = justFewAnswers
         )
     }
 

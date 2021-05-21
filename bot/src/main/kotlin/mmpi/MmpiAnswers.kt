@@ -9,7 +9,7 @@ import models.User
 class MmpiAnswers(
     user: User,
     dateTime: DateTime,
-    override val answers: List<MmpiProcess.Answer>
+    override val data: List<MmpiProcess.Answer>
 ) : Answers(user, dateTime) {
 
     constructor(
@@ -26,8 +26,8 @@ class MmpiAnswers(
 
         if (user != other.user) return false
         if (date != other.date) return false
-        if (answers.size != other.answers.size) return false
-        if (answers.zip(other.answers).any { it.first != it.second }) return false
+        if (data.size != other.data.size) return false
+        if (data.zip(other.data).any { it.first != it.second }) return false
 
         return true
     }
@@ -35,7 +35,7 @@ class MmpiAnswers(
     override fun hashCode(): Int {
         var result = user.hashCode()
         result = 31 * result + date.hashCode()
-        result = 31 * result + answers.hashCode()
+        result = 31 * result + data.hashCode()
         return result
     }
 }
