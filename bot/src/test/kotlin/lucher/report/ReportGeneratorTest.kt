@@ -16,7 +16,10 @@ internal class ReportGeneratorTest {
 
     @BeforeAll
     fun init() {
-        CentralDataStorage.init(LaunchMode.TESTS.rootPath)
+        CentralDataStorage.init(
+            rootPath = LaunchMode.TESTS.rootPath,
+            testingMode = true
+        )
     }
 
     @Test

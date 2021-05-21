@@ -16,7 +16,10 @@ internal class CalculateResultKtTest {
 
     @BeforeAll
     fun setup() {
-        CentralDataStorage.init(LaunchMode.TESTS.rootPath)
+        CentralDataStorage.init(
+            rootPath = LaunchMode.TESTS.rootPath,
+            testingMode = true
+        )
 
         scalesM = CentralDataStorage.mmpi566Data.scales(Gender.Male)
         scalesF = CentralDataStorage.mmpi566Data.scales(Gender.Female)

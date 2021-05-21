@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import storage.CentralDataStorage
 
-import mmpi.report.generateReport
 import models.User
 import telegram.LaunchMode
 
@@ -17,7 +16,10 @@ internal class LenaTest {
 
     @BeforeAll
     fun setup() {
-        CentralDataStorage.init(LaunchMode.TESTS.rootPath)
+        CentralDataStorage.init(
+            rootPath = LaunchMode.TESTS.rootPath,
+            testingMode = true
+        )
     }
 
     @Test

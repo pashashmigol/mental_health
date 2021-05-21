@@ -28,7 +28,10 @@ internal class MmpiSessionTest {
 
     @BeforeAll
     fun init() {
-        CentralDataStorage.init(LaunchMode.TESTS.rootPath)
+        CentralDataStorage.init(
+            rootPath = LaunchMode.TESTS.rootPath,
+            testingMode = true
+        )
 
         val userId = 1L
         CentralDataStorage.createUser(userId, "test_user")
