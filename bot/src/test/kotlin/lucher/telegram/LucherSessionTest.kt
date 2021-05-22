@@ -17,6 +17,7 @@ import com.soywiz.klock.DateTime
 import lucher.LucherAnswers
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 2L
 
@@ -41,14 +42,13 @@ internal class LucherSessionTest {
     }
 
     @Test
-//    @Timeout(value = 40, unit = TimeUnit.SECONDS)
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun start() = runBlocking {
 
         val resultChannel = Channel<Unit>(2)
         val lucherSession = LucherSession(
             id = LUCHER_SESSION_TEST_USER_ID,
             userConnection = object : UserConnection {
-
                 override fun sendMessageWithButtons(
                     chatId: Long,
                     text: String,
@@ -60,7 +60,8 @@ internal class LucherSessionTest {
             },
             onEndedCallback = {
                 resultChannel.offer(Unit)
-            }
+            },
+            minutesBetweenRounds = 2
         )
 
         lucherSession.start(user = testUser, chatId = 0L)

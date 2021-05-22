@@ -22,6 +22,7 @@ typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data:
 data class LucherSession(
     override val id: Long,
     val userConnection: UserConnection,
+    val minutesBetweenRounds: Int = LUCHER_TEST_TIMEOUT,
     val onEndedCallback: OnEnded
 ) : TelegramSession<Unit> {
     companion object {
