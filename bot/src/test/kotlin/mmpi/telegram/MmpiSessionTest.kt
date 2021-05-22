@@ -22,7 +22,6 @@ const val MMPI_SESSION_TEST_USER_ID = 1L
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MmpiSessionTest {
-
     private lateinit var testUser: User
 
     @BeforeAll
@@ -179,6 +178,8 @@ internal class MmpiSessionTest {
         assertFalse(answersFromDatabase.isEmpty())
 
         val lastAvailableAnswers = answersFromDatabase.first().data as List<MmpiProcess.Answer>
+
+        assertArrayEquals(answers.toTypedArray(), lastAvailableAnswers.toTypedArray())
 
         answers.zip(lastAvailableAnswers).forEach {
             assertEquals(it.first, it.second)

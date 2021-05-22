@@ -3,9 +3,7 @@ package lucher
 import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTime
 import com.soywiz.klock.parseUtc
-import mmpi.MmpiProcess
 import models.Answers
-import models.Type
 import models.User
 
 class LucherAnswers(

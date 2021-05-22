@@ -13,6 +13,9 @@ import telegram.*
 import telegram.helpers.showResult
 import Result
 import com.soywiz.klock.DateTime
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
 
@@ -34,17 +37,8 @@ data class LucherSession(
         scope.launch(handler) { executeTesting(user, chatId) }
     }
 
-    override suspend fun onCallbackFromUser(messageId: Long, data: String): Result<Unit> {
-        val chosen = onColorChosen
-        return if (chosen == null) {
-            Result.Error("onAnswer is null")
-        } else {
-            chosen.invoke(userConnection, messageId, data)
-            Result.Success(data = Unit)
-        }
-    }
-
     private suspend fun executeTesting(user: User, chatId: Long) {
+
         val firstRoundAnswers = runRound(chatId, this.userConnection)
 
         askUserToWaitBeforeSecondRound(chatId, minutes = LUCHER_TEST_TIMEOUT, userConnection)
@@ -92,6 +86,7 @@ data class LucherSession(
             answers.add(LucherColor.valueOf(answer))
 
             if (allColorsChosen(answers)) {
+                onColorChosen = null
                 val lastShownOption = shownOptions.first()
                 answers.add(lastShownOption)
                 connection.cleanUp()
@@ -102,5 +97,16 @@ data class LucherSession(
         assert(answers.size == LucherColor.values().size) { "wrong answers number" }
 
         return answers
+    }
+
+    private val mutex = Mutex()
+    override suspend fun onCallbackFromUser(messageId: Long, data: String): Result<Unit> {
+        mutex.withLock {
+            while (onColorChosen == null) {
+                delay(1)
+            }
+            onColorChosen?.invoke(userConnection, messageId, data) ?: Result.Error("onAnswer is null")
+        }
+        return Result.Success(Unit)
     }
 }

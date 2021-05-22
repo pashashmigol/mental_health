@@ -79,6 +79,11 @@ class Users(database: FirebaseDatabase) {
             .setValue(null) { error, ref ->
                 println("add($user) ref: $ref, error: $error")
             }
+        usersLucherAnswersRef
+            .child(user.id.toString())
+            .setValue(null) { error, ref ->
+                println("add($user) ref: $ref, error: $error")
+            }
     }
 
 
