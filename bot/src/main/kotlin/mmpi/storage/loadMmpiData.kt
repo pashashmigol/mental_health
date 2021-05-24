@@ -6,6 +6,7 @@ import mmpi.MmpiData
 import mmpi.MmpiProcess
 import mmpi.Scale
 import mmpi.Segment
+import storage.CentralDataStorage.string
 import storage.GoogleDriveConnection
 
 fun loadMmpiData(connection: GoogleDriveConnection, fileId: String): MmpiData {
@@ -60,7 +61,7 @@ private fun reloadQuestions(
 
     val size = questions?.size
     return questions?.mapIndexed { i: Int, question: Question ->
-        question.copy(text = "(${i + 1}/$size) ${question.text}:")
+        question.copy(text = "(${i + 1} ${string("of")} $size) ${question.text}:")
     }
 }
 
