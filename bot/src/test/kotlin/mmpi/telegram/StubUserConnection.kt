@@ -17,7 +17,7 @@ class StubUserConnection : UserConnection {
         return messageIds.next()
     }
 
-    override fun sendMessage(chatId: Long, text: String) {
+    override fun sendMessage(chatId: Long, text: String, removeWhenSessionIsOver: Boolean) {
         println("### sendMessage(chatId: $chatId, text: $text)")
     }
 

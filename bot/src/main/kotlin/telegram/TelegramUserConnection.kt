@@ -42,13 +42,19 @@ class TelegramUserConnection(
         return -1
     }
 
-    override fun sendMessage(chatId: Long, text: String) {
+    override fun sendMessage(
+        chatId: Long,
+        text: String,
+        removeWhenSessionIsOver: Boolean
+    ) {
         val result = botKeeper().clientBot.sendMessage(
             chatId = chatId,
             text = text
         )
-        result.first?.body()?.result?.let { message ->
-            sentMessages[message.messageId] = message
+        if (removeWhenSessionIsOver) {
+            result.first?.body()?.result?.let { message ->
+                sentMessages[message.messageId] = message
+            }
         }
     }
 

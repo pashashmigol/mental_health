@@ -13,7 +13,8 @@ interface UserConnection {
 
     fun sendMessage(
         chatId: Long,
-        text: String
+        text: String,
+        removeWhenSessionIsOver: Boolean = true
     ) {
     }
 

@@ -118,12 +118,12 @@ class MmpiSession(
             answers = ongoingProcess.answers,
             result = result
         )
-        userConnection.cleanUp()
         showResult(
             user = user,
             resultLink = resultFolder,
             userConnection = userConnection
         )
+        userConnection.cleanUp()
         onEndedCallback(this)
         testingCallback?.invoke(ongoingProcess.answers)
     }
