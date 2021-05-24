@@ -35,6 +35,7 @@ class MmpiSession(
     override suspend fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
             userConnection.notifyAdmin("MmpiSession error", exception)
+            userConnection.sendMessage(chatId, CentralDataStorage.string("start_again"))
         }
         scope.launch(handler) { executeTesting(user) }
     }
