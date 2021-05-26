@@ -42,7 +42,7 @@ internal class LucherSessionTest {
     }
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+//    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun start() = runBlocking {
 
         val resultChannel = Channel<Unit>(2)
@@ -56,6 +56,10 @@ internal class LucherSessionTest {
                     placeButtonsVertically: Boolean
                 ): Long {
                     return 0
+                }
+
+                override fun notifyAdmin(text: String, exception: Throwable?) {
+                    fail(exception)
                 }
             },
             onEndedCallback = {
@@ -104,7 +108,7 @@ internal class LucherSessionTest {
         assertEquals(expectedAnswers.user, databaseAnswers.user)
 
         val timeSpan = expectedAnswers.date - databaseAnswers.date
-        assertTrue(timeSpan.seconds < 2)
+        assertTrue(timeSpan.seconds < 5)
 
         assertArrayEquals(
             expectedAnswers.firstRound.toTypedArray(),
