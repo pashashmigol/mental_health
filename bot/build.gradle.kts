@@ -51,7 +51,8 @@ dependencies {
 
     implementation("org.xhtmlrenderer:flying-saucer-parent:9.1.22")
 
-    implementation("com.lowagie:itext:2.1.7")
+    implementation("com.itextpdf:itext-asian:5.2.0")
+    implementation("com.itextpdf:itextpdf:5.5.13.2")
     implementation("org.xhtmlrenderer:flying-saucer-core:9.1.22")
     implementation("org.xhtmlrenderer:flying-saucer-pdf:9.1.22")
     implementation("org.apache.xmlgraphics:batik-transcoder:1.14")

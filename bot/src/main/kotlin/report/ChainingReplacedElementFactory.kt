@@ -23,9 +23,6 @@ open class ChainingReplacedElementFactory : ReplacedElementFactory {
         cssWidth: Int,
         cssHeight: Int
     ): ReplacedElement? {
-
-        println("### ${box.element.nodeName}")
-
         for (replacedElementFactory in replacedElementFactories) {
             val element = replacedElementFactory.createReplacedElement(
                 layoutContext, box, uac, cssWidth, cssHeight

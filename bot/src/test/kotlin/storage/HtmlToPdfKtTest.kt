@@ -1,55 +1,37 @@
 package storage
 
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
-import report.convertHtmlToPdf2
+import org.junit.jupiter.api.Timeout
+import report.convertHtmlToPdf
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 internal class HtmlToPdfKtTest {
 
     @Test
-    fun `simple example`() {
-        val htmlFile = File("src/test/resources/", "example.html")
-        assertTrue(htmlFile.exists())
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    fun `generate pdf files from examples`() {
+        val examples = File("src/test/resources/")
+        assertTrue(examples.exists())
+        assertTrue(examples.isDirectory)
+        File("build", "test-results").mkdir()
+        File("build/test-results", "pdf").mkdir()
 
-        val pdfFile = File("build/example.pdf")
-        pdfFile.createNewFile()
-        assertTrue(pdfFile.exists())
+        examples.listFiles { file ->
+            try {
+                val pdfFile = File("build/test-results/pdf", "${file.nameWithoutExtension}.pdf")
+                pdfFile.createNewFile()
+                assertTrue(pdfFile.exists())
+                val pdfStream = pdfFile.outputStream()
 
-        val pdfStream = pdfFile.outputStream()
-
-        convertHtmlToPdf2(htmlFile, pdfStream)
-    }
-
-    @Test
-    @Disabled
-    fun `mmpi report to pdf`() {
-        val htmlFile = File("src/test/resources/", "test_mmpi_report.html")
-        assertTrue(htmlFile.exists())
-
-        val pdfFile = File("build/test_mmpi_report.pdf")
-        pdfFile.createNewFile()
-        assertTrue(pdfFile.exists())
-
-        val pdfStream = pdfFile.outputStream()
-
-        convertHtmlToPdf2(htmlFile, pdfStream)
-    }
-
-
-    @Test
-    fun `Lucher report to pdf`() {
-        val htmlFile = File("src/test/resources/", "test_lucher_report.html")
-        assertTrue(htmlFile.exists())
-
-        val pdfFile = File("build/test_lucher_report.pdf")
-        pdfFile.createNewFile()
-        assertTrue(pdfFile.exists())
-
-        val pdfStream = pdfFile.outputStream()
-
-        convertHtmlToPdf2(htmlFile, pdfStream)
+                convertHtmlToPdf(file, pdfStream)
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
+            true
+        }
     }
 }
