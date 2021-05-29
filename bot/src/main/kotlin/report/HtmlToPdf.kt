@@ -1,33 +1,27 @@
 package report
 
-import com.lowagie.text.pdf.BaseFont
-import org.xhtmlrenderer.pdf.ITextRenderer
+import org.apache.batik.transcoder.TranscoderInput
+import org.apache.batik.transcoder.TranscoderOutput
+import org.apache.batik.transcoder.image.PNGTranscoder
 import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
+import java.nio.file.Paths
 
 
 fun convertHtmlToPdf(
     htmlFile: File,
-    pdfStream: OutputStream
+    pdfFile: File
 ) {
-    pdfStream.use { stream ->
-        val renderer = ITextRenderer()
+    val svgUriInput = Paths.get("src/main/resources/steps.svg").toUri().toURL().toString()
+    val inputSvgImage = TranscoderInput(svgUriInput)
 
-        val chainingReplacedElementFactory = ChainingReplacedElementFactory()
-        chainingReplacedElementFactory.addReplacedElementFactory(renderer.sharedContext.replacedElementFactory)
-        chainingReplacedElementFactory.addReplacedElementFactory(SVGReplacedElementFactory())
-        renderer.sharedContext.replacedElementFactory = chainingReplacedElementFactory
+    val outputStream: OutputStream = pdfFile.outputStream()
 
-        renderer.fontResolver.addFont(
-            "Symbol",
-//            "src/main/resources/Soviet-M4Kw.ttf",
-            "UTF-8",
-            BaseFont.NOT_EMBEDDED
-        )
+    val transcoderOutput = TranscoderOutput(outputStream)
+    val pngTranscoder = PNGTranscoder()
 
-        renderer.setDocument(htmlFile)
-        renderer.layout()
-        renderer.createPDF(stream)
-        stream.close()
-    }
+    pngTranscoder.transcode(inputSvgImage, transcoderOutput)
+    outputStream.flush()
+    outputStream.close()
 }

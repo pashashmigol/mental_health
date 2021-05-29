@@ -46,6 +46,8 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:3.15")
     implementation("org.apache.poi:poi-scratchpad:3.15")
 
+    implementation("org.apache.xmlgraphics:batik-codec:1.9")
+
     implementation("org.apache.pdfbox:pdfbox-tools:2.0.3")
     implementation("net.sf.cssbox:pdf2dom:1.6")
 
