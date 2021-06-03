@@ -5,9 +5,7 @@ import com.google.firebase.database.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import lucher.LucherAnswers
-import lucher.LucherColor
 import mmpi.MmpiAnswers
-import mmpi.MmpiProcess
 import models.Answers
 import models.User
 import java.util.concurrent.CancellationException
@@ -18,7 +16,7 @@ private const val USERS = "users_info"
 private const val MMPI_ANSWERS = "mmpi_answers"
 private const val LUCHER_ANSWERS = "lucher_answers"
 
-class Users(database: FirebaseDatabase) {
+class UsersStorage(database: FirebaseDatabase) {
 
     private val usersInfoRef: DatabaseReference = database.reference.child(USERS)
     private val usersMmpiAnswersRef: DatabaseReference = database.reference.child(MMPI_ANSWERS)
@@ -58,18 +56,21 @@ class Users(database: FirebaseDatabase) {
             }
     }
 
-    fun saveAnswers(user: User, answers: Answers) {
-        val userAnswersRef = when (answers) {
-            is MmpiAnswers -> usersMmpiAnswersRef
-            is LucherAnswers -> usersLucherAnswersRef
-            else -> usersLucherAnswersRef
-        }
-
-        userAnswersRef
-            .child(user.id.toString())
+    fun saveAnswers(answers: MmpiAnswers) {
+        usersMmpiAnswersRef
+            .child(answers.user.id.toString())
             .child(answers.dateString)
-            .setValue(answers.data) { error, ref ->
-                println("add($user) ref: $ref, error: $error")
+            .setValue(answers) { error, ref ->
+                println("add(${answers.user}) ref: $ref, error: $error")
+            }
+    }
+
+    fun saveAnswers(answers: LucherAnswers) {
+        usersLucherAnswersRef
+            .child(answers.user.id.toString())
+            .child(answers.dateString)
+            .setValue(answers) { error, ref ->
+                println("add(${answers.user}) ref: $ref, error: $error")
             }
     }
 
@@ -86,7 +87,6 @@ class Users(database: FirebaseDatabase) {
             }
     }
 
-
     suspend fun getUserAnswers(user: User): Result<List<Answers>> {
         val resultChannel = Channel<List<Answers>>(2)
 
@@ -96,7 +96,7 @@ class Users(database: FirebaseDatabase) {
                 override fun onDataChange(snapshot: DataSnapshot?) {
                     println("getUserAnswers():onDataChange(): count = ${snapshot?.childrenCount}")
                     try {
-                        resultChannel.offer(parseMmpiAnswers(user, snapshot))
+                        resultChannel.offer(parseMmpiAnswers(snapshot))
                     } catch (e: Exception) {
                         resultChannel.close(e)
                     }
@@ -138,37 +138,36 @@ class Users(database: FirebaseDatabase) {
     }
 }
 
-private fun parseMmpiAnswers(user: User, snapshot: DataSnapshot?): List<Answers> {
+private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswers> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
     return snapshot?.getValue(typeIndicator)?.map { entry ->
-        val answers = (entry.value as List<*>).map {
-            MmpiProcess.Answer.valueOf(it as String)
-        }
-        MmpiAnswers(
-            user = user,
-            dateString = entry.key,
-            answers = answers
-        )
+
+//        val answers = (entry.value as List<*>).map {
+//            MmpiProcess.Answer.valueOf(it as String)
+//        }
+//        MmpiAnswers(
+//            user = user,
+//            dateString = entry.key,
+//            answers = answers
+//        )
+        entry.value as MmpiAnswers
+
     } ?: return emptyList()
 }
 
-private fun parseLucherAnswers(user: User, snapshot: DataSnapshot?): List<Answers> {
+private fun parseLucherAnswers(user: User, snapshot: DataSnapshot?): List<LucherAnswers> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
     return snapshot?.getValue(typeIndicator)?.map { entry ->
-        val answers = entry.value as Map<String, List<String>>
-
-        val firstRound = answers["firstRound"]!!.map { LucherColor.valueOf(it) }
-        val secondRound = answers["secondRound"]!!.map { LucherColor.valueOf(it) }
-
+        val answers = entry.value as LucherAnswers
         LucherAnswers(
             user = user,
             date = entry.key,
-            firstRound = firstRound,
-            secondRound = secondRound
+            firstRound = answers.firstRound,
+            secondRound = answers.secondRound
         )
     } ?: return emptyList()
 }

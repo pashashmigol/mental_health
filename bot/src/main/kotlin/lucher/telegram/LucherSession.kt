@@ -12,7 +12,7 @@ import storage.CentralDataStorage.string
 import telegram.*
 import telegram.helpers.showResult
 import Result
-import com.soywiz.klock.DateTime
+import com.soywiz.klock.DateTimeTz
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -49,7 +49,7 @@ data class LucherSession(
 
         val answers = LucherAnswers(
             user = user,
-            dateTime = DateTime.now(),
+            dateTime = DateTimeTz.nowLocal(),
             firstRound = firstRoundAnswers,
             secondRound = secondRoundAnswers
         )

@@ -9,7 +9,7 @@ import models.Question
 import mmpi.reports.chart
 import models.User
 
-fun generateReport(
+fun generateHtml(
     user: User,
     questions: List<Question>,
     answers: List<MmpiProcess.Answer>,

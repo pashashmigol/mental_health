@@ -7,11 +7,12 @@ import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTime
 import lucher.LucherAnswers
 import lucher.LucherResult
-import lucher.report.generateReport
-import models.Type
+import lucher.report.generatePdf
+import models.TestType
 import models.User
+import java.io.InputStream
 
-class Reports(private val connection: GoogleDriveConnection) {
+class ReportsStorage(private val connection: GoogleDriveConnection) {
 
     fun saveLucher(
         user: User,
@@ -21,12 +22,16 @@ class Reports(private val connection: GoogleDriveConnection) {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
         val fileName = CentralDataStorage.string("lusher_result_filename", date)
 
-        val report = generateReport(user.name, answers, result)
+        val reportStream = generatePdf(
+            user = user,
+            answers = answers,
+            result = result
+        )
 
         val parentFolderLink = saveFile(
             fileName = fileName,
             folderName = user.name,
-            textContent = report
+            contentStream = reportStream
         )
         println("saveLucher(); report saved to : $parentFolderLink")
         return parentFolderLink
@@ -34,20 +39,21 @@ class Reports(private val connection: GoogleDriveConnection) {
 
     fun saveMmpi(
         userId: Long,
-        report: String,
-        type: Type
-    ): String {
+        contentStream: InputStream,
+        type: TestType
+    ): Link {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
+
         val fileName = when (type) {
-            Type.Mmpi566 -> CentralDataStorage.string("mmpi_566_result_filename", date)
-            Type.Mmpi377 -> CentralDataStorage.string("mmpi_377_result_filename", date)
+            TestType.Mmpi566 -> CentralDataStorage.string("mmpi_566_result_filename", date)
+            TestType.Mmpi377 -> CentralDataStorage.string("mmpi_377_result_filename", date)
             else -> throw IllegalStateException()
         }
 
         val parentFolderLink = saveFile(
             fileName = fileName,
             folderName = userId.toString(),
-            textContent = report
+            contentStream = contentStream
         )
         println("saveMmpi(); report saved to : $parentFolderLink")
         return parentFolderLink
@@ -56,10 +62,10 @@ class Reports(private val connection: GoogleDriveConnection) {
     private fun saveFile(
         fileName: String,
         folderName: String,
-        textContent: String
-    ): String = try {
+        contentStream: InputStream
+    ): Link = try {
         val (folderId, _) = findFolder(folderName) ?: createFolder(folderName)
-        val fileLink = createFile(fileName, folderId, textContent)
+        val fileLink = createFile(fileName, folderId, contentStream)
 
         giveAccess(folderId, connection)
         println("fileLink : $fileLink")
@@ -99,7 +105,7 @@ class Reports(private val connection: GoogleDriveConnection) {
         return Pair(folder.id, folder.webViewLink)
     }
 
-    private fun createFile(name: String, folderId: String, content: String): String {
+    private fun createFile(name: String, folderId: String, contentStream: InputStream): Link {
         val fileMetadata = File()
 
         fileMetadata.name = name
@@ -107,7 +113,7 @@ class Reports(private val connection: GoogleDriveConnection) {
 
         val mediaContent = InputStreamContent(
             "text/html",
-            content.byteInputStream()
+            contentStream
         )
 
         val file = connection.driveService.files()

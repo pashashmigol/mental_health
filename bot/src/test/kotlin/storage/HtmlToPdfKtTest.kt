@@ -22,12 +22,12 @@ internal class HtmlToPdfKtTest {
 
         examples.listFiles { file ->
             try {
-                val pdfFile = File("build/test-results/pdf", "${file.nameWithoutExtension}.png")
+                val pdfFile = File("build/test-results/pdf", "${file.nameWithoutExtension}.pdf")
                 pdfFile.createNewFile()
                 assertTrue(pdfFile.exists())
                 val pdfStream = pdfFile.outputStream()
 
-                convertHtmlToPdf(file, pdfFile)
+                convertHtmlToPdf(file, pdfStream)
             } catch (e: Throwable) {
                 e.printStackTrace()
             }

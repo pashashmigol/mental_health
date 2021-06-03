@@ -1,13 +1,14 @@
 package mmpi.telegram
 
 import kotlinx.coroutines.runBlocking
-import models.Type
+import models.TestType
 
 import storage.CentralDataStorage
 import telegram.LaunchMode
 import java.util.concurrent.TimeUnit
 
 import Result
+import mmpi.MmpiAnswers
 import mmpi.MmpiProcess
 import models.Answers
 import models.User
@@ -32,12 +33,12 @@ internal class MmpiSessionTest {
         )
 
         CentralDataStorage.createUser(MMPI_SESSION_TEST_USER_ID, "MmpiSessionTest User")
-        testUser = CentralDataStorage.users.get(MMPI_SESSION_TEST_USER_ID)!!
+        testUser = CentralDataStorage.usersStorage.get(MMPI_SESSION_TEST_USER_ID)!!
     }
 
     @AfterEach
     fun cleanUp() {
-        CentralDataStorage.users.clearUser(testUser)
+        CentralDataStorage.usersStorage.clearUser(testUser)
     }
 
     @Test
@@ -50,7 +51,7 @@ internal class MmpiSessionTest {
 
         session = MmpiSession(
             id = 0,
-            type = Type.Mmpi566,
+            type = TestType.Mmpi566,
             userConnection = object : UserConnection {
 
                 override fun sendMessageWithButtons(
@@ -76,11 +77,11 @@ internal class MmpiSessionTest {
         } while (res is Result.Error)
 
         session.testingCallback = { answers ->
-            assertEquals(Type.Mmpi566.size, answers.size)
+            assertEquals(TestType.Mmpi566.size, answers.size)
             assertTrue(answers.all { it == MmpiProcess.Answer.Agree })
         }
 
-        repeat(Type.Mmpi566.size) {
+        repeat(TestType.Mmpi566.size) {
             val id = answersIds.next()
             val res = session.onCallbackFromUser(
                 messageId = id,
@@ -93,7 +94,7 @@ internal class MmpiSessionTest {
     private fun checkSessionResult(session: MmpiSession?, it: TelegramSession<Any>) = runBlocking {
         assertEquals(session, it)
 
-        val answersResult = CentralDataStorage.users.getUserAnswers(testUser)
+        val answersResult = CentralDataStorage.usersStorage.getUserAnswers(testUser)
         assertTrue(answersResult is Result.Success)
 
         val answers = (answersResult as Result.Success).data
@@ -108,7 +109,7 @@ internal class MmpiSessionTest {
 
         session = MmpiSession(
             id = 0,
-            type = Type.Mmpi566,
+            type = TestType.Mmpi566,
             userConnection = object : UserConnection {
                 override fun sendMessageWithButtons(
                     chatId: Long,
@@ -135,7 +136,7 @@ internal class MmpiSessionTest {
             assertTrue(res is Result.Success, "$res")
         } while (res is Result.Error)
 
-        repeat(Type.Mmpi566.size) {
+        repeat(TestType.Mmpi566.size) {
             sendAnswerToSession(answersIds, session, it)
         }
     }
@@ -161,7 +162,7 @@ internal class MmpiSessionTest {
     }
 
     private fun checkEditedAnswers(answers: List<MmpiProcess.Answer>) = runBlocking {
-        assertEquals(Type.Mmpi566.size, answers.size)
+        assertEquals(TestType.Mmpi566.size, answers.size)
 
         answers.forEachIndexed { i, answer ->
             if (i % 2 == 0) {
@@ -171,13 +172,13 @@ internal class MmpiSessionTest {
             }
         }
 
-        val answersResult = CentralDataStorage.users.getUserAnswers(testUser)
+        val answersResult = CentralDataStorage.usersStorage.getUserAnswers(testUser)
         assertTrue(answersResult is Result.Success)
 
         val answersFromDatabase: List<Answers> = (answersResult as Result.Success).data
         assertFalse(answersFromDatabase.isEmpty())
 
-        val lastAvailableAnswers = answersFromDatabase.first().data as List<MmpiProcess.Answer>
+        val lastAvailableAnswers = (answersFromDatabase.first() as MmpiAnswers).answersList
 
         assertArrayEquals(answers.toTypedArray(), lastAvailableAnswers.toTypedArray())
 

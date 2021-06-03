@@ -5,7 +5,7 @@ import models.*
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
-class MmpiProcess(gender: Gender, val type: Type) {
+class MmpiProcess(gender: Gender, val type: TestType) {
 
     internal data class State(
         val currentQuestionIndex: Int = -1,
@@ -15,12 +15,12 @@ class MmpiProcess(gender: Gender, val type: Type) {
     )
 
     private var state = when (type) {
-        Type.Mmpi566 -> State(
+        TestType.Mmpi566 -> State(
             questions = CentralDataStorage.mmpi566Data.questions(gender),
             answers = emptyList(),
             scales = CentralDataStorage.mmpi566Data.scales(gender)
         )
-        Type.Mmpi377 -> State(
+        TestType.Mmpi377 -> State(
             questions = CentralDataStorage.mmpi377Data.questions(gender),
             answers = emptyList(),
             scales = CentralDataStorage.mmpi377Data.scales(gender)
@@ -60,7 +60,6 @@ class MmpiProcess(gender: Gender, val type: Type) {
     enum class Answer {
         Agree,
         Disagree;
-
         val text
             get() = when (this) {
                 Agree -> string("agree")
@@ -139,7 +138,7 @@ private fun submitAnswer(
     )
 }
 
-private fun hasNextQuestion(state: MmpiProcess.State, type: Type): Boolean {
+private fun hasNextQuestion(state: MmpiProcess.State, type: TestType): Boolean {
     return state.currentQuestionIndex < type.size - 1
 }
 
@@ -152,11 +151,11 @@ private fun nextQuestion(state: MmpiProcess.State):
     return Pair(newState, question)
 }
 
-private fun calculateResult(state: MmpiProcess.State, type: Type): MmpiProcess.Result {
+private fun calculateResult(state: MmpiProcess.State, type: TestType): MmpiProcess.Result {
     if (state.answers.size != type.size)
         throw RuntimeException("Not all questions are answered")
     if (state.scales == null)
         throw RuntimeException("Scales are not loaded")
 
-    return calculate(state.answers, state.scales)
+    return calculateMmpi(state.answers, state.scales)
 }

@@ -14,10 +14,10 @@ import telegram.UserConnection
 
 import Result
 import com.soywiz.klock.DateTime
+import com.soywiz.klock.DateTimeTz
 import lucher.LucherAnswers
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 2L
 
@@ -33,12 +33,12 @@ internal class LucherSessionTest {
         )
 
         CentralDataStorage.createUser(MMPI_SESSION_TEST_USER_ID, "MmpiSessionTest User")
-        testUser = CentralDataStorage.users.get(MMPI_SESSION_TEST_USER_ID)!!
+        testUser = CentralDataStorage.usersStorage.get(MMPI_SESSION_TEST_USER_ID)!!
     }
 
     @AfterEach
     fun cleanUp() {
-        CentralDataStorage.users.clearUser(testUser)
+        CentralDataStorage.usersStorage.clearUser(testUser)
     }
 
     @Test
@@ -72,7 +72,7 @@ internal class LucherSessionTest {
 
         val testAnswers = LucherAnswers(
             user = testUser,
-            dateTime = DateTime.now(),
+            dateTime = DateTimeTz.nowLocal(),
             firstRound = LucherColor.values().toList(),
             secondRound = LucherColor.values().toList()
         )
@@ -97,7 +97,7 @@ internal class LucherSessionTest {
 
     private fun checkIfAnswersSavedToDatabase(expectedAnswers: LucherAnswers) = runBlocking {
 
-        val answersResult = CentralDataStorage.users.getUserAnswers(testUser)
+        val answersResult = CentralDataStorage.usersStorage.getUserAnswers(testUser)
         assertTrue(answersResult is Result.Success)
 
         val allAnswersFromDatabase: List<Answers> = (answersResult as Result.Success).data

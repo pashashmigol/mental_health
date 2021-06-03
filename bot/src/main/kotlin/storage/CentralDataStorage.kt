@@ -1,6 +1,5 @@
 package storage
 
-import com.soywiz.klock.DateTime
 import lucher.LucherAnswers
 import lucher.LucherData
 import lucher.LucherResult
@@ -8,14 +7,17 @@ import lucher.loadLucherData
 import mmpi.MmpiAnswers
 import mmpi.MmpiData
 import mmpi.MmpiProcess
-import mmpi.report.generateReport
+import mmpi.report.generatePdf
 import mmpi.storage.loadMmpiData
 import models.Question
-import models.Type
+import models.TestType
 import models.User
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.util.*
 import java.text.MessageFormat
 
+typealias Link = String
 
 object CentralDataStorage {
     private lateinit var connection: GoogleDriveConnection
@@ -23,8 +25,8 @@ object CentralDataStorage {
     val lucherData get() = lucher
     val mmpi566Data get() = mmpi566
     val mmpi377Data get() = mmpi377
-    val users get() = usersRepository
-    private val reports get() = reportsRepository
+    val usersStorage get() = usersStorageRepository
+    private val reportsStorage get() = reportsStorageRepository
 
     fun init(rootPath: String, testingMode: Boolean = false) {
         if (!this::connection.isInitialized) {
@@ -36,8 +38,8 @@ object CentralDataStorage {
     private lateinit var lucher: LucherData
     private lateinit var mmpi566: MmpiData
     private lateinit var mmpi377: MmpiData
-    private lateinit var usersRepository: Users
-    private lateinit var reportsRepository: Reports
+    private lateinit var usersStorageRepository: UsersStorage
+    private lateinit var reportsStorageRepository: ReportsStorage
 
     fun reload() {
         lucher = loadLucherData(connection)
@@ -45,8 +47,8 @@ object CentralDataStorage {
         mmpi566 = loadMmpiData(connection, Settings.MMPI_566_QUESTIONS_FILE_ID)
         mmpi377 = loadMmpiData(connection, Settings.MMPI_377_QUESTIONS_FILE_ID)
 
-        usersRepository = Users(connection.database)
-        reportsRepository = Reports(connection)
+        usersStorageRepository = UsersStorage(connection.database)
+        reportsStorageRepository = ReportsStorage(connection)
     }
 
     private val messages: ResourceBundle = ResourceBundle.getBundle("Messages")
@@ -60,7 +62,7 @@ object CentralDataStorage {
     }
 
     fun createUser(userId: Long, userName: String) {
-        val (folderId, reportsFolderLink) = reportsRepository.createFolder(userId.toString())
+        val (folderId, reportsFolderLink) = reportsStorageRepository.createFolder(userId.toString())
         giveAccess(folderId, connection)
 
         val user = User(
@@ -68,30 +70,33 @@ object CentralDataStorage {
             name = userName,
             googleDriveFolder = reportsFolderLink
         )
-        usersRepository.add(user)
+        usersStorageRepository.add(user)
     }
 
     fun saveMmpi(
         user: User,
-        type: Type,
+        type: TestType,
+        result: MmpiProcess.Result,
         questions: List<Question>,
-        answers: List<MmpiProcess.Answer>,
-        result: MmpiProcess.Result
-    ): String {
-        val mmpiAnswers = MmpiAnswers(
-            user = user,
-            dateTime = DateTime.now(),
-            data = answers
-        )
-        users.saveAnswers(user, mmpiAnswers)
+        answers: MmpiAnswers,
+        saveAnswers: Boolean
+    ): Link {
+        if (saveAnswers) {
+            usersStorage.saveAnswers(answers)
+        }
 
-        val report = generateReport(
-            user = user,
+        val pipeOut = PipedOutputStream()
+        val pipeIn = PipedInputStream()
+
+        pipeIn.connect(pipeOut)
+
+        generatePdf(
             questions = questions,
             answers = answers,
-            result = result
+            result = result,
+            pdfStream = pipeOut
         )
-        return reports.saveMmpi(user.id, report, type)
+        return reportsStorage.saveMmpi(user.id, pipeIn, type)
     }
 
     fun saveLucher(
@@ -99,10 +104,9 @@ object CentralDataStorage {
         answers: LucherAnswers,
         result: LucherResult
     ): String {
+        usersStorage.saveAnswers(answers)
 
-        users.saveAnswers(user, answers)
-
-        return reports.saveLucher(
+        return reportsStorage.saveLucher(
             user = user,
             answers = answers,
             result = result

@@ -1,7 +1,7 @@
 package mmpi
 
 import Gender
-import models.Type
+import models.TestType
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -27,7 +27,7 @@ internal class CalculateResultKtTest {
 
     @Test
     fun agree_with_everything() {
-        val test = MmpiProcess(Gender.Male, Type.Mmpi566)
+        val test = MmpiProcess(Gender.Male, TestType.Mmpi566)
 
         allAgree566.forEachIndexed {index, answer ->
             test.submitAnswer(index, answer)
@@ -38,7 +38,7 @@ internal class CalculateResultKtTest {
 
     @Test
     fun notCompletedTest() {
-        val test = MmpiProcess(Gender.Male, Type.Mmpi566)
+        val test = MmpiProcess(Gender.Male, TestType.Mmpi566)
 
         Assertions.assertThrows(RuntimeException::class.java) {
             justFewAnswers.forEachIndexed { index, answer ->
@@ -50,7 +50,7 @@ internal class CalculateResultKtTest {
 
     @Test
     fun oneAfterOneTest() {
-        val test = MmpiProcess(Gender.Male, Type.Mmpi377)
+        val test = MmpiProcess(Gender.Male, TestType.Mmpi377)
 
         oneAfterOne377.forEachIndexed { index, answer ->
             test.submitAnswer(index, answer)
@@ -470,7 +470,7 @@ private fun calculateScale(
 ): MmpiProcess.Result {
     val size = 566
     val answers = answers(size, agree, disagree)
-    val test = MmpiProcess(gender, Type.Mmpi566)
+    val test = MmpiProcess(gender, TestType.Mmpi566)
 
     answers.forEachIndexed { index, answer ->
         test.submitAnswer(index, answer)

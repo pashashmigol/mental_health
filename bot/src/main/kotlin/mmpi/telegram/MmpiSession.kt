@@ -3,7 +3,7 @@ package mmpi.telegram
 import Gender
 import kotlinx.coroutines.channels.Channel
 import mmpi.*
-import models.Type
+import models.TestType
 import models.User
 import storage.CentralDataStorage
 import telegram.OnEnded
@@ -11,6 +11,7 @@ import telegram.TelegramSession
 import telegram.UserConnection
 import telegram.helpers.showResult
 import Result
+import com.soywiz.klock.DateTimeTz
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -21,7 +22,7 @@ private typealias OnFinishedForTestingOnly = ((answers: List<MmpiProcess.Answer>
 
 class MmpiSession(
     override val id: Long,
-    private val type: Type,
+    private val type: TestType,
     val userConnection: UserConnection,
     val onEndedCallback: OnEnded
 ) : TelegramSession<Int> {
@@ -49,7 +50,7 @@ class MmpiSession(
         val gender = waitForGenderChosen()
         val ongoingProcess = MmpiProcess(gender, type)
 
-        collectAllAnswers(ongoingProcess, user)
+        collectAllAnswers(ongoingProcess, user, gender)
     }
 
     private suspend fun waitForGenderChosen(): Gender {
@@ -69,7 +70,11 @@ class MmpiSession(
         return gChannel.receive()
     }
 
-    private fun collectAllAnswers(ongoingProcess: MmpiProcess, user: User) {
+    private fun collectAllAnswers(
+        ongoingProcess: MmpiProcess,
+        user: User,
+        gender: Gender
+    ) {
         val mesIdToIndex = ConcurrentHashMap<Long, Int>()
 
         sendFirstQuestion(ongoingProcess, userConnection).apply {
@@ -94,7 +99,7 @@ class MmpiSession(
                     }
                 }
                 if (ongoingProcess.allQuestionsAreAnswered()) {
-                    finishTesting(ongoingProcess, user, userConnection)
+                    finishTesting(ongoingProcess, user, gender, userConnection)
                 }
 
                 Result.Success(index)
@@ -107,17 +112,25 @@ class MmpiSession(
     private fun finishTesting(
         ongoingProcess: MmpiProcess,
         user: User,
+        gender: Gender,
         userConnection: UserConnection,
     ) {
         onAnswer = null
         val result = ongoingProcess.calculateResult()
 
+        val answers = MmpiAnswers(
+            user = user,
+            date = DateTimeTz.nowLocal(),
+            gender = gender,
+            answersList = ongoingProcess.answers
+        )
         val resultFolder = CentralDataStorage.saveMmpi(
             user = user,
             type = type,
             questions = ongoingProcess.questions,
-            answers = ongoingProcess.answers,
-            result = result
+            answers = answers,
+            result = result,
+            saveAnswers = true
         )
         showResult(
             user = user,

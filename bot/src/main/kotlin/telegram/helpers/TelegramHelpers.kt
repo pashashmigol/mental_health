@@ -41,7 +41,7 @@ fun showUsersList(
     bot: Bot,
     userId: Long,
 ) {
-    val text = CentralDataStorage.users
+    val text = CentralDataStorage.usersStorage
         .allUsers()
         .joinToString("/n") { "${it.name}: ${it.googleDriveFolder}" }
 
