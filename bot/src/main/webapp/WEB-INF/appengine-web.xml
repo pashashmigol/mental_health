@@ -4,7 +4,8 @@
     <runtime>java11</runtime>
     <threadsafe>true</threadsafe>
     <instance-class>B2</instance-class>
-    <manual-scaling>
-        <instances>1</instances>
-    </manual-scaling>
+    <basic-scaling>
+        <max-instances>1</max-instances>
+        <idle-timeout>10m</idle-timeout>
+    </basic-scaling>
 </appengine-web-app>
