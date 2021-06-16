@@ -3,7 +3,6 @@ package lucher.telegram
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import lucher.LucherColor
-import mmpi.telegram.MMPI_SESSION_TEST_USER_ID
 import models.Answers
 import models.User
 
@@ -32,11 +31,11 @@ internal class LucherSessionTest {
             testingMode = true
         )
 
-        CentralDataStorage.createUser(MMPI_SESSION_TEST_USER_ID, "MmpiSessionTest User")
-        testUser = CentralDataStorage.usersStorage.get(MMPI_SESSION_TEST_USER_ID)!!
+        CentralDataStorage.createUser(LUCHER_SESSION_TEST_USER_ID, "LucherSessionTest User")
+        testUser = CentralDataStorage.usersStorage.get(LUCHER_SESSION_TEST_USER_ID)!!
     }
 
-    @AfterEach
+    @AfterAll
     fun cleanUp() {
         CentralDataStorage.usersStorage.clearUser(testUser)
     }
@@ -57,9 +56,9 @@ internal class LucherSessionTest {
                 ): Long {
                     return 0
                 }
-
                 override fun notifyAdmin(text: String, exception: Throwable?) {
-                    fail(exception)
+                    println(text)
+                    exception?.let { fail(it)  }
                 }
             },
             onEndedCallback = {

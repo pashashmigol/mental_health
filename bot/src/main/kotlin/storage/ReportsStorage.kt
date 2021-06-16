@@ -5,33 +5,23 @@ import com.google.api.services.drive.model.File
 import com.google.api.services.drive.model.FileList
 import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTime
-import lucher.LucherAnswers
-import lucher.LucherResult
-import lucher.report.generatePdf
 import models.TestType
-import models.User
 import java.io.InputStream
+
 
 class ReportsStorage(private val connection: GoogleDriveConnection) {
 
     fun saveLucher(
-        user: User,
-        answers: LucherAnswers,
-        result: LucherResult
+        userId: Long,
+        contentStream: InputStream,
     ): String {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
         val fileName = CentralDataStorage.string("lusher_result_filename", date)
 
-        val reportStream = generatePdf(
-            user = user,
-            answers = answers,
-            result = result
-        )
-
         val parentFolderLink = saveFile(
             fileName = fileName,
-            folderName = user.name,
-            contentStream = reportStream
+            folderName = userId.toString(),
+            contentStream = contentStream
         )
         println("saveLucher(); report saved to : $parentFolderLink")
         return parentFolderLink
@@ -112,7 +102,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
         fileMetadata.parents = listOf(folderId)
 
         val mediaContent = InputStreamContent(
-            "text/html",
+            "application/pdf",
             contentStream
         )
 

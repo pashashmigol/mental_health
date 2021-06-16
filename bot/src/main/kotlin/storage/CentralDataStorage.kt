@@ -4,10 +4,11 @@ import lucher.LucherAnswers
 import lucher.LucherData
 import lucher.LucherResult
 import lucher.loadLucherData
+import lucher.report.pdfReportLucher
 import mmpi.MmpiAnswers
 import mmpi.MmpiData
 import mmpi.MmpiProcess
-import mmpi.report.generatePdf
+import mmpi.report.pdfReportMmpi
 import mmpi.storage.loadMmpiData
 import models.Question
 import models.TestType
@@ -84,13 +85,11 @@ object CentralDataStorage {
         if (saveAnswers) {
             usersStorage.saveAnswers(answers)
         }
-
         val pipeOut = PipedOutputStream()
         val pipeIn = PipedInputStream()
-
         pipeIn.connect(pipeOut)
 
-        generatePdf(
+        pdfReportMmpi(
             questions = questions,
             answers = answers,
             result = result,
@@ -102,14 +101,21 @@ object CentralDataStorage {
     fun saveLucher(
         user: User,
         answers: LucherAnswers,
-        result: LucherResult
+        result: LucherResult,
+        saveAnswers: Boolean
     ): String {
-        usersStorage.saveAnswers(answers)
+        if (saveAnswers) {
+            usersStorage.saveAnswers(answers)
+        }
+        val pipeOut = PipedOutputStream()
+        val pipeIn = PipedInputStream()
+        pipeIn.connect(pipeOut)
 
-        return reportsStorage.saveLucher(
-            user = user,
+        pdfReportLucher(
             answers = answers,
-            result = result
+            result = result,
+            pdfStream = pipeOut
         )
+        return reportsStorage.saveLucher(user.id, pipeIn)
     }
 }

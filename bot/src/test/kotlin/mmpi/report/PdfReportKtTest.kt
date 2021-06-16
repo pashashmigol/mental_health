@@ -59,7 +59,7 @@ internal class PdfReportKtTest {
                 gender = Gender.Female,
             )
 
-            generatePdf(
+            pdfReportMmpi(
                 questions = listOf(),
                 answers = mmpiAnswers,
                 result = result,

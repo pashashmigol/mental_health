@@ -7,14 +7,10 @@ import com.itextpdf.text.pdf.PdfWriter
 import mmpi.MmpiAnswers
 import mmpi.MmpiProcess
 import models.Question
-import models.User
 import org.apache.batik.transcoder.TranscoderInput
 import org.apache.batik.transcoder.TranscoderOutput
 import org.apache.batik.transcoder.image.JPEGTranscoder
-import java.io.InputStream
 import java.io.OutputStream
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
 
 
 private val baseFont: BaseFont = BaseFont.createFont(
@@ -25,7 +21,7 @@ private val boldFont = Font(baseFont, 14f, Font.BOLD)
 private val bigFont = Font(baseFont, 18f, Font.BOLD)
 private val normalFont = Font(baseFont, 14f, Font.NORMAL)
 
-fun generatePdf(
+fun pdfReportMmpi(
     questions: List<Question>,
     answers: MmpiAnswers,
     result: MmpiProcess.Result,

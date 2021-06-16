@@ -58,7 +58,8 @@ data class LucherSession(
         val folderLink = CentralDataStorage.saveLucher(
             user = user,
             answers = answers,
-            result = result
+            result = result,
+            saveAnswers = true
         )
         onEndedCallback(this)
         showResult(user, folderLink, userConnection)
