@@ -19,7 +19,8 @@ internal class MmpiE2E {
     }
 
     @Test
+    @Disabled
     fun `full cycle from saved answers`() = runBlocking {
-        val lin = regenerateReports(413162911, Gender.Male)
+//        val lin = regenerateReports(413162911, Gender.Male)
     }
 }

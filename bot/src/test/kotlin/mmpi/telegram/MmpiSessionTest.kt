@@ -42,9 +42,8 @@ internal class MmpiSessionTest {
     }
 
     @Test
-    @Timeout(value = 5, unit = TimeUnit.SECONDS)
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `just run`() = runBlocking {
-        println("### just run()")
 
         var session: MmpiSession? = null
         val questionsIds = generateSequence(0L) { it + 1 }.iterator()
@@ -123,7 +122,6 @@ internal class MmpiSessionTest {
         ) {
             assertEquals(session, it)
         }
-
         session.testingCallback = { answers ->
             checkEditedAnswers(answers)
         }

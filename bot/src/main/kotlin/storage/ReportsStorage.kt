@@ -6,6 +6,7 @@ import com.google.api.services.drive.model.FileList
 import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTime
 import models.TestType
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 
@@ -13,7 +14,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
 
     fun saveLucher(
         userId: Long,
-        contentStream: InputStream,
+        pdfStr: String,
     ): String {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
         val fileName = CentralDataStorage.string("lusher_result_filename", date)
@@ -21,7 +22,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
         val parentFolderLink = saveFile(
             fileName = fileName,
             folderName = userId.toString(),
-            contentStream = contentStream
+            contentStream = ByteArrayInputStream(pdfStr.toByteArray(Charsets.UTF_8))
         )
         println("saveLucher(); report saved to : $parentFolderLink")
         return parentFolderLink
@@ -29,7 +30,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
 
     fun saveMmpi(
         userId: Long,
-        contentStream: InputStream,
+        pdfStr: String,
         type: TestType
     ): Link {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
@@ -43,7 +44,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
         val parentFolderLink = saveFile(
             fileName = fileName,
             folderName = userId.toString(),
-            contentStream = contentStream
+            contentStream = ByteArrayInputStream(pdfStr.toByteArray(Charsets.UTF_8))
         )
         println("saveMmpi(); report saved to : $parentFolderLink")
         return parentFolderLink

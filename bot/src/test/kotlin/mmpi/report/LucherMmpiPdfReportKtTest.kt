@@ -16,7 +16,7 @@ import java.io.*
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class PdfReportKtTest {
+internal class LucherMmpiPdfReportKtTest {
 
     @BeforeAll
     fun setup() {
@@ -58,13 +58,12 @@ internal class PdfReportKtTest {
                 date = DateTimeTz.nowLocal(),
                 gender = Gender.Female,
             )
-
-            pdfReportMmpi(
+            val pdfStr = pdfReportMmpi(
                 questions = listOf(),
                 answers = mmpiAnswers,
-                result = result,
-                pdfStream = pdfFile.outputStream()
+                result = result
             )
+            pdfFile.writeText(pdfStr, Charsets.UTF_8)
 
         } catch (e: Throwable) {
             e.printStackTrace()

@@ -13,8 +13,6 @@ import mmpi.storage.loadMmpiData
 import models.Question
 import models.TestType
 import models.User
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
 import java.util.*
 import java.text.MessageFormat
 
@@ -85,17 +83,12 @@ object CentralDataStorage {
         if (saveAnswers) {
             usersStorage.saveAnswers(answers)
         }
-        val pipeOut = PipedOutputStream()
-        val pipeIn = PipedInputStream()
-        pipeIn.connect(pipeOut)
-
-        pdfReportMmpi(
+        val pdfStr = pdfReportMmpi(
             questions = questions,
             answers = answers,
             result = result,
-            pdfStream = pipeOut
         )
-        return reportsStorage.saveMmpi(user.id, pipeIn, type)
+        return reportsStorage.saveMmpi(user.id, pdfStr, type)
     }
 
     fun saveLucher(
@@ -107,15 +100,11 @@ object CentralDataStorage {
         if (saveAnswers) {
             usersStorage.saveAnswers(answers)
         }
-        val pipeOut = PipedOutputStream()
-        val pipeIn = PipedInputStream()
-        pipeIn.connect(pipeOut)
 
-        pdfReportLucher(
+        val pdfStr = pdfReportLucher(
             answers = answers,
-            result = result,
-            pdfStream = pipeOut
+            result = result
         )
-        return reportsStorage.saveLucher(user.id, pipeIn)
+        return reportsStorage.saveLucher(user.id, pdfStr)
     }
 }

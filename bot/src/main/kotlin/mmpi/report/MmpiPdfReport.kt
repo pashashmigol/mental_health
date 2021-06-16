@@ -10,7 +10,6 @@ import models.Question
 import org.apache.batik.transcoder.TranscoderInput
 import org.apache.batik.transcoder.TranscoderOutput
 import org.apache.batik.transcoder.image.JPEGTranscoder
-import java.io.OutputStream
 
 
 private val baseFont: BaseFont = BaseFont.createFont(
@@ -24,11 +23,12 @@ private val normalFont = Font(baseFont, 14f, Font.NORMAL)
 fun pdfReportMmpi(
     questions: List<Question>,
     answers: MmpiAnswers,
-    result: MmpiProcess.Result,
-    pdfStream: OutputStream
-) {
+    result: MmpiProcess.Result
+): String {
     val document = Document()
-    PdfWriter.getInstance(document, pdfStream)
+
+    val outputStream = ByteArrayOutputStream()
+    PdfWriter.getInstance(document, outputStream)
 
     document.isMarginMirroring = true
     document.open()
@@ -41,13 +41,15 @@ fun pdfReportMmpi(
         val scaleParagraph = Paragraph()
         scaleParagraph.add(Chunk("    ${it.name} - ${it.score}", boldFont))
 
-        if(it.description.isNotEmpty()){
+        if (it.description.isNotEmpty()) {
             scaleParagraph.add(Chunk(": ", boldFont))
             scaleParagraph.add(Chunk(it.description, normalFont))
         }
         document.add(scaleParagraph)
     }
     document.close()
+
+    return outputStream.toString(Charsets.UTF_8)
 }
 
 private fun addChart(mmpiResult: MmpiProcess.Result, document: Document) {
