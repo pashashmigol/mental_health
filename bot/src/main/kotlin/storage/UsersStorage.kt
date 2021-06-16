@@ -2,10 +2,15 @@ package storage
 
 import Result
 import com.google.firebase.database.*
+import com.soywiz.klock.DateFormat
+import com.soywiz.klock.DateTimeTz
+import com.soywiz.klock.parse
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import lucher.LucherAnswers
+import lucher.LucherColor
 import mmpi.MmpiAnswers
+import mmpi.MmpiProcess
 import models.Answers
 import models.User
 import java.util.concurrent.CancellationException
@@ -57,19 +62,45 @@ class UsersStorage(database: FirebaseDatabase) {
     }
 
     fun saveAnswers(answers: MmpiAnswers) {
+
+        val hashMap = HashMap<String, Any>().apply {
+            put("date", answers.dateString)
+            put("gender", answers.gender.name)
+
+            put("user", HashMap<String, Any>().apply {
+                put("id", answers.user.id)
+                put("name", answers.user.name)
+                put("googleDriveFolder", answers.user.googleDriveFolder)
+            })
+            put("answersList", answers.answersList.map { it.name })
+        }
+
         usersMmpiAnswersRef
             .child(answers.user.id.toString())
             .child(answers.dateString)
-            .setValue(answers) { error, ref ->
+            .setValue(hashMap) { error, ref ->
                 println("add(${answers.user}) ref: $ref, error: $error")
             }
     }
 
     fun saveAnswers(answers: LucherAnswers) {
+
+        val hashMap = HashMap<String, Any>().apply {
+            put("date", answers.dateString)
+
+            put("user", HashMap<String, Any>().apply {
+                put("id", answers.user.id)
+                put("name", answers.user.name)
+                put("googleDriveFolder", answers.user.googleDriveFolder)
+            })
+            put("firstRound", answers.firstRound.map { it.name })
+            put("secondRound", answers.secondRound.map { it.name })
+        }
+
         usersLucherAnswersRef
             .child(answers.user.id.toString())
             .child(answers.dateString)
-            .setValue(answers) { error, ref ->
+            .setValue(hashMap) { error, ref ->
                 println("add(${answers.user}) ref: $ref, error: $error")
             }
     }
@@ -114,7 +145,7 @@ class UsersStorage(database: FirebaseDatabase) {
                 override fun onDataChange(snapshot: DataSnapshot?) {
                     println("getUserAnswers():onDataChange(): count = ${snapshot?.childrenCount}")
                     try {
-                        resultChannel.offer(parseLucherAnswers(user, snapshot))
+                        resultChannel.offer(parseLucherAnswers(snapshot))
                     } catch (e: Exception) {
                         resultChannel.close(e)
                     }
@@ -127,7 +158,8 @@ class UsersStorage(database: FirebaseDatabase) {
             })
 
         return try {
-            Result.Success(resultChannel.receive() + resultChannel.receive())
+            val resultList = resultChannel.receive() + resultChannel.receive()
+            Result.Success(resultList)
         } catch (e: ClosedReceiveChannelException) {
             println("getUserAnswers(): ClosedReceiveChannelException: ${e.message}")
             Result.Error("Get user $user answers failed with error")
@@ -138,36 +170,72 @@ class UsersStorage(database: FirebaseDatabase) {
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswers> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
     return snapshot?.getValue(typeIndicator)?.map { entry ->
+        val answersMap: HashMap<String, Any> = entry.value as HashMap<String, Any>
 
-//        val answers = (entry.value as List<*>).map {
-//            MmpiProcess.Answer.valueOf(it as String)
-//        }
-//        MmpiAnswers(
-//            user = user,
-//            dateString = entry.key,
-//            answers = answers
-//        )
-        entry.value as MmpiAnswers
+        val user: User = answersMap["user"].let {
+            it as HashMap<*, *>
 
-    } ?: return emptyList()
+            User(
+                id = it["id"] as Long,
+                name = it["name"] as String,
+                googleDriveFolder = it["googleDriveFolder"] as String
+            )
+        }
+        val date: DateTimeTz = (answersMap["date"] as String).let {
+            DateFormat.DEFAULT_FORMAT.parse(it)
+        }
+        val gender = (answersMap["gender"] as String).let {
+            Gender.valueOf(it)
+        }
+        val answers = (answersMap["answersList"] as List<*>).map {
+            MmpiProcess.Answer.valueOf(it as String)
+        }
+        MmpiAnswers(
+            user = user,
+            date = date,
+            gender = gender,
+            answersList = answers
+        )
+    } ?: emptyList()
 }
 
-private fun parseLucherAnswers(user: User, snapshot: DataSnapshot?): List<LucherAnswers> {
+@Suppress("UNCHECKED_CAST")
+private fun parseLucherAnswers(snapshot: DataSnapshot?): List<LucherAnswers> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
     return snapshot?.getValue(typeIndicator)?.map { entry ->
-        val answers = entry.value as LucherAnswers
+        val answersMap: HashMap<String, Any> = entry.value as HashMap<String, Any>
+
+        val user: User = answersMap["user"].let {
+            it as HashMap<*, *>
+
+            User(
+                id = it["id"] as Long,
+                name = it["name"] as String,
+                googleDriveFolder = it["googleDriveFolder"] as String
+            )
+        }
+        val date: DateTimeTz = (answersMap["date"] as String).let {
+            DateFormat.DEFAULT_FORMAT.parse(it)
+        }
+        val firstRound = (answersMap["firstRound"] as List<*>).map {
+            LucherColor.valueOf(it as String)
+        }
+        val secondRound = (answersMap["secondRound"] as List<*>).map {
+            LucherColor.valueOf(it as String)
+        }
         LucherAnswers(
             user = user,
-            date = entry.key,
-            firstRound = answers.firstRound,
-            secondRound = answers.secondRound
+            date = date,
+            firstRound = firstRound,
+            secondRound = secondRound
         )
     } ?: return emptyList()
 }

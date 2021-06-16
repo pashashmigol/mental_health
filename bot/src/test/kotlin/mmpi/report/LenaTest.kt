@@ -11,6 +11,7 @@ import org.junit.jupiter.api.TestInstance
 import storage.CentralDataStorage
 
 import models.User
+import org.junit.jupiter.api.Disabled
 import telegram.LaunchMode
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

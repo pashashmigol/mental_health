@@ -1,24 +1,22 @@
 package lucher
 
-import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTimeTz
-import com.soywiz.klock.parse
 import models.Answers
 import models.User
 
 class LucherAnswers(
     user: User,
-    dateTime: DateTimeTz,
+    date: DateTimeTz,
     val firstRound: List<LucherColor>,
     val secondRound: List<LucherColor>
-) : Answers(user, dateTime) {
+) : Answers(user, date) {
 
-    constructor(
-        user: User,
-        date: String,
-        firstRound: List<LucherColor>,
-        secondRound: List<LucherColor>
-    ) : this(user, DateFormat.FORMAT1.parse(date), firstRound, secondRound)
+//    constructor(
+//        user: User,
+//        date: String,
+//        firstRound: List<LucherColor>,
+//        secondRound: List<LucherColor>
+//    ) : this(user, DateFormat.FORMAT1.parse(date), firstRound, secondRound)
 
 //    override val data: Any = mapOf(
 //        "firstRound" to firstRound,

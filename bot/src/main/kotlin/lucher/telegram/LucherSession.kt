@@ -49,7 +49,7 @@ data class LucherSession(
 
         val answers = LucherAnswers(
             user = user,
-            dateTime = DateTimeTz.nowLocal(),
+            date = DateTimeTz.nowLocal(),
             firstRound = firstRoundAnswers,
             secondRound = secondRoundAnswers
         )

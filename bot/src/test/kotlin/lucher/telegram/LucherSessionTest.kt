@@ -13,11 +13,11 @@ import telegram.LaunchMode
 import telegram.UserConnection
 
 import Result
-import com.soywiz.klock.DateTime
 import com.soywiz.klock.DateTimeTz
 import lucher.LucherAnswers
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 2L
 
@@ -42,7 +42,7 @@ internal class LucherSessionTest {
     }
 
     @Test
-//    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun start() = runBlocking {
 
         val resultChannel = Channel<Unit>(2)
@@ -72,7 +72,7 @@ internal class LucherSessionTest {
 
         val testAnswers = LucherAnswers(
             user = testUser,
-            dateTime = DateTimeTz.nowLocal(),
+            date = DateTimeTz.nowLocal(),
             firstRound = LucherColor.values().toList(),
             secondRound = LucherColor.values().toList()
         )

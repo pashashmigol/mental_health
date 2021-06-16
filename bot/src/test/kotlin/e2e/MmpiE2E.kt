@@ -1,9 +1,7 @@
 package e2e
 
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import storage.CentralDataStorage
 import telegram.LaunchMode
 import storage.regenerateReports

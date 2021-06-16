@@ -95,7 +95,7 @@ internal class UsersStorageTest {
     private fun createLucherAnswers(user: User): LucherAnswers {
         return LucherAnswers(
             user = user,
-            dateTime = DateTime.EPOCH.plus(DateTimeSpan(seconds = 2)).utc,
+            date = DateTime.EPOCH.plus(DateTimeSpan(seconds = 2)).utc,
             firstRound = roundAnswers(),
             secondRound = roundAnswers()
         )
