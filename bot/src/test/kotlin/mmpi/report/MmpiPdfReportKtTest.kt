@@ -16,7 +16,7 @@ import java.io.*
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class LucherMmpiPdfReportKtTest {
+internal class MmpiPdfReportKtTest {
 
     @BeforeAll
     fun setup() {
@@ -40,9 +40,10 @@ internal class LucherMmpiPdfReportKtTest {
             318, 319, 322, 323, 330, 340, 341, 347, 348, 349, 352, 358, 359, 360, 361, 362, 363, 370, 374, 377
         )
 
+        val gender = Gender.Female
         val result = calculateMmpi(
             answers = answers,
-            scales = CentralDataStorage.mmpi377Data.scales(Gender.Female)
+            scales = CentralDataStorage.mmpi377Data.scales(gender)
         )
 
         try {
@@ -54,16 +55,16 @@ internal class LucherMmpiPdfReportKtTest {
 
             val mmpiAnswers = MmpiAnswers(
                 user = user,
-                answersList = listOf(),
+                answersList = answers,
                 date = DateTimeTz.nowLocal(),
-                gender = Gender.Female,
+                gender = gender,
             )
-            val pdfStr = pdfReportMmpi(
-                questions = listOf(),
+            val bytes = pdfReportMmpi(
+                questions = CentralDataStorage.mmpi377Data.questions(gender),
                 answers = mmpiAnswers,
                 result = result
             )
-            pdfFile.writeText(pdfStr, Charsets.UTF_8)
+            pdfFile.writeBytes(bytes)
 
         } catch (e: Throwable) {
             e.printStackTrace()

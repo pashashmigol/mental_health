@@ -30,7 +30,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
 
     fun saveMmpi(
         userId: Long,
-        pdfStr: String,
+        bytes: ByteArray,
         type: TestType
     ): Link {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
@@ -44,7 +44,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
         val parentFolderLink = saveFile(
             fileName = fileName,
             folderName = userId.toString(),
-            contentStream = ByteArrayInputStream(pdfStr.toByteArray(Charsets.UTF_8))
+            contentStream = ByteArrayInputStream(bytes)
         )
         println("saveMmpi(); report saved to : $parentFolderLink")
         return parentFolderLink
