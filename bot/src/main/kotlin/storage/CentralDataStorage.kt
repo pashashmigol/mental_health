@@ -13,6 +13,7 @@ import mmpi.storage.loadMmpiData
 import models.Question
 import models.TestType
 import models.User
+import report.PdfFonts
 import java.util.*
 import java.text.MessageFormat
 
@@ -20,6 +21,7 @@ typealias Link = String
 
 object CentralDataStorage {
     private lateinit var connection: GoogleDriveConnection
+    private lateinit var fonts: PdfFonts
 
     val lucherData get() = lucher
     val mmpi566Data get() = mmpi566
@@ -30,6 +32,7 @@ object CentralDataStorage {
     fun init(rootPath: String, testingMode: Boolean = false) {
         if (!this::connection.isInitialized) {
             connection = GoogleDriveConnection(rootPath, testingMode)
+            fonts = PdfFonts(rootPath)
             reload()
         }
     }
@@ -55,6 +58,8 @@ object CentralDataStorage {
     fun string(key: String, vararg parameters: Any): String {
         return MessageFormat(messages.getString(key), locale).format(parameters)
     }
+
+    fun pdfFonts() = fonts
 
     fun string(key: String): String {
         return messages.getString(key)
@@ -101,10 +106,10 @@ object CentralDataStorage {
             usersStorage.saveAnswers(answers)
         }
 
-        val pdfStr = pdfReportLucher(
+        val bytes = pdfReportLucher(
             answers = answers,
             result = result
         )
-        return reportsStorage.saveLucher(user.id, pdfStr)
+        return reportsStorage.saveLucher(user.id, bytes)
     }
 }

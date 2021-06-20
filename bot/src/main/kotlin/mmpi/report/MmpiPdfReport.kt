@@ -2,7 +2,6 @@ package mmpi.report
 
 import com.itextpdf.io.source.ByteArrayOutputStream
 import com.itextpdf.text.*
-import com.itextpdf.text.pdf.BaseFont
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
@@ -12,21 +11,8 @@ import models.Question
 import org.apache.batik.transcoder.TranscoderInput
 import org.apache.batik.transcoder.TranscoderOutput
 import org.apache.batik.transcoder.image.JPEGTranscoder
+import storage.CentralDataStorage.pdfFonts
 
-
-private val baseFont: BaseFont = BaseFont.createFont(
-    "src/main/resources/FreeSans.ttf",
-    BaseFont.IDENTITY_H, BaseFont.EMBEDDED
-)
-private val boldFont = Font(baseFont, 14f, Font.BOLD).apply {
-    color = BaseColor.BLACK
-}
-private val bigFont = Font(baseFont, 18f, Font.BOLD).apply {
-    color = BaseColor.BLACK
-}
-private val normalFont = Font(baseFont, 14f, Font.NORMAL).apply {
-    color = BaseColor.BLACK
-}
 
 fun pdfReportMmpi(
     questions: List<Question>,
@@ -41,17 +27,17 @@ fun pdfReportMmpi(
     document.isMarginMirroring = true
     document.open()
 
-    document.add(Paragraph(answers.user.name, bigFont))
+    document.add(Paragraph(answers.user.name, pdfFonts().big))
     addChart(result, document)
 
     result.scalesToShow.forEach {
         val scaleParagraph = Paragraph()
         scaleParagraph.spacingAfter = 16f
-        scaleParagraph.add(Chunk("    ${it.name} - ${it.score}", boldFont))
+        scaleParagraph.add(Chunk("    ${it.name} - ${it.score}", pdfFonts().bold))
 
         if (it.description.isNotEmpty()) {
-            scaleParagraph.add(Chunk(": ", boldFont))
-            scaleParagraph.add(Chunk(it.description, normalFont))
+            scaleParagraph.add(Chunk(": ", pdfFonts().bold))
+            scaleParagraph.add(Chunk(it.description, pdfFonts().normal))
         }
         document.add(scaleParagraph)
     }
@@ -73,14 +59,15 @@ fun pdfReportMmpi(
 }
 
 private fun createCell(text: String): PdfPCell {
-    val phrase = Phrase(text, normalFont)
-    val pdfPCell = PdfPCell(phrase)
-    pdfPCell.horizontalAlignment = Element.ALIGN_LEFT
-    pdfPCell.paddingLeft = 4f
-    pdfPCell.paddingRight = 16f
-    pdfPCell.paddingTop = 4f
-    pdfPCell.paddingBottom = 12f
-    return pdfPCell
+    val phrase = Phrase(text, pdfFonts().normal)
+
+    return PdfPCell(phrase).apply {
+        horizontalAlignment = Element.ALIGN_LEFT
+        paddingLeft = 4f
+        paddingRight = 16f
+        paddingTop = 4f
+        paddingBottom = 12f
+    }
 }
 
 private fun addChart(mmpiResult: MmpiProcess.Result, document: Document) {

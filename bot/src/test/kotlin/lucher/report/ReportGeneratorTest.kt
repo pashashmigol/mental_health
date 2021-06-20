@@ -3,7 +3,7 @@ package lucher.report
 import com.soywiz.klock.DateTimeTz
 import lucher.LucherAnswers
 import lucher.LucherColor
-import lucher.calculateResult
+import lucher.calculateLucher
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -48,7 +48,7 @@ internal class ReportGeneratorTest {
                 LucherColor.Black,
             )
         )
-        val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
+        val result = calculateLucher(answers, CentralDataStorage.lucherData.meanings)
         val report = generateReport(
             userId = "Pasha",
             answers = answers,

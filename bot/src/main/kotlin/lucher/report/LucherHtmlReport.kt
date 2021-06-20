@@ -50,12 +50,12 @@ private fun BODY.showAnswers(answers: LucherAnswers) {
 }
 
 private fun BODY.showResults(result: LucherResult) {
-    showDescriptionForPairs("Стабильные пары", result.stablePairs)
-    showDescriptionForPairs("Разбитые пары", result.brokenPairs)
-    showDescriptionForPairs("Компенсирующие пары", result.contraversedPairs)
+    descriptionForPairs("Стабильные пары", result.stablePairs)
+    descriptionForPairs("Разбитые пары", result.brokenPairs)
+    descriptionForPairs("Компенсирующие пары", result.contraversedPairs)
 }
 
-private fun BODY.showDescriptionForPairs(header: String, pairs: Map<Element, String>) {
+private fun BODY.descriptionForPairs(header: String, pairs: Map<LucherElement, String>) {
     if (pairs.isEmpty()) return
 
     justHeader(header)
@@ -63,8 +63,8 @@ private fun BODY.showDescriptionForPairs(header: String, pairs: Map<Element, Str
     pairs.forEach { (element, string) ->
 
         val colors = when (element) {
-            is Element.Pair -> listOf(element.firstColor.color, element.secondColor.color)
-            is Element.Single -> listOf(element.color.color)
+            is LucherElement.Pair -> listOf(element.firstColor.color, element.secondColor.color)
+            is LucherElement.Single -> listOf(element.color.color)
         }
         table {
             tr {

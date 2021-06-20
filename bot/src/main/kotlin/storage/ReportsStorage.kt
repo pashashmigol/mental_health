@@ -14,7 +14,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
 
     fun saveLucher(
         userId: Long,
-        pdfStr: String,
+        bytes: ByteArray,
     ): String {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
         val fileName = CentralDataStorage.string("lusher_result_filename", date)
@@ -22,7 +22,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
         val parentFolderLink = saveFile(
             fileName = fileName,
             folderName = userId.toString(),
-            contentStream = ByteArrayInputStream(pdfStr.toByteArray(Charsets.UTF_8))
+            contentStream = ByteArrayInputStream(bytes)
         )
         println("saveLucher(); report saved to : $parentFolderLink")
         return parentFolderLink
