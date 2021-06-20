@@ -11,10 +11,10 @@ fun chartFor(result: MmpiProcess.Result): String {
     val ys = result.scalesToShow
         .map { it.score }
 
-    val svg = mmpiChartTemplate(605, ys)
+    val svg = mmpiChartTemplate(405, ys)
 
     val writer = StringWriter()
-    svg.render(writer, RenderMode.INLINE)
+    svg.render(writer, RenderMode.FILE)
     return writer.toString()
 }
 
@@ -32,8 +32,8 @@ fun mmpiChartTemplate(desiredSize: Int, values: List<Int>): SVG {
         .map { it.toInt() }
 
     return SVG.svg {
-        width = "${desiredSize + padding}px"
-        height = "${desiredSize + padding}px"
+        width = "${desiredSize + padding}"
+        height = "${desiredSize + padding}"
         viewBox = "0 0 $width $height"
 
         g {

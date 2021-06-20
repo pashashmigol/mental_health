@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val compileKotlin: KotlinCompile by tasks
 
 plugins {
@@ -35,11 +36,31 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:7.0.0")
     implementation("io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram:6.0.1")
     implementation("com.soywiz.korlibs.klock:klock:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2")
     implementation("com.github.nwillc:ksvg:3.0.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
-    testImplementation( "org.junit.jupiter:junit-jupiter-api:5.6.2")
+    implementation("net.sf.cssbox:pdf2dom:1.8")
+    implementation("com.itextpdf:itextpdf:5.5.10")
+    implementation("com.itextpdf.tool:xmlworker:5.5.10")
+    implementation("com.itextpdf:itext7-core:7.1.15")
+    implementation("org.apache.poi:poi-ooxml:3.15")
+    implementation("org.apache.poi:poi-scratchpad:3.15")
+
+    implementation("org.apache.xmlgraphics:batik-codec:1.9")
+
+    implementation("org.apache.pdfbox:pdfbox-tools:2.0.3")
+    implementation("net.sf.cssbox:pdf2dom:1.6")
+
+    implementation("org.xhtmlrenderer:flying-saucer-parent:9.1.22")
+
+    implementation("com.itextpdf:itext-asian:5.2.0")
+    implementation("com.itextpdf:itextpdf:5.5.13.2")
+    implementation("org.xhtmlrenderer:flying-saucer-core:9.1.22")
+    implementation("org.xhtmlrenderer:flying-saucer-pdf:9.1.22")
+    implementation("org.apache.xmlgraphics:batik-transcoder:1.14")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
 }
 
 appengine {

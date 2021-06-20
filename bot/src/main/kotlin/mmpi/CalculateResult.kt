@@ -2,7 +2,7 @@ package mmpi
 
 import kotlin.math.roundToInt
 
-fun calculate(answers: List<MmpiProcess.Answer?>, scales: MmpiProcess.Scales): MmpiProcess.Result {
+fun calculateMmpi(answers: List<MmpiProcess.Answer?>, scales: MmpiProcess.Scales): MmpiProcess.Result {
 
     val correction = scales.correctionScaleK.calculate(answers).raw
 

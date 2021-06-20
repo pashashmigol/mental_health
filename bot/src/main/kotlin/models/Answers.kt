@@ -1,15 +1,13 @@
 package models
 
 import com.soywiz.klock.DateFormat
-import com.soywiz.klock.DateTime
+import com.soywiz.klock.DateTimeTz
 
 abstract class Answers(
     val user: User,
-    val date: DateTime
+    val date: DateTimeTz
 ) {
-    abstract val data: Any
-
-    val dateString: String = date.toString(DateFormat.FORMAT1)
+    val dateString: String = date.toString(DateFormat.DEFAULT_FORMAT)
 
     override fun toString(): String {
         return "Answers(user=$user, date=$date, dateString='$dateString')"

@@ -3,7 +3,6 @@ package lucher.telegram
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import lucher.LucherColor
-import mmpi.telegram.MMPI_SESSION_TEST_USER_ID
 import models.Answers
 import models.User
 
@@ -13,7 +12,7 @@ import telegram.LaunchMode
 import telegram.UserConnection
 
 import Result
-import com.soywiz.klock.DateTime
+import com.soywiz.klock.DateTimeTz
 import lucher.LucherAnswers
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
@@ -32,13 +31,13 @@ internal class LucherSessionTest {
             testingMode = true
         )
 
-        CentralDataStorage.createUser(MMPI_SESSION_TEST_USER_ID, "MmpiSessionTest User")
-        testUser = CentralDataStorage.users.get(MMPI_SESSION_TEST_USER_ID)!!
+        CentralDataStorage.createUser(LUCHER_SESSION_TEST_USER_ID, "LucherSessionTest User")
+        testUser = CentralDataStorage.usersStorage.get(LUCHER_SESSION_TEST_USER_ID)!!
     }
 
-    @AfterEach
+    @AfterAll
     fun cleanUp() {
-        CentralDataStorage.users.clearUser(testUser)
+        CentralDataStorage.usersStorage.clearUser(testUser)
     }
 
     @Test
@@ -57,6 +56,10 @@ internal class LucherSessionTest {
                 ): Long {
                     return 0
                 }
+                override fun notifyAdmin(text: String, exception: Throwable?) {
+                    println(text)
+                    exception?.let { fail(it)  }
+                }
             },
             onEndedCallback = {
                 resultChannel.offer(Unit)
@@ -68,7 +71,7 @@ internal class LucherSessionTest {
 
         val testAnswers = LucherAnswers(
             user = testUser,
-            dateTime = DateTime.now(),
+            date = DateTimeTz.nowLocal(),
             firstRound = LucherColor.values().toList(),
             secondRound = LucherColor.values().toList()
         )
@@ -93,7 +96,7 @@ internal class LucherSessionTest {
 
     private fun checkIfAnswersSavedToDatabase(expectedAnswers: LucherAnswers) = runBlocking {
 
-        val answersResult = CentralDataStorage.users.getUserAnswers(testUser)
+        val answersResult = CentralDataStorage.usersStorage.getUserAnswers(testUser)
         assertTrue(answersResult is Result.Success)
 
         val allAnswersFromDatabase: List<Answers> = (answersResult as Result.Success).data
@@ -104,7 +107,7 @@ internal class LucherSessionTest {
         assertEquals(expectedAnswers.user, databaseAnswers.user)
 
         val timeSpan = expectedAnswers.date - databaseAnswers.date
-        assertTrue(timeSpan.seconds < 2)
+        assertTrue(timeSpan.seconds < 5)
 
         assertArrayEquals(
             expectedAnswers.firstRound.toTypedArray(),

@@ -5,7 +5,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import lucher.telegram.LucherSession
 import mmpi.telegram.MmpiSession
-import models.Type
+import models.TestType
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
@@ -28,15 +28,15 @@ class TelegramRoom(
             userConnection.notifyAdmin(
                 "welcomeUser(); chatInfo = $chatInfo"
             )
-            if (CentralDataStorage.users.hasUserWithId(userId)) {
-                val user = CentralDataStorage.users.get(userId)
+            if (CentralDataStorage.usersStorage.hasUserWithId(userId)) {
+                val user = CentralDataStorage.usersStorage.get(userId)
 
                 userConnection.notifyAdmin(
                     "user already exists: $user"
                 )
             } else {
                 CentralDataStorage.createUser(userId, chatInfo.userName)
-                val user = CentralDataStorage.users.get(userId)
+                val user = CentralDataStorage.usersStorage.get(userId)
 
                 userConnection.notifyAdmin(
                     "user created: $user"
@@ -47,9 +47,9 @@ class TelegramRoom(
                 chatInfo.chatId,
                 text = string("choose_test"),
                 buttons = listOf(
-                    Button(string("lucher"), Type.Lucher.name),
-                    Button(string("mmpi_566"), Type.Mmpi566.name),
-                    Button(string("mmpi_377"), Type.Mmpi377.name)
+                    Button(string("lucher"), TestType.Lucher.name),
+                    Button(string("mmpi_566"), TestType.Mmpi566.name),
+                    Button(string("mmpi_377"), TestType.Mmpi377.name)
                 )
             )
         }
@@ -70,12 +70,12 @@ class TelegramRoom(
             removeSession(userId)
             sessions[userId] = MmpiSession(
                 userId,
-                Type.Mmpi566,
+                TestType.Mmpi566,
                 userConnection,
                 onEndedCallback = { removeSession(it.id) }
             )
 
-            val user = CentralDataStorage.users.get(userId)
+            val user = CentralDataStorage.usersStorage.get(userId)
 
             user?.apply {
                 sessions[userId]!!.start(
@@ -94,14 +94,14 @@ class TelegramRoom(
         try {
             println("$TAG: launchMmpi377Test();")
             val userId = chatInfo.userId
-            val user = CentralDataStorage.users.get(userId)!!
+            val user = CentralDataStorage.usersStorage.get(userId)!!
 
             userConnection.notifyAdmin("launchMmpi377Test(); chatInfo = $chatInfo")
 
             removeSession(userId)
             sessions[userId] = MmpiSession(
                 userId,
-                Type.Mmpi377,
+                TestType.Mmpi377,
                 userConnection,
             ) { removeSession(it.id) }
 
@@ -120,7 +120,7 @@ class TelegramRoom(
         try {
             println("$TAG: launchLucherTest();")
             val userId = chatInfo.userId
-            val user = CentralDataStorage.users.get(userId)!!
+            val user = CentralDataStorage.usersStorage.get(userId)!!
 
             userConnection.notifyAdmin("launchLucherTest(); chatInfo = $chatInfo")
 
@@ -175,22 +175,22 @@ class TelegramRoom(
         chatInfo: ChatInfo,
         data: String
     ) {
-        val type = Type.valueOf(data)
+        val type = TestType.valueOf(data)
         val userId = chatInfo.userId
         val chatId = chatInfo.chatId
         val messageId = chatInfo.messageId
-        val user = CentralDataStorage.users.get(userId)!!
+        val user = CentralDataStorage.usersStorage.get(userId)!!
 
         userConnection.removeMessage(chatId, messageId)
 
         sessions[userId] = when (type) {
-            Type.Mmpi566, Type.Mmpi377 -> MmpiSession(
+            TestType.Mmpi566, TestType.Mmpi377 -> MmpiSession(
                 userId,
                 type,
                 userConnection,
             ) { removeSession(it.id) }
 
-            Type.Lucher -> LucherSession(
+            TestType.Lucher -> LucherSession(
                 userId,
                 userConnection,
             ) { removeSession(it.id) }

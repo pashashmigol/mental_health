@@ -4,20 +4,20 @@ import com.google.common.collect.Lists
 
 
 data class LucherResult(
-    val stablePairs: Map<Element, String>,
-    val brokenPairs: Map<Element, String>,
-    val contraversedPairs: Map<Element, String>,
+    val stablePairs: Map<LucherElement, String>,
+    val brokenPairs: Map<LucherElement, String>,
+    val contraversedPairs: Map<LucherElement, String>,
     val firstRoundAnxiety: Int,
     val secondRoundAnxiety: Int
 )
 
 data class AllPairs(
-    val stablePairs: List<Element>,
-    val brokenPairs: List<Element>,
-    val contraversedPairs: List<Element>
+    val stablePairs: List<LucherElement>,
+    val brokenPairs: List<LucherElement>,
+    val contraversedPairs: List<LucherElement>
 )
 
-fun calculateResult(answers: LucherAnswers, meanings: Map<String, String>): LucherResult {
+fun calculateLucher(answers: LucherAnswers, meanings: Map<String, String>): LucherResult {
 
     val firstTouchAnswers = answers.firstRound.map { it.index.toString() }
     val secondTouchAnswers = answers.secondRound.map { it.index.toString() }
@@ -57,26 +57,26 @@ fun findPairs(
 
     val pairsFirst = firstTouchAnswers
         .zipWithNext()
-        .map { Element.Pair(it.first, it.second) }
+        .map { LucherElement.Pair(it.first, it.second) }
 
     val pairsSecond = secondTouchAnswers
         .zipWithNext()
-        .map { Element.Pair(it.first, it.second) }
+        .map { LucherElement.Pair(it.first, it.second) }
 
     val commonPairs = findCommonPairs(pairsSecond, pairsFirst)
     val isolatedColors = isolatedColors(commonPairs, secondTouchAnswers)
     val last = commonPairs.size + isolatedColors.size - 1
 
-    val mainPairs: List<Element> = secondTouchAnswers
+    val mainPairs: List<LucherElement> = secondTouchAnswers
         .mapNotNull { color: String ->
             isolatedColors.find { color == it.color.color.index.toString() }
                 ?: commonPairs.find { it.firstColor.color.index.toString() == color }
-        }.mapIndexed { index: Int, element: Element ->
+        }.mapIndexed { index: Int, lucherElement: LucherElement ->
             when (index) {
-                0 -> element.addAttribute("+")
-                1 -> element.addAttribute("x")
-                last -> element.addAttribute("-")
-                else -> element.addAttribute("=")
+                0 -> lucherElement.addAttribute("+")
+                1 -> lucherElement.addAttribute("x")
+                last -> lucherElement.addAttribute("-")
+                else -> lucherElement.addAttribute("=")
             }
         }
 
@@ -89,7 +89,7 @@ fun findPairs(
 fun findContraversedPairs(
     firstRoundAnswers: List<String>,
     secondRoundAnswers: List<String>
-): List<Element.Pair> {
+): List<LucherElement.Pair> {
     val firstTouchAs: MutableList<AttributedColor> = findAnxietyColors(firstRoundAnswers)
     val firstTouchCs: MutableList<AttributedColor> = findCompensatoryColors(firstRoundAnswers)
 
@@ -120,7 +120,7 @@ fun findContraversedPairs(
 
     return Lists.cartesianProduct(secondTouchCs, secondTouchAs)
         .map {
-            Element.Pair(firstColor = it[0], secondColor = it[1])
+            LucherElement.Pair(firstColor = it[0], secondColor = it[1])
         }
 }
 
@@ -185,9 +185,9 @@ fun calculateAnxiety(answers: List<String>): Int {
 
 
 private fun isolatedColors(
-    commonPairs: List<Element.Pair>,
+    commonPairs: List<LucherElement.Pair>,
     secondTouchAnswers: List<String>
-): List<Element.Single> {
+): List<LucherElement.Single> {
     val pairedColors: Set<String> =
         commonPairs
             .flatMap { listOf(it.firstColor, it.secondColor) }
@@ -196,15 +196,15 @@ private fun isolatedColors(
 
     return secondTouchAnswers
         .filterNot { pairedColors.contains(it) }
-        .map { Element.Single(it) }
+        .map { LucherElement.Single(it) }
 }
 
 internal fun findBrokenPairs(
     firstRoundAnswers: List<String>,
     secondRoundAnswers: List<String>
-): List<Element.Pair> {
+): List<LucherElement.Pair> {
 
-    val pairsFirst: List<Element.Pair> = firstRoundAnswers
+    val pairsFirst: List<LucherElement.Pair> = firstRoundAnswers
         .chunked(2)
         .mapIndexed { index: Int, list: List<String> ->
             val attribute = when (index) {
@@ -214,16 +214,16 @@ internal fun findBrokenPairs(
                 3 -> "-"
                 else -> null
             }!!
-            Element.Pair(
+            LucherElement.Pair(
                 AttributedColor(LucherColor.of(list[0]), attribute),
                 AttributedColor(LucherColor.of(list[1]), attribute)
             )
         }
 
-    val pairsSecond: List<Element.Pair> = secondRoundAnswers
+    val pairsSecond: List<LucherElement.Pair> = secondRoundAnswers
         .zipWithNext()
         .map {
-            Element.Pair(
+            LucherElement.Pair(
                 AttributedColor(it.first),
                 AttributedColor(it.second)
             )
@@ -238,9 +238,9 @@ internal fun findBrokenPairs(
 }
 
 private fun findCommonPairs(
-    pairsSecond: List<Element.Pair>,
-    pairsFirst: List<Element.Pair>
-): List<Element.Pair> = pairsSecond
+    pairsSecond: List<LucherElement.Pair>,
+    pairsFirst: List<LucherElement.Pair>
+): List<LucherElement.Pair> = pairsSecond
     .filter { pair1 ->
         pairsFirst.any { pair2 ->
             pair1.sameColors(pair2)

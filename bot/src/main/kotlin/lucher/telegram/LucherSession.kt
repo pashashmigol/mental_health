@@ -12,7 +12,7 @@ import storage.CentralDataStorage.string
 import telegram.*
 import telegram.helpers.showResult
 import Result
-import com.soywiz.klock.DateTime
+import com.soywiz.klock.DateTimeTz
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -33,8 +33,8 @@ data class LucherSession(
 
     override suspend fun start(user: User, chatId: Long) {
         val handler = CoroutineExceptionHandler { _, exception ->
-            userConnection.notifyAdmin("LucherSession error: ${exception.message}", exception)
-            userConnection.sendMessage(chatId, "LucherSession error: ${exception.message}")
+            userConnection.notifyAdmin("LucherSession error: ${exception.stackTraceToString()}", exception)
+            userConnection.sendMessage(chatId, "LucherSession error: ${exception.stackTraceToString()}")
             userConnection.sendMessage(chatId, string("start_again"))
         }
         scope.launch(handler) { executeTesting(user, chatId) }
@@ -49,16 +49,17 @@ data class LucherSession(
 
         val answers = LucherAnswers(
             user = user,
-            dateTime = DateTime.now(),
+            date = DateTimeTz.nowLocal(),
             firstRound = firstRoundAnswers,
             secondRound = secondRoundAnswers
         )
-        val result = calculateResult(answers, CentralDataStorage.lucherData.meanings)
+        val result = calculateLucher(answers, CentralDataStorage.lucherData.meanings)
 
         val folderLink = CentralDataStorage.saveLucher(
             user = user,
             answers = answers,
-            result = result
+            result = result,
+            saveAnswers = true
         )
         onEndedCallback(this)
         showResult(user, folderLink, userConnection)

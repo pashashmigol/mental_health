@@ -2,7 +2,7 @@ package mmpi.reports
 
 import mmpi.MmpiProcess
 import mmpi.Scale
-import mmpi.report.generateReport
+import mmpi.report.generateHtml
 import models.User
 import org.junit.jupiter.api.Test
 
@@ -27,7 +27,7 @@ internal class ReportHelpersTest {
             optimismScale9 = Scale.Result(name = "optimism", score = 50, description = "", raw = 0)
         )
 
-        val report = generateReport(
+        val report = generateHtml(
             user = User(id = 0, name = "Pasha Shmyhol"),
             questions = listOf(),
             answers = listOf(),

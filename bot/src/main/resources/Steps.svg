@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="369px" height="389px" viewBox="0 0 369 389" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Graph</title>
+  <g id="Graph" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g transform="translate(40.000000, 56.000000)" fill="#000000">
+      <rect id="Rectangle" x="25" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="46" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="67" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="88" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="109" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="130" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="151" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="172" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="193" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="214" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="235" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="256" y="5" width="1" height="253"></rect>
+      <rect id="Rectangle" x="277" y="5" width="1" height="253"></rect>
+      <text id="L" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="23.5078125" y="273">L</tspan>
+      </text>
+      <text id="0" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="14.1796875" y="261">0</tspan>
+      </text>
+      <text id="10" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="241">10</tspan>
+      </text>
+      <text id="20" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="220">20</tspan>
+      </text>
+      <text id="30" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="199">30</tspan>
+      </text>
+      <text id="40" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="177">40</tspan>
+      </text>
+      <text id="50" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="156">50</tspan>
+      </text>
+      <text id="60" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="135">60</tspan>
+      </text>
+      <text id="70" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="114">70</tspan>
+      </text>
+      <text id="80" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="94">80</tspan>
+      </text>
+      <text id="90" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="7.359375" y="73">90</tspan>
+      </text>
+      <text id="100" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="0.5390625" y="51">100</tspan>
+      </text>
+      <text id="110" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="0.5390625" y="31">110</tspan>
+      </text>
+      <text id="120" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="0.5390625" y="11">120</tspan>
+      </text>
+      <text id="F" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="43.4082031" y="273">F</tspan>
+      </text>
+      <text id="K" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="63.4355469" y="273">K</tspan>
+      </text>
+      <text id="1" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="85.1796875" y="273">1</tspan>
+      </text>
+      <text id="2" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="106.179688" y="273">2</tspan>
+      </text>
+      <text id="3" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="127.179688" y="273">3</tspan>
+      </text>
+      <text id="4" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="147.179688" y="273">4</tspan>
+      </text>
+      <text id="5" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="169.179688" y="273">5</tspan>
+      </text>
+      <text id="6" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="190.179688" y="273">6</tspan>
+      </text>
+      <text id="7" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="211.179688" y="273">7</tspan>
+      </text>
+      <text id="8" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="232.179688" y="273">8</tspan>
+      </text>
+      <text id="9" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="253.179688" y="273">9</tspan>
+      </text>
+      <text id="0" font-family="Roboto-Medium, Roboto" font-size="12" font-weight="400">
+        <tspan x="274.179688" y="273">0</tspan>
+      </text>
+      <rect id="Rectangle" x="25" y="257" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="236" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="215" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="194" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="173" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="152" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="131" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="110" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="89" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="68" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="47" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="26" width="253" height="1"></rect>
+      <rect id="Rectangle" x="25" y="5" width="253" height="1"></rect>
+    </g>
+    <polyline id="Path" stroke="#000000" stroke-width="3" points="65 132 86.5 132 107.5 149.501461"></polyline>
+    <polyline id="Path-2" stroke="#000000" stroke-width="3" points="121.089229 70 150 90 170 90 192 110 212 166 237 166.5 254 103 275 215 296.5 188 317 204.668743"></polyline>
+  </g>
+</svg>

@@ -83,7 +83,7 @@ internal class LucherCalculationsTest {
         val actual = findBrokenPairs(firstRound, secondRound)
 
         val expected = listOf(
-            Element.Pair(
+            LucherElement.Pair(
                 AttributedColor("5", "x"),
                 AttributedColor("4", "x"),
             )
