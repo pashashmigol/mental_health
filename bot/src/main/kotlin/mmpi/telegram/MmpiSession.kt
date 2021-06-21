@@ -25,7 +25,7 @@ class MmpiSession(
     private val type: TestType,
     val userConnection: UserConnection,
     val onEndedCallback: OnEnded
-) : TelegramSession<Int> {
+) : TelegramSession<Int>(id) {
     companion object {
         val scope = GlobalScope
     }

@@ -24,7 +24,7 @@ data class LucherSession(
     val userConnection: UserConnection,
     val minutesBetweenRounds: Int = LUCHER_TEST_TIMEOUT,
     val onEndedCallback: OnEnded
-) : TelegramSession<Unit> {
+) : TelegramSession<Unit>(id) {
     companion object {
         val scope = GlobalScope
     }
@@ -42,10 +42,9 @@ data class LucherSession(
 
     private suspend fun executeTesting(user: User, chatId: Long) {
 
-        val firstRoundAnswers = runRound(chatId, this.userConnection)
-
+        val firstRoundAnswers = runRound(chatId, userConnection)
         askUserToWaitBeforeSecondRound(chatId, minutes = LUCHER_TEST_TIMEOUT, userConnection)
-        val secondRoundAnswers = runRound(chatId, this.userConnection)
+        val secondRoundAnswers = runRound(chatId, userConnection)
 
         val answers = LucherAnswers(
             user = user,
@@ -65,7 +64,11 @@ data class LucherSession(
         showResult(user, folderLink, userConnection)
     }
 
-    private suspend fun runRound(chatId: Long, userConnection: UserConnection): List<LucherColor> {
+    private suspend fun runRound(
+        chatId: Long,
+        userConnection: UserConnection
+    ): List<LucherColor> {
+
         val shownOptions: MutableList<LucherColor> = LucherColor.values().toMutableList()
         userConnection.sendMessageWithLucherColors(chatId, LucherColor.values())
 
@@ -86,7 +89,6 @@ data class LucherSession(
                 messageId = messageId,
                 buttons = createReplyOptions(shownOptions)
             )
-
             answers.add(LucherColor.valueOf(answer))
 
             if (allColorsChosen(answers)) {
@@ -105,6 +107,8 @@ data class LucherSession(
 
     private val mutex = Mutex()
     override suspend fun onCallbackFromUser(messageId: Long, data: String): Result<Unit> {
+        super.onCallbackFromUser(messageId, data)
+
         mutex.withLock {
             while (onColorChosen == null) {
                 delay(1)
