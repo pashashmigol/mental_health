@@ -1,6 +1,6 @@
 package mmpi
 
-import models.TestType
+import models.TypeOfTest
 import models.size
 import org.junit.jupiter.api.Test
 
@@ -23,9 +23,9 @@ internal class MmpiProcessTest {
 
     @Test
     fun `simple run`() {
-        val process = MmpiProcess(Gender.Male, TestType.Mmpi566)
+        val process = MmpiProcess(Gender.Male, TypeOfTest.Mmpi566)
 
-        repeat(TestType.Mmpi566.size) { index ->
+        repeat(TypeOfTest.Mmpi566.size) { index ->
             assertTrue(process.hasNextQuestion(), "index = $index")
 
             val question = process.nextQuestion()

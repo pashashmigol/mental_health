@@ -5,7 +5,7 @@ import com.google.api.services.drive.model.File
 import com.google.api.services.drive.model.FileList
 import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTime
-import models.TestType
+import models.TypeOfTest
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
@@ -31,13 +31,13 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
     fun saveMmpi(
         userId: Long,
         bytes: ByteArray,
-        type: TestType
+        typeOfTest: TypeOfTest
     ): Link {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
 
-        val fileName = when (type) {
-            TestType.Mmpi566 -> CentralDataStorage.string("mmpi_566_result_filename", date)
-            TestType.Mmpi377 -> CentralDataStorage.string("mmpi_377_result_filename", date)
+        val fileName = when (typeOfTest) {
+            TypeOfTest.Mmpi566 -> CentralDataStorage.string("mmpi_566_result_filename", date)
+            TypeOfTest.Mmpi377 -> CentralDataStorage.string("mmpi_377_result_filename", date)
             else -> throw IllegalStateException()
         }
 

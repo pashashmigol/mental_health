@@ -32,7 +32,7 @@ internal class LucherSessionTest {
         )
 
         CentralDataStorage.createUser(LUCHER_SESSION_TEST_USER_ID, "LucherSessionTest User")
-        testUser = CentralDataStorage.usersStorage.get(LUCHER_SESSION_TEST_USER_ID)!!
+        testUser = CentralDataStorage.usersStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!
     }
 
     @AfterAll

@@ -1,9 +1,8 @@
 package mmpi.report
 
-import com.soywiz.klock.DateTime
 import com.soywiz.klock.DateTimeTz
 import mmpi.*
-import models.TestType
+import models.TypeOfTest
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.BeforeAll
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.TestInstance
 import storage.CentralDataStorage
 
 import models.User
-import org.junit.jupiter.api.Disabled
 import telegram.LaunchMode
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -56,7 +54,7 @@ internal class LenaTest {
         )
         CentralDataStorage.saveMmpi(
             user = lena,
-            type = TestType.Mmpi377,
+            typeOfTest = TypeOfTest.Mmpi377,
             result = result,
             questions = listOf(),
             answers = mmpiAnswers,

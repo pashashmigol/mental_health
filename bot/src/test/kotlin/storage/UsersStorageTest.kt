@@ -74,7 +74,7 @@ internal class UsersStorageTest {
     }
 
     private fun checkUser(userId: Long, userName: String): User {
-        val user = CentralDataStorage.usersStorage.get(userId)
+        val user = CentralDataStorage.usersStorage.getUser(userId)
 
         assert(user != null)
         assertEquals(userId, user?.id)

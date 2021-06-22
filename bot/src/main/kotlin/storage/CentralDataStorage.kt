@@ -11,7 +11,7 @@ import mmpi.MmpiProcess
 import mmpi.report.pdfReportMmpi
 import mmpi.storage.loadMmpiData
 import models.Question
-import models.TestType
+import models.TypeOfTest
 import models.User
 import report.PdfFonts
 import java.util.*
@@ -26,8 +26,9 @@ object CentralDataStorage {
     val lucherData get() = lucher
     val mmpi566Data get() = mmpi566
     val mmpi377Data get() = mmpi377
-    val usersStorage get() = usersStorageRepository
-    private val reportsStorage get() = reportsStorageRepository
+
+    val usersStorage get() = _usersStorage
+    private val reportsStorage get() = _reportsStorage
 
     fun init(rootPath: String, testingMode: Boolean = false) {
         if (!this::connection.isInitialized) {
@@ -40,8 +41,9 @@ object CentralDataStorage {
     private lateinit var lucher: LucherData
     private lateinit var mmpi566: MmpiData
     private lateinit var mmpi377: MmpiData
-    private lateinit var usersStorageRepository: UsersStorage
-    private lateinit var reportsStorageRepository: ReportsStorage
+
+    private lateinit var _usersStorage: UsersStorage
+    private lateinit var _reportsStorage: ReportsStorage
 
     fun reload() {
         lucher = loadLucherData(connection)
@@ -49,8 +51,8 @@ object CentralDataStorage {
         mmpi566 = loadMmpiData(connection, Settings.MMPI_566_QUESTIONS_FILE_ID)
         mmpi377 = loadMmpiData(connection, Settings.MMPI_377_QUESTIONS_FILE_ID)
 
-        usersStorageRepository = UsersStorage(connection.database)
-        reportsStorageRepository = ReportsStorage(connection)
+        _usersStorage = UsersStorage(connection.database)
+        _reportsStorage = ReportsStorage(connection)
     }
 
     private val messages: ResourceBundle = ResourceBundle.getBundle("Messages")
@@ -66,7 +68,7 @@ object CentralDataStorage {
     }
 
     fun createUser(userId: Long, userName: String) {
-        val (folderId, reportsFolderLink) = reportsStorageRepository.createFolder(userId.toString())
+        val (folderId, reportsFolderLink) = _reportsStorage.createFolder(userId.toString())
         giveAccess(folderId, connection)
 
         val user = User(
@@ -74,12 +76,12 @@ object CentralDataStorage {
             name = userName,
             googleDriveFolder = reportsFolderLink
         )
-        usersStorageRepository.add(user)
+        _usersStorage.add(user)
     }
 
     fun saveMmpi(
         user: User,
-        type: TestType,
+        typeOfTest: TypeOfTest,
         result: MmpiProcess.Result,
         questions: List<Question>,
         answers: MmpiAnswers,
@@ -93,7 +95,7 @@ object CentralDataStorage {
             answers = answers,
             result = result,
         )
-        return reportsStorage.saveMmpi(user.id, pdfStr, type)
+        return reportsStorage.saveMmpi(user.id, pdfStr, typeOfTest)
     }
 
     fun saveLucher(

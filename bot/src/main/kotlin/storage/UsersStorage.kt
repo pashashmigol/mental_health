@@ -13,6 +13,7 @@ import mmpi.MmpiAnswers
 import mmpi.MmpiProcess
 import models.Answers
 import models.User
+import telegram.SessionState
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 
@@ -20,12 +21,14 @@ import java.util.concurrent.ConcurrentHashMap
 private const val USERS = "users_info"
 private const val MMPI_ANSWERS = "mmpi_answers"
 private const val LUCHER_ANSWERS = "lucher_answers"
+private const val ACTIVE_SESSIONS = "active_sessions"
 
 class UsersStorage(database: FirebaseDatabase) {
 
     private val usersInfoRef: DatabaseReference = database.reference.child(USERS)
     private val usersMmpiAnswersRef: DatabaseReference = database.reference.child(MMPI_ANSWERS)
     private val usersLucherAnswersRef: DatabaseReference = database.reference.child(LUCHER_ANSWERS)
+    private val activeSessionsRef: DatabaseReference = database.reference.child(ACTIVE_SESSIONS)
 
     @Volatile
     private var users = ConcurrentHashMap<Long, User>()
@@ -45,7 +48,15 @@ class UsersStorage(database: FirebaseDatabase) {
         })
     }
 
-    fun get(id: Long) = users[id]
+    fun takeAllSessions(): List<SessionState> {
+        TODO("not implemented")
+    }
+
+    fun saveAllSessions(session: List<SessionState>) {
+        TODO("not implemented")
+    }
+
+    fun getUser(userId: Long) = users[userId]
 
     fun allUsers(): List<User> = users.values.toList()
 

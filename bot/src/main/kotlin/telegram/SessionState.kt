@@ -1,6 +1,11 @@
 package telegram
 
-class State(val sessionId: Long) {
+import models.TypeOfTest
+
+class SessionState(
+    val sessionId: Long,
+    val type: TypeOfTest
+) {
     class Message(val messageId: Long, val data: String)
 
     private val _messages = mutableListOf<Message>()

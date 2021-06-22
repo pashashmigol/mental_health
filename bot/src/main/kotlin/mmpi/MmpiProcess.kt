@@ -5,7 +5,7 @@ import models.*
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
-class MmpiProcess(gender: Gender, val type: TestType) {
+class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
 
     internal data class State(
         val currentQuestionIndex: Int = -1,
@@ -14,13 +14,13 @@ class MmpiProcess(gender: Gender, val type: TestType) {
         val scales: Scales?
     )
 
-    private var state = when (type) {
-        TestType.Mmpi566 -> State(
+    private var state = when (typeOfTest) {
+        TypeOfTest.Mmpi566 -> State(
             questions = CentralDataStorage.mmpi566Data.questions(gender),
             answers = emptyList(),
             scales = CentralDataStorage.mmpi566Data.scales(gender)
         )
-        TestType.Mmpi377 -> State(
+        TypeOfTest.Mmpi377 -> State(
             questions = CentralDataStorage.mmpi377Data.questions(gender),
             answers = emptyList(),
             scales = CentralDataStorage.mmpi377Data.scales(gender)
@@ -47,7 +47,7 @@ class MmpiProcess(gender: Gender, val type: TestType) {
             state = submitAnswer(state, index, answer)
     }
 
-    fun hasNextQuestion(): Boolean = hasNextQuestion(state, type)
+    fun hasNextQuestion(): Boolean = hasNextQuestion(state, typeOfTest)
 
     fun nextQuestion(): Question {
         val (newState, question) = nextQuestion(state)
@@ -55,7 +55,7 @@ class MmpiProcess(gender: Gender, val type: TestType) {
         return question
     }
 
-    fun calculateResult() = calculateResult(state, type)
+    fun calculateResult() = calculateResult(state, typeOfTest)
 
     enum class Answer {
         Agree,
@@ -138,8 +138,8 @@ private fun submitAnswer(
     )
 }
 
-private fun hasNextQuestion(state: MmpiProcess.State, type: TestType): Boolean {
-    return state.currentQuestionIndex < type.size - 1
+private fun hasNextQuestion(state: MmpiProcess.State, typeOfTest: TypeOfTest): Boolean {
+    return state.currentQuestionIndex < typeOfTest.size - 1
 }
 
 private fun nextQuestion(state: MmpiProcess.State):
@@ -151,8 +151,8 @@ private fun nextQuestion(state: MmpiProcess.State):
     return Pair(newState, question)
 }
 
-private fun calculateResult(state: MmpiProcess.State, type: TestType): MmpiProcess.Result {
-    if (state.answers.size != type.size)
+private fun calculateResult(state: MmpiProcess.State, typeOfTest: TypeOfTest): MmpiProcess.Result {
+    if (state.answers.size != typeOfTest.size)
         throw RuntimeException("Not all questions are answered")
     if (state.scales == null)
         throw RuntimeException("Scales are not loaded")

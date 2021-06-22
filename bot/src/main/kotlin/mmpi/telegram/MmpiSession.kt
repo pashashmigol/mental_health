@@ -3,7 +3,7 @@ package mmpi.telegram
 import Gender
 import kotlinx.coroutines.channels.Channel
 import mmpi.*
-import models.TestType
+import models.TypeOfTest
 import models.User
 import storage.CentralDataStorage
 import telegram.OnEnded
@@ -22,7 +22,7 @@ private typealias OnFinishedForTestingOnly = ((answers: List<MmpiProcess.Answer>
 
 class MmpiSession(
     override val id: Long,
-    private val type: TestType,
+    private val typeOfTest: TypeOfTest,
     val userConnection: UserConnection,
     val onEndedCallback: OnEnded
 ) : TelegramSession<Int>(id) {
@@ -48,7 +48,7 @@ class MmpiSession(
             connection = userConnection
         )
         val gender = waitForGenderChosen()
-        val ongoingProcess = MmpiProcess(gender, type)
+        val ongoingProcess = MmpiProcess(gender, typeOfTest)
 
         collectAllAnswers(ongoingProcess, user, gender)
     }
@@ -126,7 +126,7 @@ class MmpiSession(
         )
         val resultFolder = CentralDataStorage.saveMmpi(
             user = user,
-            type = type,
+            typeOfTest = typeOfTest,
             questions = ongoingProcess.questions,
             answers = answers,
             result = result,

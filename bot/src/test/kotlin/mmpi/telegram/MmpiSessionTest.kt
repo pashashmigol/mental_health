@@ -1,7 +1,7 @@
 package mmpi.telegram
 
 import kotlinx.coroutines.runBlocking
-import models.TestType
+import models.TypeOfTest
 
 import storage.CentralDataStorage
 import telegram.LaunchMode
@@ -33,7 +33,7 @@ internal class MmpiSessionTest {
         )
 
         CentralDataStorage.createUser(MMPI_SESSION_TEST_USER_ID, "MmpiSessionTest User")
-        testUser = CentralDataStorage.usersStorage.get(MMPI_SESSION_TEST_USER_ID)!!
+        testUser = CentralDataStorage.usersStorage.getUser(MMPI_SESSION_TEST_USER_ID)!!
     }
 
     @AfterEach
@@ -50,7 +50,7 @@ internal class MmpiSessionTest {
 
         session = MmpiSession(
             id = 0,
-            type = TestType.Mmpi566,
+            type = TypeOfTest.Mmpi566,
             userConnection = object : UserConnection {
 
                 override fun sendMessageWithButtons(
@@ -76,11 +76,11 @@ internal class MmpiSessionTest {
         } while (res is Result.Error)
 
         session.testingCallback = { answers ->
-            assertEquals(TestType.Mmpi566.size, answers.size)
+            assertEquals(TypeOfTest.Mmpi566.size, answers.size)
             assertTrue(answers.all { it == MmpiProcess.Answer.Agree })
         }
 
-        repeat(TestType.Mmpi566.size) {
+        repeat(TypeOfTest.Mmpi566.size) {
             val id = answersIds.next()
             val res = session.onCallbackFromUser(
                 messageId = id,
@@ -108,7 +108,7 @@ internal class MmpiSessionTest {
 
         session = MmpiSession(
             id = 0,
-            type = TestType.Mmpi566,
+            type = TypeOfTest.Mmpi566,
             userConnection = object : UserConnection {
                 override fun sendMessageWithButtons(
                     chatId: Long,
@@ -134,7 +134,7 @@ internal class MmpiSessionTest {
             assertTrue(res is Result.Success, "$res")
         } while (res is Result.Error)
 
-        repeat(TestType.Mmpi566.size) {
+        repeat(TypeOfTest.Mmpi566.size) {
             sendAnswerToSession(answersIds, session, it)
         }
     }
@@ -160,7 +160,7 @@ internal class MmpiSessionTest {
     }
 
     private fun checkEditedAnswers(answers: List<MmpiProcess.Answer>) = runBlocking {
-        assertEquals(TestType.Mmpi566.size, answers.size)
+        assertEquals(TypeOfTest.Mmpi566.size, answers.size)
 
         answers.forEachIndexed { i, answer ->
             if (i % 2 == 0) {
