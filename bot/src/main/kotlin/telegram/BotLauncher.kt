@@ -11,26 +11,36 @@ import storage.CentralDataStorage
 import telegram.helpers.chatInfo
 import telegram.helpers.showUsersList
 
+class BotLauncher(
+    val mode: LaunchMode,
+    val tokens: List<Tokens>
+) {
+    fun launchBots(): List<BotsKeeper> {
+        return tokens.map {
+            var botsKeeper: BotsKeeper? = null
 
-fun launchBots(mode: LaunchMode, tokens: Tokens): BotsKeeper {
-    val botsKeeper = BotsKeeper()
+            val adminBot = launchAdminBot(mode, it.ADMIN)
 
-    botsKeeper.adminBot = launchAdminBot(mode, tokens.ADMIN_ID, tokens.ADMIN, botsKeeper)
-    botsKeeper.clientBot = launchClientBot(mode, tokens.ADMIN_ID, tokens.CLIENT, botsKeeper)
+            val (clientBot, telegramRoom) = launchClientBot(
+                mode, it.ADMIN_ID, it.CLIENT, lazy { botsKeeper!! }.value
+            )
 
-    return botsKeeper
+            botsKeeper = BotsKeeper(
+                tokens = it,
+                adminBot = adminBot,
+                clientBot = clientBot,
+                room = telegramRoom
+            )
+            botsKeeper
+        }
+    }
 }
 
 private fun launchAdminBot(
     mode: LaunchMode,
-    adminId: Long,
     token: String,
-    botsKeeper: BotsKeeper
 ): Bot {
     return bot {
-        val telegramRoom = TelegramRoom(
-            TelegramUserConnection(adminId) { botsKeeper },
-        )
         this.token = token
         if (mode == LaunchMode.APP_ENGINE) {
             webhook {
@@ -40,28 +50,11 @@ private fun launchAdminBot(
             }
         }
         dispatch {
-            command("mmpi566") {
-                println("mmpi566")
-                telegramRoom.launchMmpi566Test(chatInfo())
-            }
-            command("mmpi377") {
-                println("mmpi377")
-                telegramRoom.launchMmpi377Test(chatInfo())
-            }
-            command("lucher") {
-                telegramRoom.launchLucherTest(chatInfo())
-            }
             command("users") {
                 showUsersList(bot, message.from!!.id)
             }
             command("reload") {
                 CentralDataStorage.reload()
-            }
-            callbackQuery {
-                telegramRoom.callbackQuery(
-                    chatInfo = chatInfo(),
-                    data = this.callbackQuery.data
-                )
             }
         }
     }.apply {
@@ -78,12 +71,16 @@ private fun launchClientBot(
     adminId: Long,
     token: String,
     botsKeeper: BotsKeeper
-): Bot {
-    return bot {
-        val telegramRoom = TelegramRoom(
-            TelegramUserConnection(adminId) { botsKeeper },
-        )
+): Pair<Bot, TelegramRoom> {
+
+    val telegramRoom = TelegramRoom(
+        roomId = adminId,
+        userConnection = TelegramUserConnection(adminId) { botsKeeper },
+    )
+
+    val clientBot = bot {
         this.token = token
+
         if (mode == LaunchMode.APP_ENGINE) {
             webhook {
                 url = "${SERVER_HOSTNAME}/$token"
@@ -127,4 +124,5 @@ private fun launchClientBot(
             else -> throw IllegalArgumentException("Illegal mode value")
         }
     }
+    return Pair(clientBot, telegramRoom)
 }

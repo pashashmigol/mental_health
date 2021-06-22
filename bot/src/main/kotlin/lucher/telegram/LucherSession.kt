@@ -16,15 +16,17 @@ import com.soywiz.klock.DateTimeTz
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import models.TypeOfTest
 
 typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
 
 data class LucherSession(
-    override val id: Long,
+    override val sessionId: Long,
+    override val roomId: Long,
     val userConnection: UserConnection,
     val minutesBetweenRounds: Int = LUCHER_TEST_TIMEOUT,
     val onEndedCallback: OnEnded
-) : TelegramSession<Unit>(id) {
+) : TelegramSession<Unit>(sessionId, roomId, TypeOfTest.Lucher) {
     companion object {
         val scope = GlobalScope
     }

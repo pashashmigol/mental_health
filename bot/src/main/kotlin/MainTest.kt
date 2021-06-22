@@ -1,6 +1,6 @@
 import storage.CentralDataStorage
+import telegram.BotLauncher
 import telegram.LaunchMode
-import telegram.launchBots
 
 /**
  * starts bot locally for debugging
@@ -8,5 +8,9 @@ import telegram.launchBots
 fun main() {
     val launchMode = LaunchMode.LOCAL
     CentralDataStorage.init(rootPath = launchMode.rootPath, testingMode = true)
-    launchBots(mode = launchMode, tokens = TESTING_TOKENS)
+
+    BotLauncher(
+        mode = launchMode,
+        tokens = listOf(TESTING_TOKENS)
+    ).launchBots()
 }

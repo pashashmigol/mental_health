@@ -46,7 +46,8 @@ internal class LucherSessionTest {
 
         val resultChannel = Channel<Unit>(2)
         val lucherSession = LucherSession(
-            id = LUCHER_SESSION_TEST_USER_ID,
+            sessionId = LUCHER_SESSION_TEST_USER_ID,
+            roomId = 0L,
             userConnection = object : UserConnection {
                 override fun sendMessageWithButtons(
                     chatId: Long,

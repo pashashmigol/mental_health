@@ -21,11 +21,12 @@ private typealias OnAnswerReceived = (messageId: Long, answer: String) -> Result
 private typealias OnFinishedForTestingOnly = ((answers: List<MmpiProcess.Answer>) -> Unit)?
 
 class MmpiSession(
-    override val id: Long,
-    private val typeOfTest: TypeOfTest,
+    override val sessionId: Long,
+    override val roomId: Long,
+    override val type: TypeOfTest,
     val userConnection: UserConnection,
     val onEndedCallback: OnEnded
-) : TelegramSession<Int>(id) {
+) : TelegramSession<Int>(sessionId, roomId, type) {
     companion object {
         val scope = GlobalScope
     }
@@ -43,12 +44,12 @@ class MmpiSession(
 
     private suspend fun executeTesting(user: User) {
         askGender(
-            userId = id,
+            userId = sessionId,
             question = createGenderQuestion(),
             connection = userConnection
         )
         val gender = waitForGenderChosen()
-        val ongoingProcess = MmpiProcess(gender, typeOfTest)
+        val ongoingProcess = MmpiProcess(gender, type)
 
         collectAllAnswers(ongoingProcess, user, gender)
     }
@@ -126,7 +127,7 @@ class MmpiSession(
         )
         val resultFolder = CentralDataStorage.saveMmpi(
             user = user,
-            typeOfTest = typeOfTest,
+            typeOfTest = type,
             questions = ongoingProcess.questions,
             answers = answers,
             result = result,
@@ -151,7 +152,7 @@ class MmpiSession(
     ): Pair<Long, Int> {
         val question = ongoingProcess.nextQuestion()
         val messageId = userConnection.sendMessageWithButtons(
-            chatId = id,
+            chatId = sessionId,
             text = question.text,
             buttons = buttons(question)
         )

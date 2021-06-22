@@ -49,7 +49,8 @@ internal class MmpiSessionTest {
         val questionsIds = generateSequence(0L) { it + 1 }.iterator()
 
         session = MmpiSession(
-            id = 0,
+            sessionId = 0,
+            roomId = 0L,
             type = TypeOfTest.Mmpi566,
             userConnection = object : UserConnection {
 
@@ -107,7 +108,8 @@ internal class MmpiSessionTest {
         val questionsIds = generateSequence(0L) { it + 1 }.iterator()
 
         session = MmpiSession(
-            id = 0,
+            sessionId = 0,
+            roomId = 0L,
             type = TypeOfTest.Mmpi566,
             userConnection = object : UserConnection {
                 override fun sendMessageWithButtons(

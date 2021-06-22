@@ -3,6 +3,7 @@ package telegram
 import models.TypeOfTest
 
 class SessionState(
+    val roomId: Long,
     val sessionId: Long,
     val type: TypeOfTest
 ) {

@@ -13,33 +13,39 @@ import storage.CentralDataStorage.string
 private const val TAG = "telegram.WorkSpace"
 
 class TelegramRoom(
+    val roomId: Long,
     private val userConnection: UserConnection,
 ) {
     private val sessions = mutableMapOf<Long, TelegramSession<*>>()
     private val scope = GlobalScope
 
-
     suspend fun restoreState() {
         val storedSessionStates = CentralDataStorage.usersStorage.takeAllSessions()
 
-        val storedSessions = storedSessionStates.map { sessionState ->
-            val session = when (sessionState.type) {
-                Mmpi566, Mmpi377 -> MmpiSession(
-                    id = sessionState.sessionId,
-                    typeOfTest = sessionState.type,
-                    userConnection = userConnection,
-                    onEndedCallback = { removeSession(it.id) }
-                )
-                Lucher -> LucherSession(
-                    id = sessionState.sessionId,
-                    userConnection = userConnection,
-                    onEndedCallback = { removeSession(it.id) }
-                )
+        val storedSessions = storedSessionStates
+            .filter {
+                roomId == it.roomId
             }
-            session.applyState(sessionState)
+            .map { sessionState ->
+                val session = when (sessionState.type) {
+                    Mmpi566, Mmpi377 -> MmpiSession(
+                        sessionId = sessionState.sessionId,
+                        roomId = roomId,
+                        type = sessionState.type,
+                        userConnection = userConnection,
+                        onEndedCallback = { removeSession(it.sessionId) }
+                    )
+                    Lucher -> LucherSession(
+                        sessionId = sessionState.sessionId,
+                        roomId = roomId,
+                        userConnection = userConnection,
+                        onEndedCallback = { removeSession(it.sessionId) }
+                    )
+                }
+                session.applyState(sessionState)
 
-            Pair(session.id, session)
-        }
+                Pair(session.sessionId, session)
+            }
         sessions.putAll(storedSessions)
     }
 
@@ -99,10 +105,11 @@ class TelegramRoom(
 
             removeSession(userId)
             sessions[userId] = MmpiSession(
-                userId,
-                Mmpi566,
-                userConnection,
-                onEndedCallback = { removeSession(it.id) }
+                sessionId = userId,
+                roomId = roomId,
+                type = Mmpi566,
+                userConnection = userConnection,
+                onEndedCallback = { removeSession(it.sessionId) }
             )
 
             val user = CentralDataStorage.usersStorage.getUser(userId)
@@ -130,10 +137,11 @@ class TelegramRoom(
 
             removeSession(userId)
             sessions[userId] = MmpiSession(
-                userId,
-                Mmpi377,
-                userConnection,
-            ) { removeSession(it.id) }
+                sessionId = userId,
+                roomId = roomId,
+                type = Mmpi377,
+                userConnection = userConnection,
+            ) { removeSession(it.sessionId) }
 
             sessions[userId]!!.start(
                 user = user,
@@ -157,8 +165,9 @@ class TelegramRoom(
             removeSession(userId)
             sessions[userId] = LucherSession(
                 userId,
+                roomId = roomId,
                 userConnection,
-            ) { removeSession(it.id) }
+            ) { removeSession(it.sessionId) }
 
             sessions[userId]!!.start(
                 user = user,
@@ -215,15 +224,17 @@ class TelegramRoom(
 
         sessions[userId] = when (type) {
             Mmpi566, Mmpi377 -> MmpiSession(
-                userId,
-                type,
-                userConnection,
-            ) { removeSession(it.id) }
+                sessionId = userId,
+                roomId = roomId,
+                type = type,
+                userConnection = userConnection,
+            ) { removeSession(it.sessionId) }
 
             Lucher -> LucherSession(
-                userId,
-                userConnection,
-            ) { removeSession(it.id) }
+                sessionId = userId,
+                roomId = roomId,
+                userConnection = userConnection,
+            ) { removeSession(it.sessionId) }
         }
         sessions[userId]!!.start(
             user = user,

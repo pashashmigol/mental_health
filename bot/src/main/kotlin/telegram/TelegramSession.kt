@@ -8,10 +8,11 @@ import models.TypeOfTest
 typealias OnEnded = (TelegramSession<Any>) -> Unit
 
 abstract class TelegramSession<out T>(
-    open val id: Long,
+    open val roomId: Long,
+    open val sessionId: Long,
     open val type: TypeOfTest
 ) {
-    val state by lazy { SessionState(id, type) }
+    val state by lazy { SessionState(roomId, sessionId, type) }
 
     abstract suspend fun start(user: User, chatId: Long)
 
