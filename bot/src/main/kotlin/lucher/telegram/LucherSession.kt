@@ -95,8 +95,6 @@ data class LucherSession(
 
             if (allColorsChosen(answers)) {
                 onColorChosen = null
-                val lastShownOption = shownOptions.first()
-                answers.add(lastShownOption)
                 connection.cleanUp()
                 channel.offer(Unit)
             }

@@ -14,6 +14,7 @@ import telegram.UserConnection
 import Result
 import com.soywiz.klock.DateTimeTz
 import lucher.LucherAnswers
+import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import java.util.concurrent.TimeUnit
@@ -42,31 +43,10 @@ internal class LucherSessionTest {
 
     @Test
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
-    fun start() = runBlocking {
+    fun `basic case`() = runBlocking {
 
         val resultChannel = Channel<Unit>(2)
-        val lucherSession = LucherSession(
-            sessionId = LUCHER_SESSION_TEST_USER_ID,
-            roomId = 0L,
-            userConnection = object : UserConnection {
-                override fun sendMessageWithButtons(
-                    chatId: Long,
-                    text: String,
-                    buttons: List<Button>,
-                    placeButtonsVertically: Boolean
-                ): Long {
-                    return 0
-                }
-                override fun notifyAdmin(text: String, exception: Throwable?) {
-                    println(text)
-                    exception?.let { fail(it)  }
-                }
-            },
-            onEndedCallback = {
-                resultChannel.offer(Unit)
-            },
-            minutesBetweenRounds = 2
-        )
+        val lucherSession = createMockSession(resultChannel)
 
         lucherSession.start(user = testUser, chatId = 0L)
 
@@ -77,14 +57,16 @@ internal class LucherSessionTest {
             secondRound = LucherColor.values().toList()
         )
 
-        LucherColor.values().dropLast(1).forEach {
+        //complete first round
+        LucherColor.values().forEach {
             lucherSession.onCallbackFromUser(
                 messageId = 0,
                 data = it.name,
             )
         }
 
-        LucherColor.values().dropLast(1).forEach {
+        //complete second round
+        LucherColor.values().forEach {
             lucherSession.onCallbackFromUser(
                 messageId = 0,
                 data = it.name,
@@ -92,32 +74,70 @@ internal class LucherSessionTest {
         }
         resultChannel.receive()
 
-        checkIfAnswersSavedToDatabase(testAnswers)
+        checkAnswersSavedToDatabase(testUser, testAnswers)
+        checkState(lucherSession)
     }
+}
 
-    private fun checkIfAnswersSavedToDatabase(expectedAnswers: LucherAnswers) = runBlocking {
+private fun checkState(session: LucherSession) {
+    val sessionState = session.state
 
-        val answersResult = CentralDataStorage.usersStorage.getUserAnswers(testUser)
-        assertTrue(answersResult is Result.Success)
+    assertEquals(session.roomId, sessionState.roomId)
+    assertEquals(session.sessionId, sessionState.sessionId)
 
-        val allAnswersFromDatabase: List<Answers> = (answersResult as Result.Success).data
-        assertFalse(allAnswersFromDatabase.isEmpty())
+    assertEquals(session.type, TypeOfTest.Lucher)
+    assertEquals(16, sessionState.messages.size)
+}
 
-        val databaseAnswers = allAnswersFromDatabase.first() as LucherAnswers
+private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
+    sessionId = LUCHER_SESSION_TEST_USER_ID,
+    roomId = 0L,
+    userConnection = object : UserConnection {
+        override fun sendMessageWithButtons(
+            chatId: Long,
+            text: String,
+            buttons: List<Button>,
+            placeButtonsVertically: Boolean
+        ): Long {
+            return 0
+        }
 
-        assertEquals(expectedAnswers.user, databaseAnswers.user)
+        override fun notifyAdmin(text: String, exception: Throwable?) {
+            println(text)
+            exception?.let { fail(it) }
+        }
+    },
+    onEndedCallback = {
+        resultChannel.offer(Unit)
+    },
+    minutesBetweenRounds = 2
+)
 
-        val timeSpan = expectedAnswers.date - databaseAnswers.date
-        assertTrue(timeSpan.seconds < 5)
+private fun checkAnswersSavedToDatabase(
+    user: User,
+    expectedAnswers: LucherAnswers
+) = runBlocking {
 
-        assertArrayEquals(
-            expectedAnswers.firstRound.toTypedArray(),
-            databaseAnswers.firstRound.toTypedArray()
-        )
+    val answersResult = CentralDataStorage.usersStorage.getUserAnswers(user)
+    assertTrue(answersResult is Result.Success)
 
-        assertArrayEquals(
-            expectedAnswers.secondRound.toTypedArray(),
-            databaseAnswers.secondRound.toTypedArray()
-        )
-    }
+    val allAnswersFromDatabase: List<Answers> = (answersResult as Result.Success).data
+    assertFalse(allAnswersFromDatabase.isEmpty())
+
+    val databaseAnswers = allAnswersFromDatabase.first() as LucherAnswers
+
+    assertEquals(expectedAnswers.user, databaseAnswers.user)
+
+    val timeSpan = expectedAnswers.date - databaseAnswers.date
+    assertTrue(timeSpan.seconds < 5)
+
+    assertArrayEquals(
+        expectedAnswers.firstRound.toTypedArray(),
+        databaseAnswers.firstRound.toTypedArray()
+    )
+
+    assertArrayEquals(
+        expectedAnswers.secondRound.toTypedArray(),
+        databaseAnswers.secondRound.toTypedArray()
+    )
 }

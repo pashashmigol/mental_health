@@ -29,7 +29,7 @@ fun askUserToWait(
     )
 }
 
-fun allColorsChosen(answers: List<LucherColor>) = answers.size == LucherColor.values().size - 1
+fun allColorsChosen(answers: List<LucherColor>) = answers.size == LucherColor.values().size
 
 fun createReplyOptions(colors: List<LucherColor>): MutableList<Button> {
     val options = mutableListOf<Button>()
