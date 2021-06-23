@@ -12,6 +12,7 @@ import lucher.LucherColor
 import mmpi.MmpiAnswers
 import mmpi.MmpiProcess
 import models.Answers
+import models.TypeOfTest
 import models.User
 import telegram.SessionState
 import java.util.concurrent.CancellationException
@@ -48,12 +49,36 @@ class UsersStorage(database: FirebaseDatabase) {
         })
     }
 
-    fun takeAllSessions(): List<SessionState> {
-        TODO("not implemented")
+    fun saveAllSessions(sessions: List<SessionState>) {
+        sessions.forEach {
+            activeSessionsRef
+                .child(it.sessionId.toString())
+                .setValue(it) { error: DatabaseError?, ref: DatabaseReference ->
+                    println("saveAllSessions(); session $it, ref: $ref, error: $error")
+                }
+        }
     }
 
-    fun saveAllSessions(session: List<SessionState>) {
-        TODO("not implemented")
+    suspend fun takeAllSessions(): Result<List<SessionState>> {
+        val resultChannel = Channel<List<SessionState>>(1)
+
+        activeSessionsRef
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot?) {
+                    println("getUserAnswers():onDataChange(): count = ${snapshot?.childrenCount}")
+                    try {
+                        resultChannel.offer(parseSessions(snapshot))
+                    } catch (e: Exception) {
+                        resultChannel.close(e)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError?) {
+                    println("getUserAnswers():onCancelled(): $error")
+                    resultChannel.close()
+                }
+            })
+        return Result.Success(resultChannel.receive())
     }
 
     fun getUser(userId: Long) = users[userId]
@@ -62,7 +87,7 @@ class UsersStorage(database: FirebaseDatabase) {
 
     fun hasUserWithId(userId: Long) = users.containsKey(userId)
 
-    fun add(user: User) {
+    fun addUser(user: User) {
         users[user.id] = user
 
         usersInfoRef
@@ -73,7 +98,6 @@ class UsersStorage(database: FirebaseDatabase) {
     }
 
     fun saveAnswers(answers: MmpiAnswers) {
-
         val hashMap = HashMap<String, Any>().apply {
             put("date", answers.dateString)
             put("gender", answers.gender.name)
@@ -95,7 +119,6 @@ class UsersStorage(database: FirebaseDatabase) {
     }
 
     fun saveAnswers(answers: LucherAnswers) {
-
         val hashMap = HashMap<String, Any>().apply {
             put("date", answers.dateString)
 
@@ -107,7 +130,6 @@ class UsersStorage(database: FirebaseDatabase) {
             put("firstRound", answers.firstRound.map { it.name })
             put("secondRound", answers.secondRound.map { it.name })
         }
-
         usersLucherAnswersRef
             .child(answers.user.id.toString())
             .child(answers.dateString)
@@ -179,6 +201,28 @@ class UsersStorage(database: FirebaseDatabase) {
             Result.Error("Get user $user answers was cancelled")
         }
     }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
+
+    val typeIndicator: GenericTypeIndicator<ArrayList<HashMap<String, Any>>> =
+        object : GenericTypeIndicator<ArrayList<HashMap<String, Any>>>() {}
+
+    return snapshot?.getValue(typeIndicator)?.map { sessionMap ->
+
+        val sessionState = SessionState(
+            roomId = sessionMap["roomId"] as Long,
+            sessionId = sessionMap["sessionId"] as Long,
+            type = TypeOfTest.valueOf(sessionMap["type"] as String)
+        )
+
+        (sessionMap["messages"] as ArrayList<HashMap<String, Any>>).forEach {
+            sessionState.add(it["messageId"] as Long, it["data"] as String)
+        }
+
+        sessionState
+    } ?: emptyList()
 }
 
 @Suppress("UNCHECKED_CAST")

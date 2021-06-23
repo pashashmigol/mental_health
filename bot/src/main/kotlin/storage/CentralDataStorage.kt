@@ -76,7 +76,7 @@ object CentralDataStorage {
             name = userName,
             googleDriveFolder = reportsFolderLink
         )
-        _usersStorage.add(user)
+        _usersStorage.addUser(user)
     }
 
     fun saveMmpi(

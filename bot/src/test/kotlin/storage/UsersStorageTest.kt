@@ -19,7 +19,10 @@ import lucher.LucherAnswers
 import lucher.roundAnswers
 import mmpi.MmpiAnswers
 import mmpi.justFewAnswers
+import models.TypeOfTest
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Timeout
+import telegram.SessionState
 import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -63,6 +66,18 @@ internal class UsersStorageTest {
         assertEquals(mockAnswers, receivedAnswers)
     }
 
+    @Test
+    @Timeout(value = 100, unit = TimeUnit.SECONDS)
+    fun `session's states saving`() = runBlocking {
+        val originalSessions = createSessions()
+        CentralDataStorage.usersStorage.saveAllSessions(originalSessions)
+        val storageResult = CentralDataStorage.usersStorage.takeAllSessions()
+
+        val sessionsFromStorage = (storageResult as Result.Success).data
+
+        assertArrayEquals(originalSessions.toTypedArray(), sessionsFromStorage.toTypedArray())
+    }
+
     private suspend fun createUser(userId: Long, userName: String): User {
         CentralDataStorage.createUser(userId, userName)
 
@@ -99,5 +114,18 @@ internal class UsersStorageTest {
             firstRound = roundAnswers(),
             secondRound = roundAnswers()
         )
+    }
+
+    private fun createSessions(): List<SessionState> {
+        val mmpi566 = SessionState(roomId = 0, sessionId = 0, type = TypeOfTest.Mmpi566)
+        val mmpi377 = SessionState(roomId = 0, sessionId = 1, type = TypeOfTest.Mmpi377)
+        val lucher = SessionState(roomId = 0, sessionId = 2, type = TypeOfTest.Lucher)
+
+        for (i in 0..20L) {
+            mmpi566.add(messageId = i, data = "answer $i")
+            mmpi377.add(messageId = i, data = "answer $i")
+            lucher.add(messageId = i, data = "answer $i")
+        }
+        return listOf(mmpi566, mmpi377, lucher)
     }
 }

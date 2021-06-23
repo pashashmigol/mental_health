@@ -9,6 +9,8 @@ import models.TypeOfTest.*
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
+import Result
+
 
 private const val TAG = "telegram.WorkSpace"
 
@@ -22,7 +24,7 @@ class TelegramRoom(
     suspend fun restoreState() {
         val storedSessionStates = CentralDataStorage.usersStorage.takeAllSessions()
 
-        val storedSessions = storedSessionStates
+        val storedSessions = (storedSessionStates as Result.Success).data
             .filter {
                 roomId == it.roomId
             }
