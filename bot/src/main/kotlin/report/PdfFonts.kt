@@ -5,7 +5,7 @@ import com.itextpdf.text.pdf.BaseFont
 
 class PdfFonts(rootPath: String) {
     val base: BaseFont = BaseFont.createFont(
-        rootPath + "resources/FreeSans.ttf",
+        "$rootPath../resources/main/FreeSans.ttf",
         BaseFont.IDENTITY_H, BaseFont.EMBEDDED
     )
     val bold = Font(base, 14f, Font.BOLD)

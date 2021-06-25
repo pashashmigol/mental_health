@@ -24,7 +24,7 @@ class GoogleDriveConnection(projectRoot: String, private val testingMode: Boolea
     internal val database: FirebaseDatabase
 
     init {
-        val serviceAccount = FileInputStream("${projectRoot}webapp/$FIREBASE_CREDENTIALS_FILE_NAME")
+        val serviceAccount = FileInputStream("${projectRoot}$FIREBASE_CREDENTIALS_FILE_NAME")
         val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
         val transport = GoogleNetHttpTransport.newTrustedTransport()
         val jacksonFactory = JacksonFactory.getDefaultInstance()
