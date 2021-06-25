@@ -48,7 +48,7 @@ internal class LucherSessionTest {
         val resultChannel = Channel<Unit>(2)
         val lucherSession = createMockSession(resultChannel)
 
-        lucherSession.start(user = testUser, chatId = 0L)
+        lucherSession.start()
 
         val testAnswers = LucherAnswers(
             user = testUser,
@@ -59,7 +59,7 @@ internal class LucherSessionTest {
 
         //complete first round
         LucherColor.values().forEach {
-            lucherSession.onCallbackFromUser(
+            lucherSession.sendAnswer(
                 messageId = 0,
                 data = it.name,
             )
@@ -67,7 +67,7 @@ internal class LucherSessionTest {
 
         //complete second round
         LucherColor.values().forEach {
-            lucherSession.onCallbackFromUser(
+            lucherSession.sendAnswer(
                 messageId = 0,
                 data = it.name,
             )
@@ -90,7 +90,6 @@ private fun checkState(session: LucherSession) {
 }
 
 private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
-    sessionId = LUCHER_SESSION_TEST_USER_ID,
     roomId = 0L,
     userConnection = object : UserConnection {
         override fun sendMessageWithButtons(
@@ -110,7 +109,9 @@ private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
     onEndedCallback = {
         resultChannel.offer(Unit)
     },
-    minutesBetweenRounds = 2
+    minutesBetweenRounds = 2,
+    user = CentralDataStorage.usersStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!,
+    chatId = 0
 )
 
 private fun checkAnswersSavedToDatabase(

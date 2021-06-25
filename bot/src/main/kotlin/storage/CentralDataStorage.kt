@@ -16,6 +16,7 @@ import models.User
 import report.PdfFonts
 import java.util.*
 import java.text.MessageFormat
+import Result
 
 typealias Link = String
 
@@ -86,7 +87,7 @@ object CentralDataStorage {
         questions: List<Question>,
         answers: MmpiAnswers,
         saveAnswers: Boolean
-    ): Link {
+    ): Result<Link> {
         if (saveAnswers) {
             usersStorage.saveAnswers(answers)
         }
@@ -103,7 +104,7 @@ object CentralDataStorage {
         answers: LucherAnswers,
         result: LucherResult,
         saveAnswers: Boolean
-    ): String {
+    ): Result<Link> {
         if (saveAnswers) {
             usersStorage.saveAnswers(answers)
         }

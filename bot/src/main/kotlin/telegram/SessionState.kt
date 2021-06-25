@@ -1,11 +1,14 @@
 package telegram
 
 import models.TypeOfTest
+import models.User
 
 class SessionState(
     val roomId: Long,
     val sessionId: Long,
-    val type: TypeOfTest
+    val type: TypeOfTest,
+    val userId: Long,
+    val chatId: Long
 ) {
     class Message(val messageId: Long, val data: String) {
         override fun equals(other: Any?): Boolean {
@@ -30,7 +33,7 @@ class SessionState(
     private val _messages = mutableListOf<Message>()
     val messages: List<Message> = _messages
 
-    fun add(messageId: Long, data: String) {
+    fun addAnswer(messageId: Long, data: String) {
         _messages.add(Message(messageId, data))
     }
 

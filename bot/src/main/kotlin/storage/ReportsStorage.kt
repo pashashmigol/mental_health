@@ -8,6 +8,7 @@ import com.soywiz.klock.DateTime
 import models.TypeOfTest
 import java.io.ByteArrayInputStream
 import java.io.InputStream
+import Result
 
 
 class ReportsStorage(private val connection: GoogleDriveConnection) {
@@ -15,24 +16,24 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
     fun saveLucher(
         userId: Long,
         bytes: ByteArray,
-    ): String {
+    ): Result<Link> {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
         val fileName = CentralDataStorage.string("lusher_result_filename", date)
 
-        val parentFolderLink = saveFile(
+        val folderLink = saveFile(
             fileName = fileName,
             folderName = userId.toString(),
             contentStream = ByteArrayInputStream(bytes)
         )
-        println("saveLucher(); report saved to : $parentFolderLink")
-        return parentFolderLink
+        println("saveLucher(); report saved to : $folderLink")
+        return folderLink
     }
 
     fun saveMmpi(
         userId: Long,
         bytes: ByteArray,
         typeOfTest: TypeOfTest
-    ): Link {
+    ): Result<Link> {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
 
         val fileName = when (typeOfTest) {
@@ -41,31 +42,31 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
             else -> throw IllegalStateException()
         }
 
-        val parentFolderLink = saveFile(
+        val folderLink = saveFile(
             fileName = fileName,
             folderName = userId.toString(),
             contentStream = ByteArrayInputStream(bytes)
         )
-        println("saveMmpi(); report saved to : $parentFolderLink")
-        return parentFolderLink
+        println("saveMmpi(); report saved to : $folderLink")
+        return folderLink
     }
 
     private fun saveFile(
         fileName: String,
         folderName: String,
         contentStream: InputStream
-    ): Link = try {
+    ): Result<Link> = try {
         val (folderId, _) = findFolder(folderName) ?: createFolder(folderName)
         val fileLink = createFile(fileName, folderId, contentStream)
 
         giveAccess(folderId, connection)
         println("fileLink : $fileLink")
 
-        fileLink
+        Result.Success(fileLink)
 
     } catch (e: Exception) {
         println("Exception : $e")
-        ""
+        Result.Error("ReportsStorage.saveFile()", e)
     }
 
     private fun findFolder(name: String): Pair<String, String>? {

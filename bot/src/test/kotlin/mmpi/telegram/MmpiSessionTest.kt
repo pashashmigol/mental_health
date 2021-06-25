@@ -5,7 +5,6 @@ import models.TypeOfTest
 
 import storage.CentralDataStorage
 import telegram.LaunchMode
-import java.util.concurrent.TimeUnit
 
 import Result
 import mmpi.MmpiAnswers
@@ -18,6 +17,7 @@ import org.junit.jupiter.api.Assertions.*
 import telegram.Button
 import telegram.TelegramSession
 import telegram.UserConnection
+import java.util.concurrent.TimeUnit
 
 const val MMPI_SESSION_TEST_USER_ID = 1L
 
@@ -42,14 +42,14 @@ internal class MmpiSessionTest {
     }
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
-    fun `just run`() = runBlocking {
+    fun `basic case`() = runBlocking {
 
         var session: MmpiSession? = null
         val questionsIds = generateSequence(0L) { it + 1 }.iterator()
 
         session = MmpiSession(
-            sessionId = 0,
+            user = testUser,
+            chatId = 1L,
             roomId = 0L,
             type = TypeOfTest.Mmpi566,
             userConnection = object : UserConnection {
@@ -62,43 +62,32 @@ internal class MmpiSessionTest {
                 ): Long {
                     return questionsIds.next()
                 }
-            },
+            }
         ) {
-            checkSessionResult(session, it)
+            checkSessionResult(testUser, session, it)
         }
 
-        session.start(user = testUser, chatId = 1L)
+        session.start()
 
         val answersIds = generateSequence(0L) { it + 1 }.iterator()
 
-        do {
-            val res = session.onCallbackFromUser(answersIds.next(), Gender.Male.name)
-            assertTrue(res is Result.Success, "$res")
-        } while (res is Result.Error)
+        val res = session.sendAnswer(answersIds.next(), Gender.Male.name)
+        assertTrue(res is Result.Success, "$res")
 
         session.testingCallback = { answers ->
             assertEquals(TypeOfTest.Mmpi566.size, answers.size)
             assertTrue(answers.all { it == MmpiProcess.Answer.Agree })
+            checkState(answers, session)
         }
 
         repeat(TypeOfTest.Mmpi566.size) {
             val id = answersIds.next()
-            val res = session.onCallbackFromUser(
+            val res = session.sendAnswer(
                 messageId = id,
                 data = MmpiProcess.Answer.Agree.name
             )
             assertTrue(res is Result.Success, "$res")
         }
-    }
-
-    private fun checkSessionResult(session: MmpiSession?, it: TelegramSession<Any>) = runBlocking {
-        assertEquals(session, it)
-
-        val answersResult = CentralDataStorage.usersStorage.getUserAnswers(testUser)
-        assertTrue(answersResult is Result.Success)
-
-        val answers = (answersResult as Result.Success).data
-        assertFalse(answers.isEmpty())
     }
 
     @Test
@@ -108,7 +97,8 @@ internal class MmpiSessionTest {
         val questionsIds = generateSequence(0L) { it + 1 }.iterator()
 
         session = MmpiSession(
-            sessionId = 0,
+            user = testUser,
+            chatId = 2L,
             roomId = 0L,
             type = TypeOfTest.Mmpi566,
             userConnection = object : UserConnection {
@@ -126,35 +116,36 @@ internal class MmpiSessionTest {
         }
         session.testingCallback = { answers ->
             checkEditedAnswers(answers)
+            checkState(answers, session)
         }
 
-        session.start(user = testUser, chatId = 2)
+        session.start()
         val answersIds = generateSequence(0L) { it + 1 }.iterator()
 
         do {
-            val res = session.onCallbackFromUser(answersIds.next(), Gender.Male.name)
+            val res = session.sendAnswer(answersIds.next(), Gender.Male.name)
             assertTrue(res is Result.Success, "$res")
         } while (res is Result.Error)
 
         repeat(TypeOfTest.Mmpi566.size) {
-            sendAnswerToSession(answersIds, session, it)
+            sendAnswersToSession(answersIds, session, it)
         }
     }
 
-    private suspend fun sendAnswerToSession(
+    private suspend fun sendAnswersToSession(
         answersIds: Iterator<Long>,
         session: MmpiSession,
         it: Int
     ) {
         val id = answersIds.next()
-        val res = session.onCallbackFromUser(
+        val res = session.sendAnswer(
             messageId = id,
             data = MmpiProcess.Answer.Agree.name
         )
         assertTrue(res is Result.Success, "$res")
 
         if (it % 2 == 0) {//edit given answer
-            session.onCallbackFromUser(
+            session.sendAnswer(
                 messageId = id,
                 data = MmpiProcess.Answer.Disagree.name
             )
@@ -186,4 +177,40 @@ internal class MmpiSessionTest {
             assertEquals(it.first, it.second)
         }
     }
+}
+
+private fun checkState(answers: List<MmpiProcess.Answer>, session: MmpiSession?) = runBlocking {
+    val sessionState = session!!.state
+
+    assertEquals(session.roomId, sessionState.roomId)
+    assertEquals(session.sessionId, sessionState.sessionId)
+    assertEquals(session.type, TypeOfTest.Mmpi566)
+
+    val restoredSession = MmpiSession(
+        user = User(id = 0, name = "", googleDriveFolder = ""),
+        chatId = 1L,
+        roomId = sessionState.sessionId,
+        type = sessionState.type,
+        userConnection = object : UserConnection {},
+        onEndedCallback = {}
+    )
+
+    restoredSession.testingCallback = {
+        assertEquals(answers, it)
+    }
+
+    restoredSession.applyState(sessionState)
+}
+
+private fun checkSessionResult(
+    user: User, session: MmpiSession?,
+    telegramSession: TelegramSession<Any>
+) = runBlocking {
+    assertEquals(session, telegramSession)
+
+    val answersResult = CentralDataStorage.usersStorage.getUserAnswers(user)
+    assertTrue(answersResult is Result.Success)
+
+    val answers = (answersResult as Result.Success).data
+    assertFalse(answers.isEmpty())
 }

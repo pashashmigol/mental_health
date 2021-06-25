@@ -117,14 +117,14 @@ internal class UsersStorageTest {
     }
 
     private fun createSessions(): List<SessionState> {
-        val mmpi566 = SessionState(roomId = 0, sessionId = 0, type = TypeOfTest.Mmpi566)
-        val mmpi377 = SessionState(roomId = 0, sessionId = 1, type = TypeOfTest.Mmpi377)
-        val lucher = SessionState(roomId = 0, sessionId = 2, type = TypeOfTest.Lucher)
+        val mmpi566 = SessionState(userId = 0, chatId = 0, roomId = 0, sessionId = 0, type = TypeOfTest.Mmpi566)
+        val mmpi377 = SessionState(userId = 0, chatId = 0, roomId = 0, sessionId = 1, type = TypeOfTest.Mmpi377)
+        val lucher = SessionState(userId = 0, chatId = 0, roomId = 0, sessionId = 2, type = TypeOfTest.Lucher)
 
         for (i in 0..20L) {
-            mmpi566.add(messageId = i, data = "answer $i")
-            mmpi377.add(messageId = i, data = "answer $i")
-            lucher.add(messageId = i, data = "answer $i")
+            mmpi566.addAnswer(messageId = i, data = "answer $i")
+            mmpi377.addAnswer(messageId = i, data = "answer $i")
+            lucher.addAnswer(messageId = i, data = "answer $i")
         }
         return listOf(mmpi566, mmpi377, lucher)
     }

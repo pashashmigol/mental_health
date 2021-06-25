@@ -8,7 +8,7 @@ import Result
 import models.size
 import java.lang.RuntimeException
 
-suspend fun regenerateReports(userid: Long, gender: Gender): String {
+suspend fun regenerateReports(userid: Long, gender: Gender): Result<Link> {
     CentralDataStorage.apply {
         val user = usersStorage.getUser(userid)!!
         val result = usersStorage.getUserAnswers(user)

@@ -8,22 +8,36 @@ import models.TypeOfTest
 typealias OnEnded = (TelegramSession<Any>) -> Unit
 
 abstract class TelegramSession<out T>(
+    open val user: User,
     open val roomId: Long,
-    open val sessionId: Long,
+    open val chatId: Long,
     open val type: TypeOfTest
 ) {
-    val state by lazy { SessionState(roomId, sessionId, type) }
+    val sessionId by lazy { user.id }
 
-    abstract suspend fun start(user: User, chatId: Long)
-
-    open suspend fun onCallbackFromUser(messageId: Long, data: String): Result<T> {
-        state.add(messageId, data)
-        return Result.Error("TelegramSession.onCallbackFromUser() should be overridden!")
+    val state by lazy {
+        SessionState(
+            userId = user.id,
+            sessionId = user.id,
+            chatId = chatId,
+            roomId = roomId,
+            type = type,
+        )
     }
 
+    abstract suspend fun start()
+
+    suspend fun sendAnswer(messageId: Long, data: String): Result<T> {
+        state.addAnswer(messageId, data)
+        return onAnswer(messageId, data)
+    }
+
+    abstract suspend fun onAnswer(messageId: Long, data: String): Result<T>
+
     suspend fun applyState(state: SessionState) {
+        start()
         state.messages.forEach {
-            onCallbackFromUser(it.messageId, it.data)
+            sendAnswer(it.messageId, it.data)
         }
     }
 }

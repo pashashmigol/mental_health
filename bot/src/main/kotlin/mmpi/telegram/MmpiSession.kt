@@ -21,12 +21,13 @@ private typealias OnAnswerReceived = (messageId: Long, answer: String) -> Result
 private typealias OnFinishedForTestingOnly = ((answers: List<MmpiProcess.Answer>) -> Unit)?
 
 class MmpiSession(
-    override val sessionId: Long,
+    override val user: User,
     override val roomId: Long,
+    override val chatId: Long,
     override val type: TypeOfTest,
     val userConnection: UserConnection,
     val onEndedCallback: OnEnded
-) : TelegramSession<Int>(sessionId, roomId, type) {
+) : TelegramSession<Int>(user, chatId, roomId, type) {
     companion object {
         val scope = GlobalScope
     }
@@ -34,7 +35,7 @@ class MmpiSession(
     internal var testingCallback: OnFinishedForTestingOnly = null
     private var onAnswer: OnAnswerReceived? = null
 
-    override suspend fun start(user: User, chatId: Long) {
+    override suspend fun start() {
         val handler = CoroutineExceptionHandler { _, exception ->
             userConnection.notifyAdmin("MmpiSession error", exception)
             userConnection.sendMessage(chatId, CentralDataStorage.string("start_again"))
@@ -132,10 +133,10 @@ class MmpiSession(
             answers = answers,
             result = result,
             saveAnswers = true
-        )
+        ) as Result.Success
         showResult(
             user = user,
-            resultLink = resultFolder,
+            resultLink = resultFolder.data,
             userConnection = userConnection
         )
         userConnection.cleanUp()
@@ -160,7 +161,7 @@ class MmpiSession(
     }
 
     private val mutex = Mutex()
-    override suspend fun onCallbackFromUser(messageId: Long, data: String): Result<Int> {
+    override suspend fun onAnswer(messageId: Long, data: String): Result<Int> {
         mutex.withLock {
             while (onAnswer == null) {
                 delay(1)

@@ -21,19 +21,21 @@ import models.TypeOfTest
 typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
 
 data class LucherSession(
-    override val sessionId: Long,
+    override val user: User,
+    override val chatId: Long,
     override val roomId: Long,
     val userConnection: UserConnection,
     val minutesBetweenRounds: Int = LUCHER_TEST_TIMEOUT,
     val onEndedCallback: OnEnded
-) : TelegramSession<Unit>(sessionId, roomId, TypeOfTest.Lucher) {
+) : TelegramSession<Unit>(user, roomId, chatId, TypeOfTest.Lucher) {
+
     companion object {
         val scope = GlobalScope
     }
 
     private var onColorChosen: OnUserChoseColor? = null
 
-    override suspend fun start(user: User, chatId: Long) {
+    override suspend fun start() {
         val handler = CoroutineExceptionHandler { _, exception ->
             userConnection.notifyAdmin("LucherSession error: ${exception.stackTraceToString()}", exception)
             userConnection.sendMessage(chatId, "LucherSession error: ${exception.stackTraceToString()}")
@@ -61,9 +63,11 @@ data class LucherSession(
             answers = answers,
             result = result,
             saveAnswers = true
-        )
+        ) as Result.Success
+
         onEndedCallback(this)
-        showResult(user, folderLink, userConnection)
+
+        showResult(user, folderLink.data, userConnection)
     }
 
     private suspend fun runRound(
@@ -106,11 +110,14 @@ data class LucherSession(
     }
 
     private val mutex = Mutex()
-    override suspend fun onCallbackFromUser(messageId: Long, data: String): Result<Unit> {
-        super.onCallbackFromUser(messageId, data)
-
+    override suspend fun onAnswer(messageId: Long, data: String): Result<Unit> {
         mutex.withLock {
+            var limit = 1000
             while (onColorChosen == null) {
+                limit--
+                if(limit == 0){
+                    return Result.Error("timeout")
+                }
                 delay(1)
             }
             onColorChosen?.invoke(userConnection, messageId, data) ?: Result.Error("onAnswer is null")

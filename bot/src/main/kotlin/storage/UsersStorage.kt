@@ -212,13 +212,15 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
     return snapshot?.getValue(typeIndicator)?.map { sessionMap ->
 
         val sessionState = SessionState(
+            userId = sessionMap["userId"] as Long,
             roomId = sessionMap["roomId"] as Long,
+            chatId = 0,
             sessionId = sessionMap["sessionId"] as Long,
             type = TypeOfTest.valueOf(sessionMap["type"] as String)
         )
 
         (sessionMap["messages"] as ArrayList<HashMap<String, Any>>).forEach {
-            sessionState.add(it["messageId"] as Long, it["data"] as String)
+            sessionState.addAnswer(it["messageId"] as Long, it["data"] as String)
         }
 
         sessionState
