@@ -22,8 +22,8 @@ class BotLauncher(
             val adminBot = launchAdminBot(mode, it.ADMIN)
 
             val (clientBot, telegramRoom) = launchClientBot(
-                mode, it.ADMIN_ID, it.CLIENT, lazy { botsKeeper!! }.value
-            )
+                mode, it.ADMIN_ID, it.CLIENT
+            ) { botsKeeper!! }
 
             botsKeeper = BotsKeeper(
                 tokens = it,
@@ -70,12 +70,12 @@ private fun launchClientBot(
     mode: LaunchMode,
     adminId: Long,
     token: String,
-    botsKeeper: BotsKeeper
+    botsKeeper: () -> BotsKeeper
 ): Pair<Bot, TelegramRoom> {
 
     val telegramRoom = TelegramRoom(
         roomId = adminId,
-        userConnection = TelegramUserConnection(adminId) { botsKeeper },
+        userConnection = TelegramUserConnection(adminId) { botsKeeper() },
     )
 
     val clientBot = bot {
@@ -107,7 +107,7 @@ private fun launchClientBot(
             command("start") {
                 telegramRoom.welcomeUser(
                     chatInfo(),
-                    TelegramUserConnection(adminId) { botsKeeper }
+                    TelegramUserConnection(adminId) { botsKeeper() }
                 )
             }
             callbackQuery {
