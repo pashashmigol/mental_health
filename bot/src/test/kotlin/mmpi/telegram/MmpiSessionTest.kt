@@ -82,11 +82,11 @@ internal class MmpiSessionTest {
 
         repeat(TypeOfTest.Mmpi566.size) {
             val id = answersIds.next()
-            val res = session.sendAnswer(
+            val answerResult = session.sendAnswer(
                 messageId = id,
                 data = MmpiProcess.Answer.Agree.name
             )
-            assertTrue(res is Result.Success, "$res")
+            assertTrue(answerResult is Result.Success, "$answerResult")
         }
     }
 

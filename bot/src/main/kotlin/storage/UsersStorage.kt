@@ -62,19 +62,25 @@ class UsersStorage(database: FirebaseDatabase) {
     suspend fun takeAllSessions(): Result<List<SessionState>> {
         val resultChannel = Channel<List<SessionState>>(1)
 
-        activeSessionsRef
-            .addValueEventListener(object : ValueEventListener {
+        fun clearSessions() = activeSessionsRef.removeValue { error, _ ->
+            println("getUserAnswers():removeValue(): $error")
+        }
+        activeSessionsRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot?) {
                     println("getUserAnswers():onDataChange(): count = ${snapshot?.childrenCount}")
                     try {
                         resultChannel.offer(parseSessions(snapshot))
+                        clearSessions()
                     } catch (e: Exception) {
                         resultChannel.close(e)
+                    } finally {
+                        activeSessionsRef.removeEventListener(this)
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError?) {
-                    println("getUserAnswers():onCancelled(): $error")
+                    println("getUserAnswers().onCancelled(): $error")
+                    activeSessionsRef.removeEventListener(this)
                     resultChannel.close()
                 }
             })

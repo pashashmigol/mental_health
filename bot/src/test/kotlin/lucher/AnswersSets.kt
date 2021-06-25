@@ -1,5 +1,5 @@
 package lucher
 
-fun roundAnswers(vararg i: Int): List<LucherColor> {
+fun roundAnswers(): List<LucherColor> {
     return LucherColor.values().toList()
 }
