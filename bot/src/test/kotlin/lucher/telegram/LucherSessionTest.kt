@@ -26,7 +26,7 @@ internal class LucherSessionTest {
     private lateinit var testUser: User
 
     @BeforeAll
-    fun init() {
+    fun init() = runBlocking{
         CentralDataStorage.init(
             launchMode = LaunchMode.TESTS,
             testingMode = true

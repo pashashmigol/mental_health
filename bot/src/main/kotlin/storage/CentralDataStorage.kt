@@ -69,7 +69,7 @@ object CentralDataStorage {
         return messages.getString(key)
     }
 
-    fun createUser(userId: Long, userName: String) {
+    suspend fun createUser(userId: Long, userName: String) {
         val (folderId, reportsFolderLink) = _reportsStorage.createFolder(userId.toString())
         giveAccess(folderId, connection)
 

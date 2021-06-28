@@ -26,7 +26,7 @@ internal class MmpiSessionTest {
     private lateinit var testUser: User
 
     @BeforeAll
-    fun init() {
+    fun init() = runBlocking{
         CentralDataStorage.init(
             launchMode = LaunchMode.TESTS,
             testingMode = true

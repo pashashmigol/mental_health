@@ -13,6 +13,7 @@ import telegram.*
  * */
 @Suppress("unused") // Referenced in application.conf
 @KtorExperimentalAPI
+@InternalAPI
 fun Application.main() {
     val launchMode = LaunchMode.APP_ENGINE
     CentralDataStorage.init(launchMode)
@@ -29,6 +30,7 @@ fun Application.main() {
 }
 
 
+@InternalAPI
 private fun Application.bindTToStartStopEvents(keepers: List<BotsKeeper>) {
 
     routing {
@@ -54,6 +56,7 @@ private fun Application.bindTToStartStopEvents(keepers: List<BotsKeeper>) {
     }
 }
 
+@InternalAPI
 private fun Application.bindTelegramWebhooks(keepers: List<BotsKeeper>) {
     routing {
         keepers.forEach { keeper ->
@@ -71,6 +74,7 @@ private fun Application.bindTelegramWebhooks(keepers: List<BotsKeeper>) {
     }
 }
 
+@InternalAPI
 private fun Application.bindToServerEvents(keepers: List<BotsKeeper>) {
     environment.apply {
         monitor.subscribe(ApplicationStarted) {
@@ -91,6 +95,7 @@ private fun Application.bindToServerEvents(keepers: List<BotsKeeper>) {
     }
 }
 
+@InternalAPI
 private fun notifyAdmins(keepers: List<BotsKeeper>, message: String) {
     keepers.forEach { keeper ->
         keeper.adminBot.notifyAdmin(

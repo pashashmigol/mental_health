@@ -7,9 +7,11 @@ import com.github.kotlintelegrambot.entities.inputmedia.GroupableMedia
 import com.github.kotlintelegrambot.entities.inputmedia.InputMediaPhoto
 import com.github.kotlintelegrambot.entities.inputmedia.MediaGroup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import io.ktor.util.*
 import lucher.LucherColor
 import lucher.url
 
+@InternalAPI
 class TelegramUserConnection(
     private val adminId: Long,
     private val botKeeper: () -> BotsKeeper

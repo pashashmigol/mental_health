@@ -1,5 +1,6 @@
 package storage
 
+import Gender
 import Result
 import com.google.firebase.database.*
 import com.soywiz.klock.DateFormat
@@ -49,14 +50,22 @@ class UsersStorage(database: FirebaseDatabase) {
         })
     }
 
-    fun saveAllSessions(sessions: List<SessionState>) {
+    suspend fun saveAllSessions(sessions: List<SessionState>): Result<Unit> {
+        val resultChannel = Channel<Result<Unit>>(1)
         sessions.forEach {
             activeSessionsRef
                 .child(it.sessionId.toString())
                 .setValue(it) { error: DatabaseError?, ref: DatabaseReference ->
                     println("saveAllSessions(); session $it, ref: $ref, error: $error")
+
+                    val result = when (error == null) {
+                        true -> Result.Success(Unit)
+                        false -> Result.Error(error.details)
+                    }
+                    resultChannel.offer(result)
                 }
         }
+        return resultChannel.receive()
     }
 
     suspend fun takeAllSessions(): Result<List<SessionState>> {
@@ -66,24 +75,24 @@ class UsersStorage(database: FirebaseDatabase) {
             println("getUserAnswers():removeValue(): $error")
         }
         activeSessionsRef.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot?) {
-                    println("getUserAnswers():onDataChange(): count = ${snapshot?.childrenCount}")
-                    try {
-                        resultChannel.offer(parseSessions(snapshot))
-                        clearSessions()
-                    } catch (e: Exception) {
-                        resultChannel.close(e)
-                    } finally {
-                        activeSessionsRef.removeEventListener(this)
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError?) {
-                    println("getUserAnswers().onCancelled(): $error")
+            override fun onDataChange(snapshot: DataSnapshot?) {
+                println("getUserAnswers():onDataChange(): count = ${snapshot?.childrenCount}")
+                try {
+                    resultChannel.offer(parseSessions(snapshot))
+                    clearSessions()
+                } catch (e: Exception) {
+                    resultChannel.close(e)
+                } finally {
                     activeSessionsRef.removeEventListener(this)
-                    resultChannel.close()
                 }
-            })
+            }
+
+            override fun onCancelled(error: DatabaseError?) {
+                println("getUserAnswers().onCancelled(): $error")
+                activeSessionsRef.removeEventListener(this)
+                resultChannel.close()
+            }
+        })
         return Result.Success(resultChannel.receive())
     }
 
@@ -93,14 +102,23 @@ class UsersStorage(database: FirebaseDatabase) {
 
     fun hasUserWithId(userId: Long) = users.containsKey(userId)
 
-    fun addUser(user: User) {
+    suspend fun addUser(user: User): Result<Unit> {
+        val resultChannel = Channel<Result<Unit>>(1)
         users[user.id] = user
 
         usersInfoRef
             .child(user.id.toString())
             .setValue(user) { error: DatabaseError?, ref: DatabaseReference ->
                 println("add($user) ref: $ref, error: $error")
+
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
+                }
+                resultChannel.offer(result)
             }
+
+        return resultChannel.receive()
     }
 
     fun saveAnswers(answers: MmpiAnswers) {

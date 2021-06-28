@@ -10,15 +10,18 @@ import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
 import Result
+import io.ktor.util.*
+import io.ktor.util.collections.*
 
 
 private const val TAG = "telegram.WorkSpace"
 
+@InternalAPI
 class TelegramRoom(
     val roomId: Long,
     private val userConnection: UserConnection,
 ) {
-    private val sessions = mutableMapOf<Long, TelegramSession<*>>()
+    internal val sessions = ConcurrentMap<Long, TelegramSession<*>>()
     private val scope = GlobalScope
 
     suspend fun restoreState() {
@@ -56,7 +59,7 @@ class TelegramRoom(
         sessions.putAll(storedSessions)
     }
 
-    fun saveState() {
+    suspend fun saveState() {
         val sessionsStates = sessions.map { it.value.state }
         CentralDataStorage.usersStorage.saveAllSessions(sessionsStates)
     }
@@ -80,6 +83,7 @@ class TelegramRoom(
             } else {
                 CentralDataStorage.createUser(userId, chatInfo.userName)
                 val user = CentralDataStorage.usersStorage.getUser(userId)
+                assert(user != null)
 
                 userConnection.notifyAdmin(
                     "user created: $user"
@@ -242,7 +246,7 @@ class TelegramRoom(
     }
 
     private fun removeSession(userId: Long) {
-        userConnection.notifyAdmin("sessions.remove($userId)")
+        userConnection.notifyAdmin("removeSession($userId)")
         sessions.remove(userId)
     }
 }

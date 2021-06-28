@@ -7,10 +7,13 @@ import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.*
 import com.github.kotlintelegrambot.webhook
+import io.ktor.util.*
 import storage.CentralDataStorage
 import telegram.helpers.chatInfo
 import telegram.helpers.showUsersList
 
+
+@InternalAPI
 class BotLauncher(
     val mode: LaunchMode,
     val tokens: List<Tokens>
@@ -66,6 +69,7 @@ private fun launchAdminBot(
     }
 }
 
+@InternalAPI
 private fun launchClientBot(
     mode: LaunchMode,
     adminId: Long,
