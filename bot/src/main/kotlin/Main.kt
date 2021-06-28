@@ -15,7 +15,7 @@ import telegram.*
 @KtorExperimentalAPI
 fun Application.main() {
     val launchMode = LaunchMode.APP_ENGINE
-    CentralDataStorage.init(launchMode.rootPath)
+    CentralDataStorage.init(launchMode)
 
     val botLauncher = BotLauncher(
         mode = LaunchMode.APP_ENGINE,

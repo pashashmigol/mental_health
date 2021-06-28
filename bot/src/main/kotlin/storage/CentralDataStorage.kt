@@ -17,6 +17,7 @@ import report.PdfFonts
 import java.util.*
 import java.text.MessageFormat
 import Result
+import telegram.LaunchMode
 
 typealias Link = String
 
@@ -31,10 +32,10 @@ object CentralDataStorage {
     val usersStorage get() = _usersStorage
     private val reportsStorage get() = _reportsStorage
 
-    fun init(rootPath: String, testingMode: Boolean = false) {
+    fun init(launchMode: LaunchMode, testingMode: Boolean = false) {
         if (!this::connection.isInitialized) {
-            connection = GoogleDriveConnection(rootPath, testingMode)
-            fonts = PdfFonts(rootPath)
+            connection = GoogleDriveConnection(launchMode, testingMode)
+            fonts = PdfFonts(launchMode)
             reload()
         }
     }

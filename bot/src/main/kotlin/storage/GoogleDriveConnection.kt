@@ -15,16 +15,21 @@ import com.google.firebase.FirebaseApp
 
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.database.*
+import telegram.LaunchMode
 
 
-class GoogleDriveConnection(projectRoot: String, private val testingMode: Boolean) {
+class GoogleDriveConnection(launchMode: LaunchMode, private val testingMode: Boolean) {
 
     val driveService: Drive
     private val sheets: Sheets
     internal val database: FirebaseDatabase
 
     init {
-        val serviceAccount = FileInputStream("${projectRoot}$FIREBASE_CREDENTIALS_FILE_NAME")
+        val credentialsPath = when(launchMode){
+            LaunchMode.TESTS, LaunchMode.LOCAL -> "${launchMode.rootPath}webapp/$FIREBASE_CREDENTIALS_FILE_NAME"
+            LaunchMode.APP_ENGINE -> "${launchMode.rootPath}$FIREBASE_CREDENTIALS_FILE_NAME"
+        }
+        val serviceAccount = FileInputStream(credentialsPath)
         val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)
         val transport = GoogleNetHttpTransport.newTrustedTransport()
         val jacksonFactory = JacksonFactory.getDefaultInstance()

@@ -13,7 +13,7 @@ internal class MmpiE2E {
     @BeforeAll
     fun init() {
         CentralDataStorage.init(
-            rootPath = LaunchMode.TESTS.rootPath,
+            launchMode = LaunchMode.TESTS,
             testingMode = true
         )
     }

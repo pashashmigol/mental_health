@@ -28,7 +28,7 @@ internal class LucherSessionTest {
     @BeforeAll
     fun init() {
         CentralDataStorage.init(
-            rootPath = LaunchMode.TESTS.rootPath,
+            launchMode = LaunchMode.TESTS,
             testingMode = true
         )
 

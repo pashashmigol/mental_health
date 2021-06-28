@@ -17,7 +17,7 @@ internal class CalculateResultKtTest {
     @BeforeAll
     fun setup() {
         CentralDataStorage.init(
-            rootPath = LaunchMode.TESTS.rootPath,
+            launchMode = LaunchMode.TESTS,
             testingMode = true
         )
 
