@@ -20,14 +20,21 @@ import models.TypeOfTest
 
 typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
 
-data class LucherSession(
+class LucherSession(
     override val user: User,
     override val chatId: Long,
     override val roomId: Long,
-    val userConnection: UserConnection,
+    override val userConnection: UserConnection,
     val minutesBetweenRounds: Int = LUCHER_TEST_TIMEOUT,
-    val onEndedCallback: OnEnded
-) : TelegramSession<Unit>(user, roomId, chatId, TypeOfTest.Lucher) {
+    override val onEndedCallback: OnEnded
+) : TelegramSession<Unit>(
+    user = user,
+    roomId = chatId,
+    chatId = roomId,
+    type = TypeOfTest.Lucher,
+    userConnection = userConnection,
+    onEndedCallback = onEndedCallback
+) {
 
     companion object {
         val scope = GlobalScope
@@ -72,13 +79,13 @@ data class LucherSession(
 
     private suspend fun runRound(
         chatId: Long,
-        userConnection: UserConnection
+        userConnection: UserConnection?
     ): List<LucherColor> {
 
         val shownOptions: MutableList<LucherColor> = LucherColor.values().toMutableList()
-        userConnection.sendMessageWithLucherColors(chatId, LucherColor.values())
+        userConnection?.sendMessageWithLucherColors(chatId, LucherColor.values())
 
-        userConnection.sendMessageWithButtons(
+        userConnection?.sendMessageWithButtons(
             chatId = chatId,
             text = string("choose_color"),
             buttons = createReplyOptions(shownOptions),

@@ -25,9 +25,10 @@ class MmpiSession(
     override val roomId: Long,
     override val chatId: Long,
     override val type: TypeOfTest,
-    val userConnection: UserConnection,
-    val onEndedCallback: OnEnded
-) : TelegramSession<Int>(user, chatId, roomId, type) {
+    userConnection: UserConnection,
+    override val onEndedCallback: OnEnded
+) : TelegramSession<Int>(user, chatId, roomId, type, userConnection, onEndedCallback) {
+
     companion object {
         val scope = GlobalScope
     }

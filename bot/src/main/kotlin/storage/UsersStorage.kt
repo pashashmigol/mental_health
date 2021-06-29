@@ -71,15 +71,13 @@ class UsersStorage(database: FirebaseDatabase) {
     suspend fun takeAllSessions(): Result<List<SessionState>> {
         val resultChannel = Channel<List<SessionState>>(1)
 
-        fun clearSessions() = activeSessionsRef.removeValue { error, _ ->
-            println("getUserAnswers():removeValue(): $error")
-        }
         activeSessionsRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot?) {
                 println("getUserAnswers():onDataChange(): count = ${snapshot?.childrenCount}")
                 try {
-                    resultChannel.offer(parseSessions(snapshot))
-                    clearSessions()
+                    val sessions = parseSessions(snapshot)
+                    activeSessionsRef.removeValueAsync()
+                    resultChannel.offer(sessions)
                 } catch (e: Exception) {
                     resultChannel.close(e)
                 } finally {
@@ -230,22 +228,25 @@ class UsersStorage(database: FirebaseDatabase) {
 @Suppress("UNCHECKED_CAST")
 private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
 
-    val typeIndicator: GenericTypeIndicator<ArrayList<HashMap<String, Any>>> =
-        object : GenericTypeIndicator<ArrayList<HashMap<String, Any>>>() {}
+    val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
+        object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
-    return snapshot?.getValue(typeIndicator)?.map { sessionMap ->
+
+    return snapshot?.children?.map { dataSnapshot ->
+        val sessionMap = dataSnapshot.getValue(typeIndicator)
 
         val sessionState = SessionState(
             userId = sessionMap["userId"] as Long,
             roomId = sessionMap["roomId"] as Long,
-            chatId = 0,
+            chatId = sessionMap["chatId"] as Long,
             sessionId = sessionMap["sessionId"] as Long,
             type = TypeOfTest.valueOf(sessionMap["type"] as String)
         )
 
-        (sessionMap["messages"] as ArrayList<HashMap<String, Any>>).forEach {
-            sessionState.addAnswer(it["messageId"] as Long, it["data"] as String)
-        }
+        (sessionMap["messages"] as? ArrayList<HashMap<String, Any>>)
+            ?.forEach {
+                sessionState.addAnswer(it["messageId"] as Long, it["data"] as String)
+            }
 
         sessionState
     } ?: emptyList()

@@ -24,44 +24,56 @@ class TelegramRoom(
     internal val sessions = ConcurrentMap<Long, TelegramSession<*>>()
     private val scope = GlobalScope
 
-    suspend fun restoreState() {
-        val storedSessionStates = CentralDataStorage.usersStorage.takeAllSessions()
+    fun saveState(): Job {
+        return scope.launch {
+            val sessionsStates = sessions.map { it.value.state }
 
-        val storedSessions = (storedSessionStates as Result.Success).data
-            .filter {
-                roomId == it.roomId
-            }
-            .map { sessionState ->
-                val userId = sessionState.userId
-                val user = CentralDataStorage.usersStorage.getUser(userId)!!
-
-                val session = when (sessionState.type) {
-                    Mmpi566, Mmpi377 -> MmpiSession(
-                        user = user,
-                        roomId = roomId,
-                        chatId = sessionState.chatId,
-                        type = sessionState.type,
-                        userConnection = userConnection,
-                        onEndedCallback = { removeSession(it.sessionId) }
+            CentralDataStorage.usersStorage.saveAllSessions(sessionsStates)
+                .dealWithError {
+                    userConnection.notifyAdmin(
+                        "saveState(); error = ${it.message}",
+                        it.exception
                     )
-                    Lucher -> LucherSession(
-                        user = user,
-                        roomId = roomId,
-                        chatId = sessionState.chatId,
-                        userConnection = userConnection,
-                        onEndedCallback = { removeSession(it.sessionId) }
-                    )
+                    return@launch
                 }
-                session.applyState(sessionState)
-
-                Pair(session.sessionId, session)
-            }
-        sessions.putAll(storedSessions)
+        }
     }
 
-    suspend fun saveState() {
-        val sessionsStates = sessions.map { it.value.state }
-        CentralDataStorage.usersStorage.saveAllSessions(sessionsStates)
+    fun restoreState(): Job {
+        return scope.launch {
+            val storedSessionStates = CentralDataStorage.usersStorage.takeAllSessions()
+
+            val storedSessions = (storedSessionStates as Result.Success).data
+                .filter {
+                    roomId == it.roomId
+                }
+                .map { sessionState ->
+                    val userId = sessionState.userId
+                    val user = CentralDataStorage.usersStorage.getUser(userId)!!
+
+                    val session = when (sessionState.type) {
+                        Mmpi566, Mmpi377 -> MmpiSession(
+                            user = user,
+                            roomId = roomId,
+                            chatId = sessionState.chatId,
+                            type = sessionState.type,
+                            userConnection = userConnection,
+                            onEndedCallback = { removeSession(it.sessionId) }
+                        )
+                        Lucher -> LucherSession(
+                            user = user,
+                            roomId = roomId,
+                            chatId = sessionState.chatId,
+                            userConnection = userConnection,
+                            onEndedCallback = { removeSession(it.sessionId) }
+                        )
+                    }
+                    session.applyState(sessionState)
+
+                    Pair(session.sessionId, session)
+                }
+            sessions.putAll(storedSessions)
+        }
     }
 
     fun welcomeUser(
@@ -71,9 +83,7 @@ class TelegramRoom(
         return scope.launch {
             val userId = chatInfo.userId
 
-            userConnection.notifyAdmin(
-                "welcomeUser(); chatInfo = $chatInfo"
-            )
+
             if (CentralDataStorage.usersStorage.hasUserWithId(userId)) {
                 val user = CentralDataStorage.usersStorage.getUser(userId)
 

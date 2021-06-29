@@ -34,7 +34,6 @@ internal class TelegramRoomTest {
             ).join()
 
             originalRoom.launchMmpi377Test(chatInfo).join()
-            originalRoom.callbackQuery(chatInfo, data = "")
         }
 
         assertEquals(11, originalRoom.sessions.size)
@@ -45,7 +44,7 @@ internal class TelegramRoomTest {
             userConnection = MockUserConnection
         )
 
-        restoredRoom.restoreState()
+        restoredRoom.restoreState().join()
         assertEquals(11, restoredRoom.sessions.size)
     }
 }

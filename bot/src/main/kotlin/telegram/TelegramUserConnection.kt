@@ -10,6 +10,7 @@ import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import io.ktor.util.*
 import lucher.LucherColor
 import lucher.url
+import java.util.concurrent.atomic.AtomicBoolean
 
 @InternalAPI
 class TelegramUserConnection(
@@ -18,6 +19,7 @@ class TelegramUserConnection(
 ) : UserConnection {
 
     private val sentMessages = mutableMapOf<Long, Message>()
+    private val paused = AtomicBoolean(false)
 
     override fun sendMessageWithButtons(
         chatId: Long,
@@ -25,6 +27,10 @@ class TelegramUserConnection(
         buttons: List<Button>,
         placeButtonsVertically: Boolean
     ): Long {
+        if (paused.get()) {
+            return -1L
+        }
+
         val options =
             if (placeButtonsVertically) {
                 buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
@@ -49,6 +55,9 @@ class TelegramUserConnection(
         text: String,
         removeWhenSessionIsOver: Boolean
     ) {
+        if (paused.get()) {
+            return
+        }
         val result = botKeeper().clientBot.sendMessage(
             chatId = chatId,
             text = text
@@ -85,6 +94,9 @@ class TelegramUserConnection(
         chatId: Long,
         color: LucherColor
     ) {
+        if (paused.get()) {
+            return
+        }
         val result = botKeeper().clientBot.sendPhoto(
             caption = "${color.index} - ${color.name}",
             disableNotification = true,
@@ -100,6 +112,9 @@ class TelegramUserConnection(
         chatId: Long,
         colors: Array<LucherColor>
     ) {
+        if (paused.get()) {
+            return
+        }
         val allOptions = colors.map { color ->
             InputMediaPhoto(
                 caption = "${color.index} - ${color.name}",
@@ -126,6 +141,9 @@ class TelegramUserConnection(
         buttons: MutableList<Button>,
         placeButtonsVertically: Boolean
     ) {
+        if (paused.get()) {
+            return
+        }
         val options =
             if (placeButtonsVertically) {
                 buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
@@ -141,6 +159,9 @@ class TelegramUserConnection(
     }
 
     override fun highlightAnswer(messageId: Long, answer: String) {
+        if (paused.get()) {
+            return
+        }
         val message = sentMessages[messageId]
 
         message?.let { mes ->
@@ -174,6 +195,9 @@ class TelegramUserConnection(
         text: String,
         buttons: List<Button>
     ) {
+        if (paused.get()) {
+            return
+        }
         val markup = buttons.map {
             InlineKeyboardButton.CallbackData(it.text, it.data)
         }
@@ -186,5 +210,13 @@ class TelegramUserConnection(
         result.first?.body()?.result?.let { message ->
             sentMessages[message.messageId] = message
         }
+    }
+
+    override fun pause() {
+        paused.set(true)
+    }
+
+    override fun resume() {
+        paused.set(false)
     }
 }

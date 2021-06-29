@@ -61,6 +61,10 @@ interface UserConnection {
         colors: Array<LucherColor>
     ) {
     }
+
+    fun pause() {}
+
+    fun resume() {}
 }
 
 data class ChatInfo(
