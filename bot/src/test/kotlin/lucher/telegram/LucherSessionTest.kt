@@ -17,6 +17,7 @@ import lucher.LucherAnswers
 import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import telegram.Callback
 import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 2L
@@ -26,7 +27,7 @@ internal class LucherSessionTest {
     private lateinit var testUser: User
 
     @BeforeAll
-    fun init() = runBlocking{
+    fun init() = runBlocking {
         CentralDataStorage.init(
             launchMode = LaunchMode.TESTS,
             testingMode = true
@@ -37,7 +38,7 @@ internal class LucherSessionTest {
     }
 
     @AfterAll
-    fun cleanUp() {
+    fun cleanUp() = runBlocking {
         CentralDataStorage.usersStorage.clearUser(testUser)
     }
 
@@ -60,16 +61,14 @@ internal class LucherSessionTest {
         //complete first round
         LucherColor.values().forEach {
             lucherSession.sendAnswer(
-                messageId = 0,
-                data = it.name,
+                Callback.LucherAnswer(it)
             )
         }
 
         //complete second round
         LucherColor.values().forEach {
             lucherSession.sendAnswer(
-                messageId = 0,
-                data = it.name,
+                Callback.LucherAnswer(it)
             )
         }
         resultChannel.receive()
@@ -86,7 +85,7 @@ private fun checkState(session: LucherSession) {
     assertEquals(session.sessionId, sessionState.sessionId)
 
     assertEquals(session.type, TypeOfTest.Lucher)
-    assertEquals(16, sessionState.messages.size)
+    assertEquals(16, sessionState.answers.size)
 }
 
 private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(

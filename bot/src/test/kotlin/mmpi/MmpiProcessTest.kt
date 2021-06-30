@@ -29,13 +29,15 @@ internal class MmpiProcessTest {
             assertTrue(process.hasNextQuestion(), "index = $index")
 
             val question = process.nextQuestion()
-            assertEquals(index, question.index, "index = $index")
 
-            assertTrue(process.isItLastAskedQuestion(index), "index = $index")
-            assertFalse(process.isItLastAskedQuestion(index - 1), "index = $index")
+            assertEquals(index, question.index, "index = $index")
+//            assertTrue(process.isItLastAskedQuestion(index), "index = $index")
+//            assertFalse(process.isItLastAskedQuestion(index - 1), "index = $index")
+
             process.submitAnswer(index, MmpiProcess.Answer.Agree)
-            assertTrue(process.isItLastAskedQuestion(index), "index = $index")
-            assertFalse(process.isItLastAskedQuestion(index + 1), "index = $index")
+
+//            assertTrue(process.isItLastAskedQuestion(index), "index = $index")
+//            assertFalse(process.isItLastAskedQuestion(index + 1), "index = $index")
         }
 
         val randomIndex = 20

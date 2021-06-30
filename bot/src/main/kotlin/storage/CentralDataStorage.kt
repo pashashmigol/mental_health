@@ -81,7 +81,7 @@ object CentralDataStorage {
         _usersStorage.addUser(user)
     }
 
-    fun saveMmpi(
+    suspend fun saveMmpi(
         user: User,
         typeOfTest: TypeOfTest,
         result: MmpiProcess.Result,
@@ -90,7 +90,9 @@ object CentralDataStorage {
         saveAnswers: Boolean
     ): Result<Link> {
         if (saveAnswers) {
-            usersStorage.saveAnswers(answers)
+            usersStorage.saveAnswers(answers).dealWithError {
+                return it
+            }
         }
         val pdfStr = pdfReportMmpi(
             questions = questions,
@@ -100,14 +102,16 @@ object CentralDataStorage {
         return reportsStorage.saveMmpi(user.id, pdfStr, typeOfTest)
     }
 
-    fun saveLucher(
+    suspend fun saveLucher(
         user: User,
         answers: LucherAnswers,
         result: LucherResult,
         saveAnswers: Boolean
     ): Result<Link> {
         if (saveAnswers) {
-            usersStorage.saveAnswers(answers)
+            usersStorage.saveAnswers(answers).dealWithError {
+                return it
+            }
         }
 
         val bytes = pdfReportLucher(

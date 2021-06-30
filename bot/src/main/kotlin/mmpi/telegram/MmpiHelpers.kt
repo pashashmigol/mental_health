@@ -1,34 +1,44 @@
 package mmpi.telegram
 
+import mmpi.MmpiProcess
 import models.Question
 import storage.CentralDataStorage.string
 import telegram.Button
+import telegram.Callback
 import telegram.UserConnection
+import telegram.UserId
 
 
 fun askGender(
-    userId: Long,
-    question: Question,
+    userId: UserId,
     connection: UserConnection
 ): Long {
     return connection.sendMessageWithButtons(
         chatId = userId,
         text = string("choose_your_sex"),
-        buttons = buttons(question)
+        buttons = genderButtons()
     )
 }
 
-fun createGenderQuestion() = Question(
-    index = -1,
-    text = string("choose_your_sex"),
-    options = listOf(
-        Question.Option(text = Gender.Male.title, tag = Gender.Male.name),
-        Question.Option(text = Gender.Female.title, tag = Gender.Female.name)
-    )
-)
-
-fun buttons(question: Question): List<Button> {
+fun mmpiButtons(question: Question): List<Button> {
     return question.options.map {
-        Button(text = it.text, data = it.tag)
+        Button(
+            text = it.text,
+            callback = Callback.MmpiAnswer(
+                index = question.index,
+                answer = MmpiProcess.Answer.valueOf(it.tag)
+            )
+        )
+    }
+}
+
+fun genderButtons(): List<Button> {
+    return Gender.values().map {
+        Button(
+            text = it.title,
+            callback = Callback.GenderAnswer(
+                answer = it
+            )
+        )
     }
 }

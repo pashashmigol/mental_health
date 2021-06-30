@@ -1,7 +1,6 @@
 package telegram
 
 import models.TypeOfTest
-import models.User
 
 class SessionState(
     val roomId: Long,
@@ -10,31 +9,10 @@ class SessionState(
     val userId: Long,
     val chatId: Long
 ) {
-    class Message(val messageId: Long, val data: String) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
+    val answers: List<Callback> = mutableListOf()
 
-            other as Message
-
-            if (messageId != other.messageId) return false
-            if (data != other.data) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = messageId.hashCode()
-            result = 31 * result + data.hashCode()
-            return result
-        }
-    }
-
-    private val _messages = mutableListOf<Message>()
-    val messages: List<Message> = _messages
-
-    fun addAnswer(messageId: Long, data: String) {
-        _messages.add(Message(messageId, data))
+    fun addAnswer(callback: Callback) {
+        (answers as MutableList).add(callback)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -46,7 +24,9 @@ class SessionState(
         if (roomId != other.roomId) return false
         if (sessionId != other.sessionId) return false
         if (type != other.type) return false
-        if (_messages != other._messages) return false
+        if (userId != other.userId) return false
+        if (chatId != other.chatId) return false
+        if (answers != other.answers) return false
 
         return true
     }
@@ -55,8 +35,15 @@ class SessionState(
         var result = roomId.hashCode()
         result = 31 * result + sessionId.hashCode()
         result = 31 * result + type.hashCode()
-        result = 31 * result + _messages.hashCode()
+        result = 31 * result + userId.hashCode()
+        result = 31 * result + chatId.hashCode()
+        result = 31 * result + answers.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "SessionState(roomId=$roomId, sessionId=$sessionId, type=$type, userId=$userId, chatId=$chatId, answers=$answers)"
+    }
+
 
 }

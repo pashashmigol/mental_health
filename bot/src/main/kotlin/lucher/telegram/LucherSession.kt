@@ -18,7 +18,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import models.TypeOfTest
 
-typealias OnUserChoseColor = (connection: UserConnection, messageId: Long, data: String) -> Unit
+//typealias OnUserChoseColor = (userConnection: UserConnection, callback: Callback) -> Unit
+typealias OnUserChoseColor = (callback: Callback, messageId: MessageId?) -> Unit
 
 class LucherSession(
     override val user: User,
@@ -78,7 +79,7 @@ class LucherSession(
     }
 
     private suspend fun runRound(
-        chatId: Long,
+        chatId: ChatId,
         userConnection: UserConnection?
     ): List<LucherColor> {
 
@@ -94,10 +95,14 @@ class LucherSession(
         val answers = mutableListOf<LucherColor>()
         val channel = Channel<Unit>(0)//using channel to wait until all colors are chosen
 
-        onColorChosen = { connection: UserConnection, messageId: Long, answer: String ->
+//        onColorChosen = { connection: UserConnection, messageId: Long, answer: String ->
+        onColorChosen = { callback: Callback, messageId: MessageId? ->
+            callback as Callback.LucherAnswer
+            val answer = callback.answer.name
+
             shownOptions.removeIf { it.name == answer }
 
-            connection.setButtonsForMessage(
+            userConnection?.setButtonsForMessage(
                 chatId = chatId,
                 messageId = messageId,
                 buttons = createReplyOptions(shownOptions)
@@ -106,7 +111,7 @@ class LucherSession(
 
             if (allColorsChosen(answers)) {
                 onColorChosen = null
-                connection.cleanUp()
+                userConnection?.cleanUp()
                 channel.offer(Unit)
             }
         }
@@ -117,7 +122,8 @@ class LucherSession(
     }
 
     private val mutex = Mutex()
-    override suspend fun onAnswer(messageId: Long, data: String): Result<Unit> {
+//    override suspend fun onAnswer(messageId: Long, data: String): Result<Unit> {
+    override suspend fun onAnswer(callback: Callback, messageId: MessageId?): Result<Unit> {
         mutex.withLock {
             var limit = 1000
             while (onColorChosen == null) {
@@ -127,7 +133,7 @@ class LucherSession(
                 }
                 delay(1)
             }
-            onColorChosen?.invoke(userConnection, messageId, data) ?: Result.Error("onAnswer is null")
+            onColorChosen?.invoke(callback, messageId) ?: Result.Error("onAnswer is null")
         }
         return Result.Success(Unit)
     }

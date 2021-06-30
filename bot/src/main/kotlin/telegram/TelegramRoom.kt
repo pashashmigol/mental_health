@@ -12,6 +12,7 @@ import storage.CentralDataStorage.string
 import Result
 import io.ktor.util.*
 import io.ktor.util.collections.*
+import models.TypeOfTest
 
 
 private const val TAG = "telegram.WorkSpace"
@@ -83,7 +84,6 @@ class TelegramRoom(
         return scope.launch {
             val userId = chatInfo.userId
 
-
             if (CentralDataStorage.usersStorage.hasUserWithId(userId)) {
                 val user = CentralDataStorage.usersStorage.getUser(userId)
 
@@ -100,13 +100,17 @@ class TelegramRoom(
                 )
             }
 
+            val lucher = Callback.NewTestRequest(typeOfTest = Lucher)
+            val mmpi566 = Callback.NewTestRequest(typeOfTest = Mmpi566)
+            val mmpi377 = Callback.NewTestRequest(typeOfTest = Mmpi377)
+
             userConnection.sendMessageWithButtons(
                 chatInfo.chatId,
                 text = string("choose_test"),
                 buttons = listOf(
-                    Button(string("lucher"), Lucher.name),
-                    Button(string("mmpi_566"), Mmpi566.name),
-                    Button(string("mmpi_377"), Mmpi377.name)
+                    Button(string("lucher"), lucher),
+                    Button(string("mmpi_566"), mmpi566),
+                    Button(string("mmpi_377"), mmpi377)
                 )
             )
         }
@@ -199,22 +203,20 @@ class TelegramRoom(
     ) = scope.launch {
         try {
             val userId = chatInfo.userId
+            val messageId = chatInfo.messageId
             val session = sessions[userId]
 
-            if (session != null) {
-                session.sendAnswer(
-                    messageId = chatInfo.messageId,
-                    data = data
-                )
-            } else {
-                val sessionStr = sessions.entries.joinToString(
-                    ",", "[", "]"
-                ) { "${it.key}" }
-                userConnection.notifyAdmin("no session with id $userId, just $sessionStr")
-                launchTest(
-                    chatInfo = chatInfo,
-                    data = data
-                )
+            when (val callback = Callback.fromString(data)) {
+                is Callback.GenderAnswer, is Callback.LucherAnswer, is Callback.MmpiAnswer -> {
+                    session?.sendAnswer(callback, messageId)
+                }
+                is Callback.NewTestRequest -> {
+                    userConnection.notifyAdmin("no session with id $userId, just ${formatSessionsList()}")
+                    launchTest(
+                        chatInfo = chatInfo,
+                        type = callback.typeOfTest
+                    )
+                }
             }
         } catch (e: Exception) {
             val userId = chatInfo.userId
@@ -224,16 +226,23 @@ class TelegramRoom(
         }
     }
 
+    private fun formatSessionsList(): String {
+        val sessionStr = sessions.entries.joinToString(
+            ",", "[", "]"
+        ) { "${it.key}" }
+        return sessionStr
+    }
+
     private suspend fun launchTest(
         chatInfo: ChatInfo,
-        data: String
+        type: TypeOfTest
     ) {
-        val type = valueOf(data)
         val userId = chatInfo.userId
         val chatId = chatInfo.chatId
         val messageId = chatInfo.messageId
         val user = CentralDataStorage.usersStorage.getUser(userId)!!
 
+        userConnection.notifyAdmin("launchTest($type)")
         userConnection.removeMessage(chatId, messageId)
 
         sessions[userId] = when (type) {

@@ -7,7 +7,6 @@ import com.soywiz.klock.DateTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import models.User
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.BeforeAll
@@ -16,12 +15,15 @@ import telegram.LaunchMode
 import Result
 import com.soywiz.klock.DateTimeSpan
 import lucher.LucherAnswers
+import lucher.LucherColor
 import lucher.roundAnswers
 import mmpi.MmpiAnswers
+import mmpi.MmpiProcess
 import mmpi.justFewAnswers
 import models.TypeOfTest
-import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Timeout
+import telegram.Callback
 import telegram.SessionState
 import java.util.concurrent.TimeUnit
 
@@ -37,42 +39,48 @@ internal class UsersStorageTest {
     }
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `mmpi answers saving`() = runBlocking {
-        val user = createUser(0L, "Pasha")
+        val user = createUser(111L, "Pasha")
 
         val mockAnswers = createMmpiAnswers(user, Gender.Female)
-        CentralDataStorage.usersStorage.saveAnswers(mockAnswers)
+        val saveResult = CentralDataStorage.usersStorage.saveAnswers(mockAnswers)
+        assertTrue(saveResult is Result.Success)
 
         val receivedAnswers = (CentralDataStorage.usersStorage
             .getUserAnswers(user = user) as Result.Success)
             .data.first()
 
         assertEquals(mockAnswers, receivedAnswers)
+
+        CentralDataStorage.usersStorage.clearUser(user)
     }
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `Lucher answers saving`() = runBlocking {
-        val user = createUser(0L, "Pasha")
+        val user = createUser(222L, "Pasha")
 
         val mockAnswers = createLucherAnswers(user)
-        CentralDataStorage.usersStorage.saveAnswers(mockAnswers)
+        val saveResult = CentralDataStorage.usersStorage.saveAnswers(mockAnswers)
+        assertTrue(saveResult is Result.Success)
 
         val receivedAnswers = (CentralDataStorage.usersStorage
             .getUserAnswers(user = user) as Result.Success)
-            .data[1]
+            .data[0]
 
         assertEquals(mockAnswers, receivedAnswers)
+
+        CentralDataStorage.usersStorage.clearUser(user)
     }
 
     @Test
     @Timeout(value = 100, unit = TimeUnit.SECONDS)
     fun `session's states saving`() = runBlocking {
-        val originalSessions = createSessions()
+        val originalSessions: List<SessionState> = createSessions()
         CentralDataStorage.usersStorage.saveAllSessions(originalSessions)
-        val storageResult = CentralDataStorage.usersStorage.takeAllSessions()
 
+        val storageResult = CentralDataStorage.usersStorage.takeAllSessions()
         val sessionsFromStorage = (storageResult as Result.Success).data
 
         assertArrayEquals(originalSessions.toTypedArray(), sessionsFromStorage.toTypedArray())
@@ -121,10 +129,25 @@ internal class UsersStorageTest {
         val mmpi377 = SessionState(userId = 0, chatId = 0, roomId = 0, sessionId = 1, type = TypeOfTest.Mmpi377)
         val lucher = SessionState(userId = 0, chatId = 0, roomId = 0, sessionId = 2, type = TypeOfTest.Lucher)
 
-        for (i in 0..20L) {
-            mmpi566.addAnswer(messageId = i, data = "answer $i")
-            mmpi377.addAnswer(messageId = i, data = "answer $i")
-            lucher.addAnswer(messageId = i, data = "answer $i")
+        for (index in 0..20) {
+
+            mmpi566.addAnswer(
+                Callback.MmpiAnswer(
+                    index = index,
+                    answer = MmpiProcess.Answer.Agree
+                )
+            )
+            mmpi377.addAnswer(
+                Callback.MmpiAnswer(
+                    index = index,
+                    answer = MmpiProcess.Answer.Agree
+                )
+            )
+            lucher.addAnswer(
+                Callback.LucherAnswer(
+                    answer = LucherColor.Gray
+                )
+            )
         }
         return listOf(mmpi566, mmpi377, lucher)
     }

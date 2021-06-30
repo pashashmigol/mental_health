@@ -1,8 +1,7 @@
 package mmpi.telegram
 
 import lucher.LucherColor
-import telegram.Button
-import telegram.UserConnection
+import telegram.*
 
 class StubUserConnection : UserConnection {
     private val messageIds =  generateSequence(0L) { it + 1 }.iterator()
@@ -30,8 +29,8 @@ class StubUserConnection : UserConnection {
     }
 
     override fun setButtonsForMessage(
-        chatId: Long,
-        messageId: Long,
+        chatId: ChatId,
+        messageId: MessageId?,
         buttons: MutableList<Button>,
         placeButtonsVertically: Boolean
     ) {
@@ -46,7 +45,7 @@ class StubUserConnection : UserConnection {
         println("### cleanUp()")
     }
 
-    override fun highlightAnswer(messageId: Long, answer: String) {
+    override fun highlightAnswer(messageId: MessageId?, answer: Callback) {
         println("### highlightAnswer(messageId: $messageId, answer: $answer)")
     }
 }

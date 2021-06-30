@@ -1,6 +1,7 @@
 package mmpi.report
 
 import com.soywiz.klock.DateTimeTz
+import kotlinx.coroutines.runBlocking
 import mmpi.*
 import models.TypeOfTest
 import org.junit.jupiter.api.Test
@@ -10,7 +11,9 @@ import org.junit.jupiter.api.TestInstance
 import storage.CentralDataStorage
 
 import models.User
+import org.junit.jupiter.api.Assertions.assertTrue
 import telegram.LaunchMode
+import Result
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LenaTest {
@@ -24,7 +27,7 @@ internal class LenaTest {
     }
 
     @Test
-    fun generateReport() {
+    fun generateReport() = runBlocking {
         val answersList = agreeTo(
             5, 7, 10, 13, 14, 16, 18, 24, 32, 35, 44, 47, 57, 58, 65, 66, 67, 68, 69, 75, 79, 84, 87, 90, 92, 94, 95,
             96, 97, 98, 101, 110, 118, 120, 122, 123, 131, 138, 148, 149, 151, 152, 160, 163, 167, 170, 176, 181, 185,
@@ -52,14 +55,16 @@ internal class LenaTest {
             answers = answersList,
             result = result
         )
-        CentralDataStorage.saveMmpi(
+        assertTrue(CentralDataStorage.saveMmpi(
             user = lena,
             typeOfTest = TypeOfTest.Mmpi377,
             result = result,
             questions = listOf(),
             answers = mmpiAnswers,
             saveAnswers = true
-        )
+        ) is Result.Success)
         println(report)
+
+        CentralDataStorage.usersStorage.clearUser(lena)
     }
 }

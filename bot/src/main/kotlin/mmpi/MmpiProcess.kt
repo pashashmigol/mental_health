@@ -4,25 +4,26 @@ import Gender
 import models.*
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
+import java.util.*
 
 class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
 
     internal data class State(
         val currentQuestionIndex: Int = -1,
         val questions: List<Question>,
-        val answers: List<Answer>,
+        val answers: SortedMap<Int, Answer>,
         val scales: Scales?
     )
 
     private var state = when (typeOfTest) {
         TypeOfTest.Mmpi566 -> State(
             questions = CentralDataStorage.mmpi566Data.questions(gender),
-            answers = emptyList(),
+            answers = sortedMapOf(),
             scales = CentralDataStorage.mmpi566Data.scales(gender)
         )
         TypeOfTest.Mmpi377 -> State(
             questions = CentralDataStorage.mmpi377Data.questions(gender),
-            answers = emptyList(),
+            answers = sortedMapOf(),
             scales = CentralDataStorage.mmpi377Data.scales(gender)
         )
         else -> throw IllegalStateException()
@@ -33,21 +34,24 @@ class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
     val questions
         get() = state.questions
 
+    fun allQuestionsAreAnswered(): Boolean {
+        return state.answers.size == state.questions.size
+    }
+
+    fun setNextQuestionIndex(index: Int) {
+        state = state.copy(currentQuestionIndex = index)
+    }
+
+    fun submitAnswer(index: Int, answer: Answer) {
+        state = submitAnswer(state, index, answer)
+    }
+
+    fun hasNextQuestion(): Boolean = hasNextQuestion(state, typeOfTest)
 
     fun isItLastAskedQuestion(index: Int): Boolean {
         return index == state.currentQuestionIndex
     }
 
-    fun allQuestionsAreAnswered(): Boolean {
-        return state.answers.size == state.questions.size
-    }
-
-    fun submitAnswer(index: Int, answer: Answer) {
-        if (index < questions.size)
-            state = submitAnswer(state, index, answer)
-    }
-
-    fun hasNextQuestion(): Boolean = hasNextQuestion(state, typeOfTest)
 
     fun nextQuestion(): Question {
         val (newState, question) = nextQuestion(state)
@@ -60,6 +64,7 @@ class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
     enum class Answer {
         Agree,
         Disagree;
+
         val text
             get() = when (this) {
                 Agree -> string("agree")
@@ -122,19 +127,20 @@ class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
 
 private fun submitAnswer(
     state: MmpiProcess.State,
+//    messageId: Long,
     index: Int,
     answer: MmpiProcess.Answer
 ): MmpiProcess.State {
-    val answers = state.answers.toMutableList()
+    val answers = state.answers
 
-    if (answers.lastIndex < index) {
-        answers.add(index, answer)
-    } else {
-        answers[index] = answer
-    }
+//    if (answers.lastIndex < index) {
+//        answers.add(index, answer)
+//    } else {
+//    }
+    answers[index] = answer
 
     return state.copy(
-        answers = answers.toList()
+        answers = answers
     )
 }
 
@@ -157,5 +163,7 @@ private fun calculateResult(state: MmpiProcess.State, typeOfTest: TypeOfTest): M
     if (state.scales == null)
         throw RuntimeException("Scales are not loaded")
 
-    return calculateMmpi(state.answers, state.scales)
+    val answers = state.answers.toSortedMap().values.toList()
+
+    return calculateMmpi(answers, state.scales)
 }

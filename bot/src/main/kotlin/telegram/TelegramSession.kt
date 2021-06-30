@@ -7,10 +7,16 @@ import models.TypeOfTest
 
 typealias OnEnded = (TelegramSession<Any>) -> Unit
 
+typealias MessageId = Long
+typealias RoomId = Long
+typealias ChatId = Long
+typealias UserId = Long
+typealias SessionId = Long
+
 abstract class TelegramSession<out T>(
     open val user: User,
-    open val roomId: Long,
-    open val chatId: Long,
+    open val roomId: RoomId,
+    open val chatId: ChatId,
     open val type: TypeOfTest,
     open val userConnection: UserConnection,
     open val onEndedCallback: OnEnded
@@ -29,18 +35,23 @@ abstract class TelegramSession<out T>(
 
     abstract suspend fun start()
 
-    suspend fun sendAnswer(messageId: Long, data: String): Result<T> {
-        state.addAnswer(messageId, data)
-        return onAnswer(messageId, data)
+//    suspend fun sendAnswer(messageId: Long, data: String): Result<T> {
+//        state.addAnswer(messageId, data)
+//        return onAnswer(messageId, data)
+//    }
+
+    suspend fun sendAnswer(callback: Callback, messageId: MessageId? = null): Result<T> {
+        state.addAnswer(callback)
+        return onAnswer(callback, messageId)
     }
 
-    abstract suspend fun onAnswer(messageId: Long, data: String): Result<T>
+    abstract suspend fun onAnswer(callback: Callback, messageId: MessageId?): Result<T>
 
-    suspend fun applyState(state: SessionState) {
+    open suspend fun applyState(state: SessionState) {
         userConnection.pause()
         start()
-        state.messages.forEach {
-            sendAnswer(it.messageId, it.data)
+        state.answers.forEach {
+            sendAnswer(it)
         }
         userConnection.resume()
     }

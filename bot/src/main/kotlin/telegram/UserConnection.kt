@@ -35,8 +35,8 @@ interface UserConnection {
     fun removeMessage(chatId: Long, messageId: Long) {}
 
     fun setButtonsForMessage(
-        chatId: Long,
-        messageId: Long,
+        chatId: ChatId,
+        messageId: MessageId?,
         buttons: MutableList<Button>,
         placeButtonsVertically: Boolean = true
     ) {
@@ -51,8 +51,8 @@ interface UserConnection {
     fun cleanUp() {}
 
     fun highlightAnswer(
-        messageId: Long,
-        answer: String
+        messageId: MessageId?,
+        answer: Callback
     ) {
     }
 
@@ -80,5 +80,5 @@ data class ChatInfo(
 
 data class Button(
     val text: String,
-    val data: String
+    val callback: Callback
 )

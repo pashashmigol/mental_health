@@ -33,9 +33,13 @@ class TelegramUserConnection(
 
         val options =
             if (placeButtonsVertically) {
-                buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
+                buttons.map {
+                    listOf(InlineKeyboardButton.CallbackData(it.text, it.callback.makeString()))
+                }
             } else {
-                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
+                listOf(buttons.map {
+                    InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())
+                })
             }
 
         val result = botKeeper().clientBot.sendMessage(
@@ -136,8 +140,8 @@ class TelegramUserConnection(
     }
 
     override fun setButtonsForMessage(
-        chatId: Long,
-        messageId: Long,
+        chatId: ChatId,
+        messageId: MessageId?,
         buttons: MutableList<Button>,
         placeButtonsVertically: Boolean
     ) {
@@ -146,9 +150,9 @@ class TelegramUserConnection(
         }
         val options =
             if (placeButtonsVertically) {
-                buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
+                buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())) }
             } else {
-                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
+                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.callback.makeString()) })
             }
 
         botKeeper().clientBot.editMessageReplyMarkup(
@@ -158,7 +162,7 @@ class TelegramUserConnection(
         )
     }
 
-    override fun highlightAnswer(messageId: Long, answer: String) {
+    override fun highlightAnswer(messageId: MessageId?, answer: Callback) {
         if (paused.get()) {
             return
         }
@@ -168,7 +172,7 @@ class TelegramUserConnection(
             val buttons = mes.replyMarkup?.inlineKeyboard?.map {
                 it.map { button ->
                     (button as InlineKeyboardButton.CallbackData)
-                    if (button.callbackData == answer) {
+                    if (button.callbackData == answer.makeString()) {
 
                         InlineKeyboardButton.CallbackData(
                             text = button.text + " + ",
@@ -199,7 +203,7 @@ class TelegramUserConnection(
             return
         }
         val markup = buttons.map {
-            InlineKeyboardButton.CallbackData(it.text, it.data)
+            InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())
         }
         val result = botKeeper().clientBot.editMessageText(
             chatId = chatId,

@@ -15,7 +15,7 @@ import mmpi.MmpiProcess
 import models.Answers
 import models.TypeOfTest
 import models.User
-import telegram.SessionState
+import telegram.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 
@@ -119,7 +119,9 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    fun saveAnswers(answers: MmpiAnswers) {
+    suspend fun saveAnswers(answers: MmpiAnswers): Result<Unit> {
+        val resultChannel = Channel<Result<Unit>>(1)
+
         val hashMap = HashMap<String, Any>().apply {
             put("date", answers.dateString)
             put("gender", answers.gender.name)
@@ -137,10 +139,19 @@ class UsersStorage(database: FirebaseDatabase) {
             .child(answers.dateString)
             .setValue(hashMap) { error, ref ->
                 println("add(${answers.user}) ref: $ref, error: $error")
+
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
+                }
+                resultChannel.offer(result)
             }
+        return resultChannel.receive()
     }
 
-    fun saveAnswers(answers: LucherAnswers) {
+    suspend fun saveAnswers(answers: LucherAnswers): Result<Unit> {
+        val resultChannel = Channel<Result<Unit>>(1)
+
         val hashMap = HashMap<String, Any>().apply {
             put("date", answers.dateString)
 
@@ -157,20 +168,38 @@ class UsersStorage(database: FirebaseDatabase) {
             .child(answers.dateString)
             .setValue(hashMap) { error, ref ->
                 println("add(${answers.user}) ref: $ref, error: $error")
+
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
+                }
+                resultChannel.offer(result)
             }
+        return resultChannel.receive()
     }
 
-    fun clearUser(user: User) {
+    suspend fun clearUser(user: User) {
+        val resultChannel = Channel<Unit>(3)
         usersMmpiAnswersRef
             .child(user.id.toString())
             .setValue(null) { error, ref ->
                 println("add($user) ref: $ref, error: $error")
+                resultChannel.offer(Unit)
             }
         usersLucherAnswersRef
             .child(user.id.toString())
             .setValue(null) { error, ref ->
                 println("add($user) ref: $ref, error: $error")
+                resultChannel.offer(Unit)
             }
+        activeSessionsRef
+            .child(user.id.toString())
+            .setValue(null) { error, ref ->
+                println("add($user) ref: $ref, error: $error")
+                resultChannel.offer(Unit)
+            }
+
+        resultChannel.receive()
     }
 
     suspend fun getUserAnswers(user: User): Result<List<Answers>> {
@@ -236,18 +265,28 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
         val sessionMap = dataSnapshot.getValue(typeIndicator)
 
         val sessionState = SessionState(
-            userId = sessionMap["userId"] as Long,
-            roomId = sessionMap["roomId"] as Long,
-            chatId = sessionMap["chatId"] as Long,
-            sessionId = sessionMap["sessionId"] as Long,
+            userId = sessionMap["userId"] as UserId,
+            roomId = sessionMap["roomId"] as RoomId,
+            chatId = sessionMap["chatId"] as ChatId,
+            sessionId = sessionMap["sessionId"] as SessionId,
             type = TypeOfTest.valueOf(sessionMap["type"] as String)
         )
 
-        (sessionMap["messages"] as? ArrayList<HashMap<String, Any>>)
+        (sessionMap["answers"] as? ArrayList<HashMap<String, Any>>)
             ?.forEach {
-                sessionState.addAnswer(it["messageId"] as Long, it["data"] as String)
-            }
+                val type = Callback.Type.valueOf(it["type"] as String)
+                val index = (it["index"] as? Long)?.toInt()
+                val answer = it["answer"] as String
 
+                val callback = when (type) {
+                    Callback.Type.Gender -> Callback.GenderAnswer(Gender.valueOf(answer))
+                    Callback.Type.Mmpi -> Callback.MmpiAnswer(index!!, MmpiProcess.Answer.valueOf(answer))
+                    Callback.Type.Lucher -> Callback.LucherAnswer(LucherColor.valueOf(answer))
+                    Callback.Type.NewTestRequest -> Callback.NewTestRequest(TypeOfTest.valueOf(answer))
+                }
+
+                sessionState.addAnswer(callback)
+            }
         sessionState
     } ?: emptyList()
 }

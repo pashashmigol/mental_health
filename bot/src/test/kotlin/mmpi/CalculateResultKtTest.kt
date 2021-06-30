@@ -29,7 +29,7 @@ internal class CalculateResultKtTest {
     fun agree_with_everything() {
         val test = MmpiProcess(Gender.Male, TypeOfTest.Mmpi566)
 
-        allAgree566.forEachIndexed {index, answer ->
+        allAgree566.forEachIndexed { index, answer ->
             test.submitAnswer(index, answer)
         }
         val result = test.calculateResult()

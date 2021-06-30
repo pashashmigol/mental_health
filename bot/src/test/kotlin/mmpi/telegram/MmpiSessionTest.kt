@@ -4,7 +4,6 @@ import kotlinx.coroutines.runBlocking
 import models.TypeOfTest
 
 import storage.CentralDataStorage
-import telegram.LaunchMode
 
 import Result
 import mmpi.MmpiAnswers
@@ -14,9 +13,7 @@ import models.User
 import models.size
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import telegram.Button
-import telegram.TelegramSession
-import telegram.UserConnection
+import telegram.*
 import java.util.concurrent.TimeUnit
 
 const val MMPI_SESSION_TEST_USER_ID = 1L
@@ -26,7 +23,7 @@ internal class MmpiSessionTest {
     private lateinit var testUser: User
 
     @BeforeAll
-    fun init() = runBlocking{
+    fun init() = runBlocking {
         CentralDataStorage.init(
             launchMode = LaunchMode.TESTS,
             testingMode = true
@@ -37,11 +34,12 @@ internal class MmpiSessionTest {
     }
 
     @AfterEach
-    fun cleanUp() {
+    fun cleanUp() = runBlocking {
         CentralDataStorage.usersStorage.clearUser(testUser)
     }
 
     @Test
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `basic case`() = runBlocking {
 
         var session: MmpiSession? = null
@@ -52,26 +50,17 @@ internal class MmpiSessionTest {
             chatId = 1L,
             roomId = 0L,
             type = TypeOfTest.Mmpi566,
-            userConnection = object : UserConnection {
-
-                override fun sendMessageWithButtons(
-                    chatId: Long,
-                    text: String,
-                    buttons: List<Button>,
-                    placeButtonsVertically: Boolean
-                ): Long {
-                    return questionsIds.next()
-                }
-            }
+            userConnection = stubUserConnection(questionsIds)
         ) {
             checkSessionResult(testUser, session, it)
         }
-
         session.start()
 
-        val answersIds = generateSequence(0L) { it + 1 }.iterator()
-
-        val res = session.sendAnswer(answersIds.next(), Gender.Male.name)
+        val res = session.sendAnswer(
+            Callback.GenderAnswer(
+                answer = Gender.Male
+            )
+        )
         assertTrue(res is Result.Success, "$res")
 
         session.testingCallback = { answers ->
@@ -81,17 +70,18 @@ internal class MmpiSessionTest {
         }
 
         repeat(TypeOfTest.Mmpi566.size) {
-            val id = answersIds.next()
             val answerResult = session.sendAnswer(
-                messageId = id,
-                data = MmpiProcess.Answer.Agree.name
+                Callback.MmpiAnswer(
+                    index = it,
+                    answer = MmpiProcess.Answer.Agree
+                )
             )
             assertTrue(answerResult is Result.Success, "$answerResult")
         }
     }
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `change answers`() = runBlocking {
         var session: MmpiSession? = null
         val questionsIds = generateSequence(0L) { it + 1 }.iterator()
@@ -101,16 +91,7 @@ internal class MmpiSessionTest {
             chatId = 2L,
             roomId = 0L,
             type = TypeOfTest.Mmpi566,
-            userConnection = object : UserConnection {
-                override fun sendMessageWithButtons(
-                    chatId: Long,
-                    text: String,
-                    buttons: List<Button>,
-                    placeButtonsVertically: Boolean
-                ): Long {
-                    return questionsIds.next()
-                }
-            },
+            userConnection = stubUserConnection(questionsIds),
         ) {
             assertEquals(session, it)
         }
@@ -120,10 +101,14 @@ internal class MmpiSessionTest {
         }
 
         session.start()
-        val answersIds = generateSequence(0L) { it + 1 }.iterator()
+        val answersIds = generateSequence(0) { it + 1 }.iterator()
 
         do {
-            val res = session.sendAnswer(answersIds.next(), Gender.Male.name)
+            val res = session.sendAnswer(
+                Callback.GenderAnswer(
+                    answer = Gender.Male
+                )
+            )
             assertTrue(res is Result.Success, "$res")
         } while (res is Result.Error)
 
@@ -133,21 +118,26 @@ internal class MmpiSessionTest {
     }
 
     private suspend fun sendAnswersToSession(
-        answersIds: Iterator<Long>,
+        answersIds: Iterator<Int>,
         session: MmpiSession,
         it: Int
     ) {
-        val id = answersIds.next()
+        val index = answersIds.next()
+
         val res = session.sendAnswer(
-            messageId = id,
-            data = MmpiProcess.Answer.Agree.name
+            Callback.MmpiAnswer(
+                index = index,
+                answer = MmpiProcess.Answer.Agree
+            )
         )
         assertTrue(res is Result.Success, "$res")
 
         if (it % 2 == 0) {//edit given answer
             session.sendAnswer(
-                messageId = id,
-                data = MmpiProcess.Answer.Disagree.name
+                Callback.MmpiAnswer(
+                    index = index,
+                    answer = MmpiProcess.Answer.Disagree
+                )
             )
         }
     }
@@ -213,4 +203,20 @@ private fun checkSessionResult(
 
     val answers = (answersResult as Result.Success).data
     assertFalse(answers.isEmpty())
+}
+
+private fun stubUserConnection(questionsIds: Iterator<Long>) = object : UserConnection {
+
+    override fun sendMessageWithButtons(
+        chatId: Long,
+        text: String,
+        buttons: List<Button>,
+        placeButtonsVertically: Boolean
+    ): Long {
+        return questionsIds.next()
+    }
+
+    override fun notifyAdmin(text: String, exception: Throwable?) {
+        exception?.apply { throw this }
+    }
 }

@@ -11,18 +11,6 @@ class LucherAnswers(
     val secondRound: List<LucherColor>
 ) : Answers(user, date) {
 
-//    constructor(
-//        user: User,
-//        date: String,
-//        firstRound: List<LucherColor>,
-//        secondRound: List<LucherColor>
-//    ) : this(user, DateFormat.FORMAT1.parse(date), firstRound, secondRound)
-
-//    override val data: Any = mapOf(
-//        "firstRound" to firstRound,
-//        "secondRound" to secondRound
-//    )
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
