@@ -201,11 +201,12 @@ class TelegramRoom(
         chatInfo: ChatInfo,
         data: String
     ) = scope.launch {
-        try {
-            val userId = chatInfo.userId
-            val messageId = chatInfo.messageId
-            val session = sessions[userId]
+        val userId: UserId = chatInfo.userId
+        val charId: ChatId = chatInfo.chatId
+        val session = sessions[userId]
+        val messageId = chatInfo.messageId
 
+        try {
             when (val callback = Callback.fromString(data)) {
                 is Callback.GenderAnswer, is Callback.LucherAnswer, is Callback.MmpiAnswer -> {
                     session?.sendAnswer(callback, messageId)
@@ -222,7 +223,7 @@ class TelegramRoom(
             val userId = chatInfo.userId
             userConnection.notifyAdmin("callbackQuery()", exception = e)
             removeSession(userId)
-            userConnection.cleanUp()
+            userConnection.cleanUp(charId, session?.state?.messageIds)
         }
     }
 

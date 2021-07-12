@@ -57,13 +57,21 @@ class MmpiSession(
 
     private suspend fun waitForGenderChosen(): Gender {
         val gChannel = Channel<Gender>(1)
+
         onAnswer = { callback: Callback, messageId: MessageId? ->
             callback as Callback.GenderAnswer
-
             onAnswer = null
 
+            val index = Gender.values().indexOfFirst {
+                it == callback.answer
+            }
             messageId?.let {
-                userConnection.highlightAnswer(it, callback)
+                userConnection.highlightAnswer(
+                    messageId = messageId,
+                    chatId = chatId,
+                    buttons = genderButtons(),
+                    buttonToHighLight = index
+                )
             }
             gChannel.offer(callback.answer)
             Result.Success(0)
@@ -81,8 +89,18 @@ class MmpiSession(
 
         onAnswer = { callback: Callback, messageId: MessageId? ->
             callback as Callback.MmpiAnswer
-            userConnection.highlightAnswer(messageId, callback)
 
+            val question = ongoingProcess.questions[callback.index]
+
+            val index = question.options.indexOfFirst {
+                it.tag == callback.answer.name
+            }
+            userConnection.highlightAnswer(
+                messageId = messageId,
+                chatId = chatId,
+                buttons = mmpiButtons(question),
+                buttonToHighLight = index
+            )
             ongoingProcess.submitAnswer(
                 callback.index, callback.answer
             )
@@ -109,7 +127,6 @@ class MmpiSession(
         state.answers
             .filterIsInstance(Callback.MmpiAnswer::class.java)
             .maxOfOrNull { it.index }
-
 
         ongoingProcess?.setNextQuestionIndex(state.answers.size - 1)
     }
@@ -143,8 +160,9 @@ class MmpiSession(
             resultLink = resultFolder.data,
             userConnection = userConnection
         )
-        userConnection.cleanUp()
+        userConnection.cleanUp(chatId, state.messageIds)
         onEndedCallback(this)
+
         testingCallback?.invoke(ongoingProcess.answers.values.toList())
     }
 

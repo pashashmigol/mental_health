@@ -55,7 +55,12 @@ class LucherSession(
     private suspend fun executeTesting(user: User, chatId: Long) {
 
         val firstRoundAnswers = runRound(chatId, userConnection)
-        askUserToWaitBeforeSecondRound(chatId, minutes = LUCHER_TEST_TIMEOUT, userConnection)
+        askUserToWaitBeforeSecondRound(
+            chatId,
+            minutes = LUCHER_TEST_TIMEOUT,
+            sessionState = state,
+            userConnection = userConnection
+        )
         val secondRoundAnswers = runRound(chatId, userConnection)
 
         val answers = LucherAnswers(
@@ -84,7 +89,7 @@ class LucherSession(
     ): List<LucherColor> {
 
         val shownOptions: MutableList<LucherColor> = LucherColor.values().toMutableList()
-        userConnection?.sendMessageWithLucherColors(chatId, LucherColor.values())
+        userConnection?.sendMessagesWithLucherColors(chatId, LucherColor.values())
 
         userConnection?.sendMessageWithButtons(
             chatId = chatId,
@@ -111,7 +116,10 @@ class LucherSession(
 
             if (allColorsChosen(answers)) {
                 onColorChosen = null
-                userConnection?.cleanUp()
+                userConnection?.cleanUp(
+                    chatId = chatId,
+                    messageIds = state.messageIds
+                )
                 channel.offer(Unit)
             }
         }
@@ -122,13 +130,14 @@ class LucherSession(
     }
 
     private val mutex = Mutex()
-//    override suspend fun onAnswer(messageId: Long, data: String): Result<Unit> {
+
+    //    override suspend fun onAnswer(messageId: Long, data: String): Result<Unit> {
     override suspend fun onAnswer(callback: Callback, messageId: MessageId?): Result<Unit> {
         mutex.withLock {
             var limit = 1000
             while (onColorChosen == null) {
                 limit--
-                if(limit == 0){
+                if (limit == 0) {
                     return Result.Error("timeout")
                 }
                 delay(1)

@@ -7,9 +7,6 @@ import models.Answers
 import models.User
 
 import storage.CentralDataStorage
-import telegram.Button
-import telegram.LaunchMode
-import telegram.UserConnection
 
 import Result
 import com.soywiz.klock.DateTimeTz
@@ -17,7 +14,7 @@ import lucher.LucherAnswers
 import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import telegram.Callback
+import telegram.*
 import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 2L
@@ -100,9 +97,10 @@ private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
             return 0
         }
 
-        override fun notifyAdmin(text: String, exception: Throwable?) {
+        override fun notifyAdmin(text: String, exception: Throwable?): MessageId {
             println(text)
             exception?.let { fail(it) }
+            return -1L
         }
     },
     onEndedCallback = {

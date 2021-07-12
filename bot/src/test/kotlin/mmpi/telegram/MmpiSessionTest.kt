@@ -216,7 +216,8 @@ private fun stubUserConnection(questionsIds: Iterator<Long>) = object : UserConn
         return questionsIds.next()
     }
 
-    override fun notifyAdmin(text: String, exception: Throwable?) {
+    override fun notifyAdmin(text: String, exception: Throwable?): MessageId {
         exception?.apply { throw this }
+        return -1L
     }
 }

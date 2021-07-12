@@ -1,7 +1,6 @@
 package telegram
 
 import lucher.LucherColor
-import java.lang.Exception
 
 interface UserConnection {
     fun sendMessageWithButtons(
@@ -9,28 +8,24 @@ interface UserConnection {
         text: String,
         buttons: List<Button>,
         placeButtonsVertically: Boolean = true
-    ): Long = 0
+    ): MessageId = -1L
 
     fun sendMessage(
         chatId: Long,
         text: String,
-        removeWhenSessionIsOver: Boolean = true
-    ) {
-    }
+    ): MessageId = -1L
 
     fun notifyAdmin(
         text: String,
         exception: Throwable? = null
-    ) {
-    }
+    ): MessageId = -1L
 
     fun updateMessage(
         chatId: Long,
         messageId: Long,
         text: String,
         buttons: List<Button>
-    ) {
-    }
+    ): MessageId = -1L
 
     fun removeMessage(chatId: Long, messageId: Long) {}
 
@@ -39,28 +34,26 @@ interface UserConnection {
         messageId: MessageId?,
         buttons: MutableList<Button>,
         placeButtonsVertically: Boolean = true
-    ) {
-    }
+    ): MessageId = -1L
 
     fun sendMessageWithLucherColor(
         chatId: Long,
         color: LucherColor
-    ) {
-    }
+    ): MessageId = -1L
 
-    fun cleanUp() {}
+    fun cleanUp(chatId: ChatId, messageIds: List<MessageId>?) {}
 
     fun highlightAnswer(
         messageId: MessageId?,
-        answer: Callback
-    ) {
-    }
+        chatId: ChatId,
+        buttons: List<Button>,
+        buttonToHighLight: Int
+    ): MessageId = -1L
 
-    fun sendMessageWithLucherColors(
+    fun sendMessagesWithLucherColors(
         chatId: Long,
         colors: Array<LucherColor>
-    ) {
-    }
+    ): List<MessageId> = listOf()
 
     fun pause() {}
 

@@ -10,9 +10,16 @@ class SessionState(
     val chatId: Long
 ) {
     val answers: List<Callback> = mutableListOf()
-
     fun addAnswer(callback: Callback) {
         (answers as MutableList).add(callback)
+    }
+
+    val messageIds: List<MessageId> = mutableListOf()
+    fun addMessageId(messageId: MessageId) {
+        (messageIds as MutableList).add(messageId)
+    }
+    fun addMessageIds(messageIds: Collection<MessageId>) {
+        (messageIds as MutableList).addAll(messageIds)
     }
 
     override fun equals(other: Any?): Boolean {
