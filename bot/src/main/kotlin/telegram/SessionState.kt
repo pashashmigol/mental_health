@@ -15,11 +15,12 @@ class SessionState(
     }
 
     val messageIds: List<MessageId> = mutableListOf()
-    fun addMessageId(messageId: MessageId) {
-        (messageIds as MutableList).add(messageId)
+    fun addMessageId(messageId: MessageId?) {
+        messageId?.let { (messageIds as MutableList).add(messageId) }
     }
-    fun addMessageIds(messageIds: Collection<MessageId>) {
-        (messageIds as MutableList).addAll(messageIds)
+
+    fun addMessageIds(messageIds: Collection<MessageId>?) {
+        messageIds?.let { (this.messageIds as MutableList).addAll(messageIds) }
     }
 
     override fun equals(other: Any?): Boolean {

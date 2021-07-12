@@ -5,6 +5,7 @@ import lucher.LucherColor
 import lucher.callbackData
 import storage.CentralDataStorage.string
 import telegram.Button
+import telegram.MessageId
 import telegram.SessionState
 import telegram.UserConnection
 
@@ -16,6 +17,8 @@ suspend fun askUserToWaitBeforeSecondRound(
     userConnection: UserConnection
 ) {
     askUserToWait(chatId, minutes, userConnection)
+        .apply { sessionState.addMessageId(this) }
+
     delay(minutes * 60 * 1000L)
     userConnection.cleanUp(chatId, sessionState.messageIds)
 }
@@ -24,8 +27,8 @@ fun askUserToWait(
     chatId: Long,
     minutes: Int,
     userConnection: UserConnection
-) {
-    userConnection.sendMessage(
+): MessageId {
+    return userConnection.sendMessage(
         chatId = chatId,
         text = string("lucher_timeout", minutes)
     )

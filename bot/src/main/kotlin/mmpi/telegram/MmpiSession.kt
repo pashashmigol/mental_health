@@ -48,7 +48,8 @@ class MmpiSession(
         askGender(
             userId = sessionId,
             connection = userConnection
-        )
+        ).apply { state.addMessageId(this) }
+
         val gender = waitForGenderChosen()
         ongoingProcess = MmpiProcess(gender, type)
 
@@ -86,6 +87,7 @@ class MmpiSession(
         gender: Gender
     ) {
         lastQuestionId = sendFirstQuestion(ongoingProcess, userConnection)
+            .apply { state.addMessageId(this) }
 
         onAnswer = { callback: Callback, messageId: MessageId? ->
             callback as Callback.MmpiAnswer
@@ -108,6 +110,7 @@ class MmpiSession(
                 && ongoingProcess.isItLastAskedQuestion(callback.index)
             ) {
                 lastQuestionId = sendNextQuestion(ongoingProcess, userConnection)
+                    .apply { state.addMessageId(this) }
             }
             if (ongoingProcess.allQuestionsAreAnswered()) {
                 finishTesting(ongoingProcess, user, gender, userConnection)

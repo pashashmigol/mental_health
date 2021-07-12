@@ -18,7 +18,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import models.TypeOfTest
 
-//typealias OnUserChoseColor = (userConnection: UserConnection, callback: Callback) -> Unit
 typealias OnUserChoseColor = (callback: Callback, messageId: MessageId?) -> Unit
 
 class LucherSession(
@@ -89,18 +88,21 @@ class LucherSession(
     ): List<LucherColor> {
 
         val shownOptions: MutableList<LucherColor> = LucherColor.values().toMutableList()
+
         userConnection?.sendMessagesWithLucherColors(chatId, LucherColor.values())
+            .apply {
+                state.addMessageIds(this)
+            }
 
         userConnection?.sendMessageWithButtons(
             chatId = chatId,
             text = string("choose_color"),
             buttons = createReplyOptions(shownOptions),
-        )
+        ).let { state.addMessageId(it) }
 
         val answers = mutableListOf<LucherColor>()
         val channel = Channel<Unit>(0)//using channel to wait until all colors are chosen
 
-//        onColorChosen = { connection: UserConnection, messageId: Long, answer: String ->
         onColorChosen = { callback: Callback, messageId: MessageId? ->
             callback as Callback.LucherAnswer
             val answer = callback.answer.name
@@ -111,7 +113,8 @@ class LucherSession(
                 chatId = chatId,
                 messageId = messageId,
                 buttons = createReplyOptions(shownOptions)
-            )
+            ).let { state.addMessageId(it) }
+
             answers.add(LucherColor.valueOf(answer))
 
             if (allColorsChosen(answers)) {

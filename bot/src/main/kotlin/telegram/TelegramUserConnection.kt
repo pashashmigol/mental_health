@@ -14,11 +14,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 @InternalAPI
 class TelegramUserConnection(
     private val adminId: Long,
-//    private val sessionState: SessionState,
     private val botKeeper: () -> BotsKeeper
 ) : UserConnection {
 
-    //    private val sentMessages = mutableMapOf<Long, Message>()
     private val paused = AtomicBoolean(false)
 
     override fun sendMessageWithButtons(
@@ -53,7 +51,6 @@ class TelegramUserConnection(
     override fun sendMessage(
         chatId: Long,
         text: String,
-//        removeWhenSessionIsOver: Boolean
     ): MessageId {
         if (paused.get()) {
             return -1L
@@ -62,12 +59,6 @@ class TelegramUserConnection(
             chatId = chatId,
             text = text
         )
-//        if (removeWhenSessionIsOver) {
-//            result.first?.body()?.result?.let { message ->
-////                sentMessages[message.messageId] = message
-//                sessionState.addMessageId(message.messageId)
-//            }
-//        }
         return result.first?.body()?.result?.messageId ?: -1L
     }
 
@@ -106,11 +97,6 @@ class TelegramUserConnection(
             chatId = chatId,
             photo = color.url(),
         )
-//        result.first?.body()?.result?.let { message: Message ->
-////            sentMessages[message.messageId] = message
-//            sessionState.addMessageId(message.messageId)
-//        }
-
         return result.first?.body()?.result?.messageId ?: -1L
     }
 
@@ -135,11 +121,6 @@ class TelegramUserConnection(
             disableNotification = true,
             mediaGroup = mediaGroup,
         )
-//
-//        result.first?.body()?.result?.let { messages: Array<Message> ->
-////            sentMessages.putAll(messages.map { it.messageId to it })
-//            sessionState.addMessageIds(messages.map { it.messageId })
-//        }
 
         return result.first?.body()?.result?.map { it.messageId } ?: listOf()
     }
@@ -177,22 +158,6 @@ class TelegramUserConnection(
         if (paused.get()) {
             return -1L
         }
-//        message?.let { mes ->
-//        val buttons: List<List<InlineKeyboardButton.CallbackData>>? = mes.replyMarkup?.inlineKeyboard?.map {
-//            it.map { button ->
-//                (button as InlineKeyboardButton.CallbackData)
-//                if (button.callbackData == answer.makeString()) {
-//
-//                    InlineKeyboardButton.CallbackData(
-//                        text = button.text + " + ",
-//                        callbackData = button.callbackData
-//                    )
-//                } else {
-//                    button
-//                }
-//            }
-//        }
-
         buttons
             .mapIndexed { i: Int, button: Button ->
                 if (i == buttonToHighLight) button.copy(text = button.text + " + ") else button
@@ -227,10 +192,6 @@ class TelegramUserConnection(
             text = text,
             replyMarkup = InlineKeyboardMarkup.create(markup)
         )
-//        result.first?.body()?.result?.let { message ->
-//            sentMessages[message.messageId] = message
-//            sessionState.addMessageId(message.messageId)
-//        }
         return result.first?.body()?.result?.messageId ?: -1L
     }
 
