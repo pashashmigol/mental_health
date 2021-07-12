@@ -89,7 +89,7 @@ class LucherSession(
 
         val shownOptions: MutableList<LucherColor> = LucherColor.values().toMutableList()
 
-        userConnection?.sendMessagesWithLucherColors(chatId, LucherColor.values())
+        val colorIds: List<MessageId>? = userConnection?.sendMessagesWithLucherColors(chatId, LucherColor.values())
             .apply {
                 state.addMessageIds(this)
             }
@@ -106,6 +106,7 @@ class LucherSession(
         onColorChosen = { callback: Callback, messageId: MessageId? ->
             callback as Callback.LucherAnswer
             val answer = callback.answer.name
+            val index = callback.answer.index
 
             shownOptions.removeIf { it.name == answer }
 
@@ -114,6 +115,12 @@ class LucherSession(
                 messageId = messageId,
                 buttons = createReplyOptions(shownOptions)
             ).let { state.addMessageId(it) }
+
+            colorIds?.let {messageIds->
+                messageIds.elementAtOrNull(index)?.let { messageId ->
+                    userConnection?.removeMessage(chatId, messageId)
+                }
+            }
 
             answers.add(LucherColor.valueOf(answer))
 
