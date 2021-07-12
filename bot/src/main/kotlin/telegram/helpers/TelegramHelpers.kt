@@ -4,6 +4,7 @@ import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import models.User
+import org.apache.poi.util.StringUtil
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 import telegram.ChatInfo
@@ -25,10 +26,17 @@ fun showResult(
 
 fun CommandHandlerEnvironment.chatInfo() = ChatInfo(
     userId = message.from!!.id,
-    userName = message.from!!.firstName + " " + message.from!!.lastName,
+    userName = message.from!!.run { formatName(firstName, lastName) },
     chatId = message.chat.id,
     messageId = message.messageId
 )
+
+fun formatName(
+    firstName: String?,
+    lastName: String?
+): String {
+    return StringUtil.join(" ", firstName ?: "", lastName ?: "").trim()
+}
 
 fun CallbackQueryHandlerEnvironment.chatInfo() = ChatInfo(
     userId = callbackQuery.from.id,
