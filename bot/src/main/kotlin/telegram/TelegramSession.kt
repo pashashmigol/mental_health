@@ -35,11 +35,6 @@ abstract class TelegramSession<out T>(
 
     abstract suspend fun start()
 
-//    suspend fun sendAnswer(messageId: Long, data: String): Result<T> {
-//        state.addAnswer(messageId, data)
-//        return onAnswer(messageId, data)
-//    }
-
     suspend fun sendAnswer(callback: Callback, messageId: MessageId? = null): Result<T> {
         state.addAnswer(callback)
         return onAnswer(callback, messageId)
@@ -53,6 +48,8 @@ abstract class TelegramSession<out T>(
         state.answers.forEach {
             sendAnswer(it)
         }
+
+        this.state.addMessageIds(state.messageIds)
         userConnection.resume()
     }
 }

@@ -16,11 +16,23 @@ class SessionState(
 
     val messageIds: List<MessageId> = mutableListOf()
     fun addMessageId(messageId: MessageId?) {
-        messageId?.let { (messageIds as MutableList).add(messageId) }
+        messageId
+            ?.takeIf { messageId != NOT_SENT }
+            ?.let {
+                (messageIds as MutableList).add(messageId)
+            }
     }
 
     fun addMessageIds(messageIds: Collection<MessageId>?) {
-        messageIds?.let { (this.messageIds as MutableList).addAll(messageIds) }
+        messageIds
+            ?.filter { it != NOT_SENT }
+            ?.let { (this.messageIds as MutableList).addAll(it) }
+    }
+
+
+
+    override fun toString(): String {
+        return "SessionState(roomId=$roomId, sessionId=$sessionId, type=$type, userId=$userId, chatId=$chatId, answers=$answers)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -35,6 +47,7 @@ class SessionState(
         if (userId != other.userId) return false
         if (chatId != other.chatId) return false
         if (answers != other.answers) return false
+        if (messageIds != other.messageIds) return false
 
         return true
     }
@@ -46,12 +59,7 @@ class SessionState(
         result = 31 * result + userId.hashCode()
         result = 31 * result + chatId.hashCode()
         result = 31 * result + answers.hashCode()
+        result = 31 * result + messageIds.hashCode()
         return result
     }
-
-    override fun toString(): String {
-        return "SessionState(roomId=$roomId, sessionId=$sessionId, type=$type, userId=$userId, chatId=$chatId, answers=$answers)"
-    }
-
-
 }

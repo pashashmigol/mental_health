@@ -90,8 +90,9 @@ class LucherSession(
         val shownOptions: MutableList<LucherColor> = LucherColor.values().toMutableList()
 
         val colorIds: List<MessageId>? = userConnection?.sendMessagesWithLucherColors(chatId, LucherColor.values())
-            .apply {
-                state.addMessageIds(this)
+            .let {
+                state.addMessageIds(it)
+                it
             }
 
         userConnection?.sendMessageWithButtons(

@@ -11,6 +11,8 @@ import lucher.LucherColor
 import lucher.url
 import java.util.concurrent.atomic.AtomicBoolean
 
+const val NOT_SENT = -1L
+
 @InternalAPI
 class TelegramUserConnection(
     private val adminId: Long,
@@ -26,7 +28,7 @@ class TelegramUserConnection(
         placeButtonsVertically: Boolean
     ): Long {
         if (paused.get()) {
-            return -1L
+            return NOT_SENT
         }
 
         val options =
@@ -45,7 +47,7 @@ class TelegramUserConnection(
             text = text,
             replyMarkup = InlineKeyboardMarkup.create(options)
         )
-        return result.first?.body()?.result?.messageId ?: -1L
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
     override fun sendMessage(
@@ -53,13 +55,13 @@ class TelegramUserConnection(
         text: String,
     ): MessageId {
         if (paused.get()) {
-            return -1L
+            return NOT_SENT
         }
         val result = botKeeper().clientBot.sendMessage(
             chatId = chatId,
             text = text
         )
-        return result.first?.body()?.result?.messageId ?: -1L
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
     override fun notifyAdmin(
@@ -71,7 +73,7 @@ class TelegramUserConnection(
             message = text,
             exception = exception
         )
-        return result.first?.body()?.result?.messageId ?: -1L
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
     override fun cleanUp(chatId: ChatId, messageIds: List<MessageId>?) {
@@ -89,7 +91,7 @@ class TelegramUserConnection(
         color: LucherColor
     ): MessageId {
         if (paused.get()) {
-            return -1L
+            return NOT_SENT
         }
         val result = botKeeper().clientBot.sendPhoto(
             caption = "${color.index} - ${color.name}",
@@ -97,7 +99,7 @@ class TelegramUserConnection(
             chatId = chatId,
             photo = color.url(),
         )
-        return result.first?.body()?.result?.messageId ?: -1L
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
     override fun sendMessagesWithLucherColors(
@@ -132,7 +134,7 @@ class TelegramUserConnection(
         placeButtonsVertically: Boolean
     ): MessageId {
         if (paused.get()) {
-            return -1L
+            return NOT_SENT
         }
         val options =
             if (placeButtonsVertically) {
@@ -146,7 +148,7 @@ class TelegramUserConnection(
             messageId = messageId,
             replyMarkup = InlineKeyboardMarkup.create(options)
         )
-        return result.first?.body()?.result?.messageId ?: -1L
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
     override fun highlightAnswer(
@@ -156,7 +158,7 @@ class TelegramUserConnection(
         buttonToHighLight: Int
     ): MessageId {
         if (paused.get()) {
-            return -1L
+            return NOT_SENT
         }
         buttons
             .mapIndexed { i: Int, button: Button ->
@@ -170,7 +172,7 @@ class TelegramUserConnection(
                     messageId = messageId,
                     replyMarkup = InlineKeyboardMarkup.create(it)
                 )
-                return result.first?.body()?.result?.messageId ?: -1L
+                return result.first?.body()?.result?.messageId ?: NOT_SENT
             }
     }
 
@@ -181,7 +183,7 @@ class TelegramUserConnection(
         buttons: List<Button>
     ): MessageId {
         if (paused.get()) {
-            return -1L
+            return NOT_SENT
         }
         val markup = buttons.map {
             InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())
@@ -192,7 +194,7 @@ class TelegramUserConnection(
             text = text,
             replyMarkup = InlineKeyboardMarkup.create(markup)
         )
-        return result.first?.body()?.result?.messageId ?: -1L
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
     override fun pause() {

@@ -80,7 +80,8 @@ class MmpiSession(
         return gChannel.receive()
     }
 
-    private var lastQuestionId = -1L
+    private var lastQuestionId = NOT_SENT
+
     private suspend fun collectAllAnswers(
         ongoingProcess: MmpiProcess,
         user: User,
@@ -115,7 +116,7 @@ class MmpiSession(
             if (ongoingProcess.allQuestionsAreAnswered()) {
                 finishTesting(ongoingProcess, user, gender, userConnection)
             }
-            Result.Success(messageId ?: -1L)
+            Result.Success(messageId ?: NOT_SENT)
         }
     }
 

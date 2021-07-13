@@ -18,6 +18,7 @@ import models.User
 import telegram.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
+import java.util.stream.Collectors.toList
 
 
 private const val USERS = "users_info"
@@ -271,6 +272,9 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
             sessionId = sessionMap["sessionId"] as SessionId,
             type = TypeOfTest.valueOf(sessionMap["type"] as String)
         )
+
+        (sessionMap["messageIds"] as? ArrayList<Long>)
+            ?.apply { sessionState.addMessageIds(this) }
 
         (sessionMap["answers"] as? ArrayList<HashMap<String, Any>>)
             ?.forEach {

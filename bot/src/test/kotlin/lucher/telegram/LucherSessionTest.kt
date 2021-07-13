@@ -100,7 +100,7 @@ private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
         override fun notifyAdmin(text: String, exception: Throwable?): MessageId {
             println(text)
             exception?.let { fail(it) }
-            return -1L
+            return NOT_SENT
         }
     },
     onEndedCallback = {

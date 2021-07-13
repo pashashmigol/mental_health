@@ -8,24 +8,24 @@ interface UserConnection {
         text: String,
         buttons: List<Button>,
         placeButtonsVertically: Boolean = true
-    ): MessageId = -1L
+    ): MessageId = NOT_SENT
 
     fun sendMessage(
         chatId: Long,
         text: String,
-    ): MessageId = -1L
+    ): MessageId = NOT_SENT
 
     fun notifyAdmin(
         text: String,
         exception: Throwable? = null
-    ): MessageId = -1L
+    ): MessageId = NOT_SENT
 
     fun updateMessage(
         chatId: Long,
         messageId: Long,
         text: String,
         buttons: List<Button>
-    ): MessageId = -1L
+    ): MessageId = NOT_SENT
 
     fun removeMessage(chatId: Long, messageId: Long) {}
 
@@ -34,12 +34,12 @@ interface UserConnection {
         messageId: MessageId?,
         buttons: MutableList<Button>,
         placeButtonsVertically: Boolean = true
-    ): MessageId = -1L
+    ): MessageId = NOT_SENT
 
     fun sendMessageWithLucherColor(
         chatId: Long,
         color: LucherColor
-    ): MessageId = -1L
+    ): MessageId = NOT_SENT
 
     fun cleanUp(chatId: ChatId, messageIds: List<MessageId>?) {}
 
@@ -48,7 +48,7 @@ interface UserConnection {
         chatId: ChatId,
         buttons: List<Button>,
         buttonToHighLight: Int
-    ): MessageId = -1L
+    ): MessageId = NOT_SENT
 
     fun sendMessagesWithLucherColors(
         chatId: Long,

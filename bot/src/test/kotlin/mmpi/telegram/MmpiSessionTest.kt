@@ -218,6 +218,6 @@ private fun stubUserConnection(questionsIds: Iterator<Long>) = object : UserConn
 
     override fun notifyAdmin(text: String, exception: Throwable?): MessageId {
         exception?.apply { throw this }
-        return -1L
+        return NOT_SENT
     }
 }
