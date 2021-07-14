@@ -17,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import models.TypeOfTest
+import storage.Folder
 
 typealias OnUserChoseColor = (callback: Callback, messageId: MessageId?) -> Unit
 
@@ -75,11 +76,11 @@ class LucherSession(
             answers = answers,
             result = result,
             saveAnswers = true
-        ) as Result.Success
+        ) as Result.Success<Folder>
 
         onEndedCallback(this)
 
-        showResult(user, folderLink.data, userConnection)
+        showResult(user, folderLink.data.link, userConnection)
     }
 
     private suspend fun runRound(

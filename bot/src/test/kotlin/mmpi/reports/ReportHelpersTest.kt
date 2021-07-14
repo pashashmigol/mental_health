@@ -28,7 +28,12 @@ internal class ReportHelpersTest {
         )
 
         val report = generateHtml(
-            user = User(id = 0, name = "Pasha Shmyhol"),
+            user = User(
+                id = 0,
+                name = "Pasha Shmyhol",
+                googleDriveFolderUrl = "",
+                googleDriveFolderId = ""
+            ),
             questions = listOf(),
             answers = listOf(),
             result = mmpiResult

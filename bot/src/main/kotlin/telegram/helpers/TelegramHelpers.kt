@@ -51,7 +51,7 @@ fun showUsersList(
 ) {
     val text = CentralDataStorage.usersStorage
         .allUsers()
-        .joinToString("/n") { "${it.name}: ${it.googleDriveFolder}" }
+        .joinToString("/n") { "${it.name}: ${it.googleDriveFolderUrl}" }
 
     bot.sendMessage(
         chatId = userId,

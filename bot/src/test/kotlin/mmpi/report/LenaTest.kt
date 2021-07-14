@@ -1,9 +1,7 @@
 package mmpi.report
 
-import com.soywiz.klock.DateTimeTz
 import kotlinx.coroutines.runBlocking
 import mmpi.*
-import models.TypeOfTest
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.BeforeAll
@@ -11,9 +9,7 @@ import org.junit.jupiter.api.TestInstance
 import storage.CentralDataStorage
 
 import models.User
-import org.junit.jupiter.api.Assertions.assertTrue
 import telegram.LaunchMode
-import Result
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LenaTest {
@@ -35,16 +31,12 @@ internal class LenaTest {
             246, 249, 254, 256, 263, 269, 270, 272, 274, 282, 283, 284, 285, 293, 296, 298, 300, 301, 306, 312, 317,
             318, 319, 322, 323, 330, 340, 341, 347, 348, 349, 352, 358, 359, 360, 361, 362, 363, 370, 374, 377
         )
-
-        val lena = User(id = 111, name = "Lena", googleDriveFolder = "")
-
-        val mmpiAnswers = MmpiAnswers(
-            user = lena,
-            date = DateTimeTz.nowLocal(),
-            gender = Gender.Female,
-            answersList = answersList
+        val lena = User(
+            id = 111,
+            name = "LenaTest",
+            googleDriveFolderUrl = "",
+            googleDriveFolderId = ""
         )
-
         val result = calculateMmpi(
             answers = answersList,
             scales = CentralDataStorage.mmpi377Data.scales(Gender.Female)
@@ -55,16 +47,6 @@ internal class LenaTest {
             answers = answersList,
             result = result
         )
-        assertTrue(CentralDataStorage.saveMmpi(
-            user = lena,
-            typeOfTest = TypeOfTest.Mmpi377,
-            result = result,
-            questions = listOf(),
-            answers = mmpiAnswers,
-            saveAnswers = true
-        ) is Result.Success)
         println(report)
-
-        CentralDataStorage.usersStorage.clearUser(lena)
     }
 }

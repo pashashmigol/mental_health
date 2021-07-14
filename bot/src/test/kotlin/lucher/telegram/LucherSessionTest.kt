@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Assertions.*
 import telegram.*
 import java.util.concurrent.TimeUnit
 
-const val LUCHER_SESSION_TEST_USER_ID = 2L
+const val LUCHER_SESSION_TEST_USER_ID = 444L
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LucherSessionTest {
@@ -30,17 +30,20 @@ internal class LucherSessionTest {
             testingMode = true
         )
 
-        CentralDataStorage.createUser(LUCHER_SESSION_TEST_USER_ID, "LucherSessionTest User")
+        val res = CentralDataStorage.createUser(LUCHER_SESSION_TEST_USER_ID, "LucherSessionTest User")
+        assertTrue(res is Result.Success<Unit>)
+
         testUser = CentralDataStorage.usersStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!
     }
 
     @AfterAll
     fun cleanUp() = runBlocking {
-        CentralDataStorage.usersStorage.clearUser(testUser)
+        CentralDataStorage.deleteUser(testUser)
+        Unit
     }
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+//    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `basic case`() = runBlocking {
 
         val resultChannel = Channel<Unit>(2)

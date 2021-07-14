@@ -31,7 +31,12 @@ internal class LucherPdfReportKtTest {
         File("build", "test-results").mkdir()
         File("build/test-results", "pdf").mkdir()
 
-        val user = User(id = -1, name = "Test User", googleDriveFolder = "")
+        val user = User(
+            id = -1,
+            name = "Test User",
+            googleDriveFolderUrl = "",
+            googleDriveFolderId = ""
+        )
 
         val answers = LucherAnswers(
             user = user,

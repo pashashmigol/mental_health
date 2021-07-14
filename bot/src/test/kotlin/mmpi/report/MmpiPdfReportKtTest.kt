@@ -51,7 +51,12 @@ internal class MmpiPdfReportKtTest {
             pdfFile.createNewFile()
             assertTrue(pdfFile.exists())
 
-            val user = User(id = -1, name = "Test User", googleDriveFolder = "")
+            val user = User(
+                id = -1,
+                name = "Test User",
+                googleDriveFolderUrl = "",
+                googleDriveFolderId = ""
+            )
 
             val mmpiAnswers = MmpiAnswers(
                 user = user,

@@ -18,7 +18,6 @@ import models.User
 import telegram.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
-import java.util.stream.Collectors.toList
 
 
 private const val USERS = "users_info"
@@ -101,7 +100,7 @@ class UsersStorage(database: FirebaseDatabase) {
 
     fun hasUserWithId(userId: Long) = users.containsKey(userId)
 
-    suspend fun addUser(user: User): Result<Unit> {
+    suspend fun saveUser(user: User): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
         users[user.id] = user
 
@@ -130,7 +129,8 @@ class UsersStorage(database: FirebaseDatabase) {
             put("user", HashMap<String, Any>().apply {
                 put("id", answers.user.id)
                 put("name", answers.user.name)
-                put("googleDriveFolder", answers.user.googleDriveFolder)
+                put("googleDriveFolder", answers.user.googleDriveFolderUrl)
+                put("googleDriveFolderId", answers.user.googleDriveFolderId)
             })
             put("answersList", answers.answersList.map { it.name })
         }
@@ -159,7 +159,8 @@ class UsersStorage(database: FirebaseDatabase) {
             put("user", HashMap<String, Any>().apply {
                 put("id", answers.user.id)
                 put("name", answers.user.name)
-                put("googleDriveFolder", answers.user.googleDriveFolder)
+                put("googleDriveFolder", answers.user.googleDriveFolderUrl)
+                put("googleDriveFolderId", answers.user.googleDriveFolderId)
             })
             put("firstRound", answers.firstRound.map { it.name })
             put("secondRound", answers.secondRound.map { it.name })
@@ -179,7 +180,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun clearUser(user: User) {
+    suspend fun clearUser(user: User) : Result<Unit> {
         val resultChannel = Channel<Unit>(3)
         usersMmpiAnswersRef
             .child(user.id.toString())
@@ -201,6 +202,7 @@ class UsersStorage(database: FirebaseDatabase) {
             }
 
         resultChannel.receive()
+        return Result.Success(Unit)
     }
 
     suspend fun getUserAnswers(user: User): Result<List<Answers>> {
@@ -309,7 +311,8 @@ private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswers> {
             User(
                 id = it["id"] as Long,
                 name = it["name"] as String,
-                googleDriveFolder = it["googleDriveFolder"] as String
+                googleDriveFolderId = it["googleDriveFolderId"] as String,
+                googleDriveFolderUrl = it["googleDriveFolder"] as String
             )
         }
         val date: DateTimeTz = (answersMap["date"] as String).let {
@@ -344,7 +347,8 @@ private fun parseLucherAnswers(snapshot: DataSnapshot?): List<LucherAnswers> {
             User(
                 id = it["id"] as Long,
                 name = it["name"] as String,
-                googleDriveFolder = it["googleDriveFolder"] as String
+                googleDriveFolderId = it["googleDriveFolderId"] as String,
+                googleDriveFolderUrl = it["googleDriveFolder"] as String
             )
         }
         val date: DateTimeTz = (answersMap["date"] as String).let {

@@ -33,9 +33,10 @@ internal class MmpiSessionTest {
         testUser = CentralDataStorage.usersStorage.getUser(MMPI_SESSION_TEST_USER_ID)!!
     }
 
-    @AfterEach
+    @AfterAll
     fun cleanUp() = runBlocking {
-        CentralDataStorage.usersStorage.clearUser(testUser)
+        CentralDataStorage.deleteUser(testUser)
+        Unit
     }
 
     @Test
@@ -177,7 +178,12 @@ private fun checkState(answers: List<MmpiProcess.Answer>, session: MmpiSession?)
     assertEquals(session.type, TypeOfTest.Mmpi566)
 
     val restoredSession = MmpiSession(
-        user = User(id = 0, name = "", googleDriveFolder = ""),
+        user = User(
+            id = 0,
+            name = "",
+            googleDriveFolderUrl = "",
+            googleDriveFolderId = ""
+        ),
         chatId = 1L,
         roomId = sessionState.sessionId,
         type = sessionState.type,

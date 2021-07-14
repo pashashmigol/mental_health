@@ -21,6 +21,8 @@ import telegram.LaunchMode
 
 typealias Link = String
 
+data class Folder(val id: String, val link: String)
+
 object CentralDataStorage {
     private lateinit var connection: GoogleDriveConnection
     private lateinit var fonts: PdfFonts
@@ -69,16 +71,24 @@ object CentralDataStorage {
         return messages.getString(key)
     }
 
-    suspend fun createUser(userId: Long, userName: String) {
-        val (folderId, reportsFolderLink) = _reportsStorage.createFolder(userId.toString())
-        giveAccess(folderId, connection)
+    suspend fun createUser(userId: Long, userName: String) : Result<Unit> {
+        val folder = (_reportsStorage.createUserFolder(userId.toString()) as Result.Success<Folder>).data
+
+        giveAccess(folder.id, connection)
 
         val user = User(
             id = userId,
             name = userName,
-            googleDriveFolder = reportsFolderLink
+            googleDriveFolderUrl = folder.link,
+            googleDriveFolderId = folder.id
         )
-        _usersStorage.addUser(user)
+       return _usersStorage.saveUser(user)
+    }
+
+
+    suspend fun deleteUser(user: User) : Result<Unit> {
+        deleteFolder(user.googleDriveFolderId, connection)
+        return _usersStorage.clearUser(user)
     }
 
     suspend fun saveMmpi(
@@ -88,7 +98,7 @@ object CentralDataStorage {
         questions: List<Question>,
         answers: MmpiAnswers,
         saveAnswers: Boolean
-    ): Result<Link> {
+    ): Result<Folder> {
         if (saveAnswers) {
             usersStorage.saveAnswers(answers).dealWithError {
                 return it
@@ -99,7 +109,7 @@ object CentralDataStorage {
             answers = answers,
             result = result,
         )
-        return reportsStorage.saveMmpi(user.id, pdfStr, typeOfTest)
+        return reportsStorage.saveMmpi(user, pdfStr, typeOfTest)
     }
 
     suspend fun saveLucher(
@@ -107,7 +117,7 @@ object CentralDataStorage {
         answers: LucherAnswers,
         result: LucherResult,
         saveAnswers: Boolean
-    ): Result<Link> {
+    ): Result<Folder> {
         if (saveAnswers) {
             usersStorage.saveAnswers(answers).dealWithError {
                 return it
@@ -118,6 +128,6 @@ object CentralDataStorage {
             answers = answers,
             result = result
         )
-        return reportsStorage.saveLucher(user.id, bytes)
+        return reportsStorage.saveLucher(user, bytes)
     }
 }

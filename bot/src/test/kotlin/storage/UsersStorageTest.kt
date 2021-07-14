@@ -41,7 +41,7 @@ internal class UsersStorageTest {
     @Test
     @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `mmpi answers saving`() = runBlocking {
-        val user = createUser(111L, "Pasha")
+        val user = createUser(333L, "mmpi answers saving")
 
         val mockAnswers = createMmpiAnswers(user, Gender.Female)
         val saveResult = CentralDataStorage.usersStorage.saveAnswers(mockAnswers)
@@ -52,14 +52,14 @@ internal class UsersStorageTest {
             .data.first()
 
         assertEquals(mockAnswers, receivedAnswers)
-
-        CentralDataStorage.usersStorage.clearUser(user)
+        CentralDataStorage.deleteUser(user)
+        Unit
     }
 
     @Test
     @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `Lucher answers saving`() = runBlocking {
-        val user = createUser(222L, "Pasha")
+        val user = createUser(222L, "Lucher answers saving")
 
         val mockAnswers = createLucherAnswers(user)
         val saveResult = CentralDataStorage.usersStorage.saveAnswers(mockAnswers)
@@ -70,8 +70,8 @@ internal class UsersStorageTest {
             .data[0]
 
         assertEquals(mockAnswers, receivedAnswers)
-
-        CentralDataStorage.usersStorage.clearUser(user)
+        CentralDataStorage.deleteUser(user)
+        Unit
     }
 
     @Test
@@ -88,9 +88,7 @@ internal class UsersStorageTest {
 
     private suspend fun createUser(userId: Long, userName: String): User {
         CentralDataStorage.createUser(userId, userName)
-
         checkUser(userId, userName)
-        CentralDataStorage.reload()
 
         delay(1000)
         return checkUser(userId, userName)

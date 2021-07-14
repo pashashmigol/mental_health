@@ -2,38 +2,39 @@ package storage
 
 import com.google.api.client.http.InputStreamContent
 import com.google.api.services.drive.model.File
-import com.google.api.services.drive.model.FileList
 import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTime
 import models.TypeOfTest
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import Result
+import Settings.ROOT_DIRECTORY_ID
+import models.User
 
 
 class ReportsStorage(private val connection: GoogleDriveConnection) {
 
     fun saveLucher(
-        userId: Long,
+        user: User,
         bytes: ByteArray,
-    ): Result<Link> {
+    ): Result<Folder> {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
         val fileName = CentralDataStorage.string("lusher_result_filename", date)
 
-        val folderLink = saveFile(
+        val folderResult = saveFile(
             fileName = fileName,
-            folderName = userId.toString(),
+            user = user,
             contentStream = ByteArrayInputStream(bytes)
         )
-        println("saveLucher(); report saved to : $folderLink")
-        return folderLink
+        println("saveLucher(); report saved to : $folderResult")
+        return folderResult
     }
 
     fun saveMmpi(
-        userId: Long,
+        user: User,
         bytes: ByteArray,
         typeOfTest: TypeOfTest
-    ): Result<Link> {
+    ): Result<Folder> {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
 
         val fileName = when (typeOfTest) {
@@ -42,49 +43,45 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
             else -> throw IllegalStateException()
         }
 
-        val folderLink = saveFile(
+        val folderResult = saveFile(
             fileName = fileName,
-            folderName = userId.toString(),
+            user = user,
             contentStream = ByteArrayInputStream(bytes)
         )
-        println("saveMmpi(); report saved to : $folderLink")
-        return folderLink
+        println("saveMmpi(); report saved to : $folderResult")
+
+        return folderResult
     }
 
     private fun saveFile(
         fileName: String,
-        folderName: String,
+        user: User,
         contentStream: InputStream
-    ): Result<Link> = try {
-        val (folderId, _) = findFolder(folderName) ?: createFolder(folderName)
-        val fileLink = createFile(fileName, folderId, contentStream)
+    ): Result<Folder> = try {
 
-        giveAccess(folderId, connection)
+        val userFolder = Folder(
+            id = user.googleDriveFolderId,
+            link = user.googleDriveFolderUrl
+        )
+        val fileLink = createFile(
+            name = fileName,
+            folderId = userFolder.id,
+            contentStream = contentStream
+        )
+        giveAccess(userFolder.id, connection)
         println("fileLink : $fileLink")
 
-        Result.Success(fileLink)
+        Result.Success(userFolder)
 
     } catch (e: Exception) {
         println("Exception : $e")
-        Result.Error("ReportsStorage.saveFile()", e)
+        Result.Error("ReportsStorage.saveFile() ${e.message}", e)
     }
 
-    private fun findFolder(name: String): Pair<String, String>? {
-        val fileList: FileList = connection.driveService.files().list()
-            .setQ("mimeType = 'application/vnd.google-apps.folder' and name = '$name'")
-            .setSpaces("drive")
-            .setFields("nextPageToken, files(id, name, webViewLink)")
-            .execute()
-
-        if (fileList.files.isEmpty()) return null
-
-        val folder = fileList.files.first()
-        return Pair(folder.id, folder.webViewLink)
-    }
-
-    fun createFolder(name: String): Pair<String, String> {
+    fun createUserFolder(userName: String): Result<Folder> {
         val folderMetadata = File()
-        folderMetadata.name = name
+        folderMetadata.name = userName
+        folderMetadata.parents = listOf(ROOT_DIRECTORY_ID)
         folderMetadata.mimeType = "application/vnd.google-apps.folder"
 
         val folder = connection.driveService.files()
@@ -94,7 +91,7 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
 
         println("Folder ID: " + folder.id)
 
-        return Pair(folder.id, folder.webViewLink)
+        return Result.Success(Folder(folder.id, folder.webViewLink))
     }
 
     private fun createFile(name: String, folderId: String, contentStream: InputStream): Link {

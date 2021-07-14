@@ -24,9 +24,16 @@ internal fun giveAccess(folderId: String, connection: GoogleDriveConnection) {
 
     permission.permissionDetails = listOf(details)
 
-    val result = connection.driveService.permissions()
+    val result: Permission = connection.driveService.permissions()
         .create(folderId, permission)
         .execute()
 
     println("result : $result")
+}
+
+internal fun deleteFolder(folderId: String, connection: GoogleDriveConnection){
+    connection.driveService
+        .files()
+        .delete(folderId)
+        .execute()
 }

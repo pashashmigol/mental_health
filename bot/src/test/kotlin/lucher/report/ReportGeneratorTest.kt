@@ -25,7 +25,12 @@ internal class ReportGeneratorTest {
     @Test
     fun generateReport() {
         val answers = LucherAnswers(
-            user = User(id = 0),
+            user = User(
+                id = 0,
+                name = "ReportGeneratorTest",
+                googleDriveFolderUrl = "",
+                googleDriveFolderId = ""
+            ),
             date = DateTimeTz.nowLocal(),
             firstRound = listOf(
                 LucherColor.Red,

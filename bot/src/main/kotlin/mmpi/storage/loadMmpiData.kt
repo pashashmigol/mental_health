@@ -75,11 +75,10 @@ private fun loadScales(
         fileId = fileId,
         page = "'scales'"
     )!!
-        .filter { it.isNotEmpty() }
-        .map {
+        .filter { it.isNotEmpty() }.associate {
             val scale = toScale(it, gender)
             Pair(scale.id, scale)
-        }.toMap()
+        }
 
     return MmpiProcess.Scales(
         correctionScaleK = scalesMap["CorrectionScaleK"]!!,

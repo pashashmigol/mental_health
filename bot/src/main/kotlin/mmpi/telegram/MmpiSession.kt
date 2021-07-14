@@ -140,7 +140,7 @@ class MmpiSession(
         user: User,
         gender: Gender,
         userConnection: UserConnection,
-    ) {
+    ): Result<Unit> {
         onAnswer = null
         val result = ongoingProcess.calculateResult()
 
@@ -150,24 +150,26 @@ class MmpiSession(
             gender = gender,
             answersList = ongoingProcess.answers.values.toList()
         )
-        val resultFolder = CentralDataStorage.saveMmpi(
+        val parentFolder = CentralDataStorage.saveMmpi(
             user = user,
             typeOfTest = type,
             questions = ongoingProcess.questions,
             answers = answers,
             result = result,
             saveAnswers = true
-        ) as Result.Success
+        ).dealWithError { return it }
 
         showResult(
             user = user,
-            resultLink = resultFolder.data,
+            resultLink = parentFolder.link,
             userConnection = userConnection
         )
         userConnection.cleanUp(chatId, state.messageIds)
         onEndedCallback(this)
 
         testingCallback?.invoke(ongoingProcess.answers.values.toList())
+
+        return Result.Success(Unit)
     }
 
     private fun sendFirstQuestion(ongoingProcess: MmpiProcess, userConnection: UserConnection) =
