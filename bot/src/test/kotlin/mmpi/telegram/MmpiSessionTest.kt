@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Assertions.*
 import telegram.*
 import java.util.concurrent.TimeUnit
 
-const val MMPI_SESSION_TEST_USER_ID = 1L
+const val MMPI_SESSION_TEST_USER_ID = 555L
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MmpiSessionTest {
