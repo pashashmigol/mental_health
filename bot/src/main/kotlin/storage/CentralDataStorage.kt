@@ -71,8 +71,9 @@ object CentralDataStorage {
         return messages.getString(key)
     }
 
-    suspend fun createUser(userId: Long, userName: String) : Result<Unit> {
-        val folder = (_reportsStorage.createUserFolder(userId.toString()) as Result.Success<Folder>).data
+    suspend fun createUser(userId: Long, userName: String): Result<Unit> {
+        val folder = _reportsStorage.createUserFolder(userName)
+            .dealWithError { return it }
 
         giveAccess(folder.id, connection)
 
@@ -82,11 +83,11 @@ object CentralDataStorage {
             googleDriveFolderUrl = folder.link,
             googleDriveFolderId = folder.id
         )
-       return _usersStorage.saveUser(user)
+        return _usersStorage.saveUser(user)
     }
 
 
-    suspend fun deleteUser(user: User) : Result<Unit> {
+    suspend fun deleteUser(user: User): Result<Unit> {
         deleteFolder(user.googleDriveFolderId, connection)
         return _usersStorage.clearUser(user)
     }
