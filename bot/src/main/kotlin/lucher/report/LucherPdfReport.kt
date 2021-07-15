@@ -24,6 +24,9 @@ fun pdfReportLucher(
 
     Paragraph(answers.user.name, pdfFonts().big).let { document.add(it) }
 
+    createNumbersRow(string("first_round"), answers.firstRound).let { document.add(it) }
+    createNumbersRow(string("second_round"), answers.secondRound).let { document.add(it) }
+
     descriptionForPairs(string("stable_pairs"), result.stablePairs).let { document.add(it) }
     descriptionForPairs(string("broken_pairs"), result.brokenPairs).let { document.add(it) }
     descriptionForPairs(string("contraversed_pairs"), result.contraversedPairs).let { document.add(it) }
@@ -32,6 +35,25 @@ fun pdfReportLucher(
 
     document.close()
     return outputStream.toByteArray()
+}
+
+
+private fun createNumbersRow(header: String, colors: List<LucherColor>): Paragraph {
+    return Paragraph().apply {
+        spacingBefore = 24f
+        keepTogether = true
+
+        add(
+            Phrase().apply {
+                add(Chunk(header, pdfFonts().bold))
+                add(Chunk.TABBING)
+                colors.forEach { color ->
+                    add(Chunk.TABBING)
+                    add(createColorBox(color))
+                }
+            }
+        )
+    }
 }
 
 private fun anxietyDescription(
