@@ -21,14 +21,14 @@ enum class LucherColor(val index: Int) {
 }
 
 fun LucherColor.url(): String = when (this) {
-    LucherColor.Gray -> "https://drive.google.com/uc?export=download&id=1GuQ5B2jFD48rRVZcWjgB2VYymzZh9my1"
-    LucherColor.Blue -> "https://drive.google.com/uc?export=download&id=1FbQHlO_eycM9SVUOPkXJhEyjUzOKxEHF"
-    LucherColor.Green -> "https://drive.google.com/uc?export=download&id=12pgfDxHfe3BMZwJelx0oA8PaHrrGEL5k"
-    LucherColor.Red -> "https://drive.google.com/uc?export=download&id=16HI01RELVjYcOyW9WBH46yP435-XshJu"
-    LucherColor.Yellow -> "https://drive.google.com/uc?export=download&id=1fmoDra7KpOukr8Pveu2RabQxE618AfwC"
-    LucherColor.Violet -> "https://drive.google.com/uc?export=download&id=1RJKBMtE7A1-serZ3yT-wFFmfKieSbURw"
-    LucherColor.Brown -> "https://drive.google.com/uc?export=download&id=1QsRaeZ9KVI0GSQCF2AIGrXmUlL9sc1P0"
-    LucherColor.Black -> "https://drive.google.com/uc?export=download&id=1DHISDgiM6HPFWrDOnC09L1K9WGmTnpmX"
+    LucherColor.Gray -> "https://drive.google.com/uc?export=download&id=16-HckEnkJK65V0cY_PQm_pBdyNdY8Oo3"
+    LucherColor.Blue -> "https://drive.google.com/uc?export=download&id=1_x72xz9efKUH8mtr_z5PLPbUn7867W2z"
+    LucherColor.Green -> "https://drive.google.com/uc?export=download&id=1PqwXhKftH8RqhW0uQQkaPjEVVTlAt3jr"
+    LucherColor.Red -> "https://drive.google.com/uc?export=download&id=17mcTjWmMZ7HSTlprNJ3GcmMUgK4gGCWE"
+    LucherColor.Yellow -> "https://drive.google.com/uc?export=download&id=1_vajYGSfRPjebx7vpK7J9bDI085kYduN"
+    LucherColor.Violet -> "https://drive.google.com/uc?export=download&id=1RH9OIenFsmOT6U-xJpOSW5mGfdmzneeS"
+    LucherColor.Brown -> "https://drive.google.com/uc?export=download&id=1Hoqz5gTC4eipiOtH3pk5-JOcB5jkLaTi"
+    LucherColor.Black -> "https://drive.google.com/uc?export=download&id=1iXXodvyxt691jfo5TLl3f3XwiUs43QRp"
 }
 
 fun LucherColor.toARGB(): Int = when (this) {
