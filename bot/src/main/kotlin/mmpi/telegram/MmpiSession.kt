@@ -80,14 +80,12 @@ class MmpiSession(
         return gChannel.receive()
     }
 
-    private var lastQuestionId = NOT_SENT
-
     private suspend fun collectAllAnswers(
         ongoingProcess: MmpiProcess,
         user: User,
         gender: Gender
     ) {
-        lastQuestionId = sendFirstQuestion(ongoingProcess, userConnection)
+        sendFirstQuestion(ongoingProcess, userConnection)
             .apply { state.addMessageId(this) }
 
         onAnswer = { callback: Callback, messageId: MessageId? ->
@@ -110,7 +108,7 @@ class MmpiSession(
             if (ongoingProcess.hasNextQuestion()
                 && ongoingProcess.isItLastAskedQuestion(callback.index)
             ) {
-                lastQuestionId = sendNextQuestion(ongoingProcess, userConnection)
+                sendNextQuestion(ongoingProcess, userConnection)
                     .apply { state.addMessageId(this) }
             }
             if (ongoingProcess.allQuestionsAreAnswered()) {
@@ -122,17 +120,12 @@ class MmpiSession(
 
     override suspend fun applyState(state: SessionState) {
         super.applyState(state)
-//        lastQuestionId = state.answers.maxOfOrNull { it.messageId + 1 } ?: -1L
 
-//        lastQuestionId = state.answers
-//            .filterIsInstance(Callback.MmpiAnswer::class.java)
-//            .maxOfOrNull { (it as Callback.MmpiAnswer).index }
-
-        state.answers
+        val index: Int = state.answers
             .filterIsInstance(Callback.MmpiAnswer::class.java)
-            .maxOfOrNull { it.index }
+            .maxOfOrNull { it.index } ?: 0
 
-        ongoingProcess?.setNextQuestionIndex(state.answers.size - 1)
+        ongoingProcess?.setNextQuestionIndex(index + 1)
     }
 
     private suspend fun finishTesting(

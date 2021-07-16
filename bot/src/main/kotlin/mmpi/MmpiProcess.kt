@@ -127,16 +127,10 @@ class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
 
 private fun submitAnswer(
     state: MmpiProcess.State,
-//    messageId: Long,
     index: Int,
     answer: MmpiProcess.Answer
 ): MmpiProcess.State {
     val answers = state.answers
-
-//    if (answers.lastIndex < index) {
-//        answers.add(index, answer)
-//    } else {
-//    }
     answers[index] = answer
 
     return state.copy(
