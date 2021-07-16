@@ -55,7 +55,7 @@ fun launchClientBot(
                 )
             }
             command("saveState") {
-                telegramRoom.saveState()
+//                telegramRoom.saveState()
             }
             command("restoreState") {
                 telegramRoom.restoreState()

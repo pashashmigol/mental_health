@@ -40,7 +40,7 @@ internal class MmpiSessionTest {
     }
 
     @Test
-    @Timeout(value = 20, unit = TimeUnit.SECONDS)
+    @Timeout(value = 120, unit = TimeUnit.SECONDS)
     fun `basic case`() = runBlocking {
 
         var session: MmpiSession? = null
@@ -82,7 +82,7 @@ internal class MmpiSessionTest {
     }
 
     @Test
-    @Timeout(value = 20, unit = TimeUnit.SECONDS)
+    @Timeout(value = 120, unit = TimeUnit.SECONDS)
     fun `change answers`() = runBlocking {
         var session: MmpiSession? = null
         val questionsIds = generateSequence(0L) { it + 1 }.iterator()

@@ -41,6 +41,7 @@ class MmpiSession(
             userConnection.notifyAdmin("MmpiSession error", exception)
             userConnection.sendMessage(chatId, CentralDataStorage.string("start_again"))
         }
+        state.addToStorage()
         scope.launch(handler) { executeTesting(user) }
     }
 

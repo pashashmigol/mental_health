@@ -36,7 +36,7 @@ abstract class TelegramSession<out T>(
     abstract suspend fun start()
 
     suspend fun sendAnswer(callback: Callback, messageId: MessageId? = null): Result<T> {
-        state.addAnswer(callback)
+        state.saveAnswer(callback)
         return onAnswer(callback, messageId)
     }
 

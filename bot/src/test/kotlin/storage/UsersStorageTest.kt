@@ -7,10 +7,7 @@ import com.soywiz.klock.DateTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import models.User
-import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.TestInstance
 import telegram.LaunchMode
 import Result
 import com.soywiz.klock.DateTimeSpan
@@ -21,8 +18,9 @@ import mmpi.MmpiAnswers
 import mmpi.MmpiProcess
 import mmpi.justFewAnswers
 import models.TypeOfTest
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.Assertions.fail
 import telegram.Callback
 import telegram.SessionState
 import java.util.concurrent.TimeUnit
@@ -75,12 +73,17 @@ internal class UsersStorageTest {
     }
 
     @Test
-    @Timeout(value = 100, unit = TimeUnit.SECONDS)
+//    @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `session's states saving`() = runBlocking {
+        CentralDataStorage.usersStorage.clear()
         val originalSessions: List<SessionState> = createSessions()
-        CentralDataStorage.usersStorage.saveAllSessions(originalSessions)
+//        CentralDataStorage.usersStorage.saveAllSessions(originalSessions)
 
         val storageResult = CentralDataStorage.usersStorage.takeAllSessions()
+
+        if (storageResult is Result.Error) {
+            fail<Exception>(storageResult.exception)
+        }
         val sessionsFromStorage = (storageResult as Result.Success).data
 
         assertArrayEquals(originalSessions.toTypedArray(), sessionsFromStorage.toTypedArray())
@@ -122,29 +125,50 @@ internal class UsersStorageTest {
         )
     }
 
-    private fun createSessions(): List<SessionState> {
-        val mmpi566 = SessionState(userId = 0, chatId = 0, roomId = 0, sessionId = 0, type = TypeOfTest.Mmpi566)
-        val mmpi377 = SessionState(userId = 0, chatId = 0, roomId = 0, sessionId = 1, type = TypeOfTest.Mmpi377)
-        val lucher = SessionState(userId = 0, chatId = 0, roomId = 0, sessionId = 2, type = TypeOfTest.Lucher)
+    private suspend fun createSessions(): List<SessionState> {
+        val mmpi566 = SessionState(
+            userId = 0,
+            chatId = 0,
+            roomId = 0,
+            sessionId = 0,
+            type = TypeOfTest.Mmpi566
+        ).apply { addToStorage() }
 
+        val mmpi377 = SessionState(
+            userId = 0,
+            chatId = 0,
+            roomId = 0,
+            sessionId = 1,
+            type = TypeOfTest.Mmpi377
+        ).apply { addToStorage() }
+
+        val lucher = SessionState(
+            userId = 0,
+            chatId = 0,
+            roomId = 0,
+            sessionId = 2,
+            type = TypeOfTest.Lucher
+        ).apply { addToStorage() }
+
+//        CentralDataStorage.usersStorage.
         for (index in 0..20) {
 
-            mmpi566.addMessageId(index + 1L)
-            mmpi566.addAnswer(
+            mmpi566.saveMessageId(index + 1L)
+            mmpi566.saveAnswer(
                 Callback.MmpiAnswer(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 )
             )
-            mmpi377.addMessageId(index * 2 + 1L)
-            mmpi377.addAnswer(
+            mmpi377.saveMessageId(index * 2 + 1L)
+            mmpi377.saveAnswer(
                 Callback.MmpiAnswer(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 )
             )
-            lucher.addMessageId(index * 3 + 1L)
-            lucher.addAnswer(
+            lucher.saveMessageId(index * 3 + 1L)
+            lucher.saveAnswer(
                 Callback.LucherAnswer(
                     answer = LucherColor.Gray
                 )

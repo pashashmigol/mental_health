@@ -1,6 +1,7 @@
 package telegram
 
 import models.TypeOfTest
+import storage.CentralDataStorage
 
 class SessionState(
     val roomId: Long,
@@ -14,6 +15,19 @@ class SessionState(
         (answers as MutableList).add(callback)
     }
 
+    suspend fun addToStorage(){
+        CentralDataStorage.usersStorage.addSession(this)
+    }
+
+    suspend fun saveAnswer(callback: Callback) {
+        CentralDataStorage.usersStorage.addAnswer(
+            sessionId = this.sessionId,
+            callback = callback,
+            index = answers.size
+        )
+        (answers as MutableList).add(callback)
+    }
+
     val messageIds: List<MessageId> = mutableListOf()
     fun addMessageId(messageId: MessageId?) {
         messageId
@@ -23,13 +37,25 @@ class SessionState(
             }
     }
 
+    suspend fun saveMessageId(messageId: MessageId?) {
+        messageId
+            ?.takeIf { messageId != NOT_SENT }
+            ?.let {
+                (messageIds as MutableList).add(messageId)
+
+                CentralDataStorage.usersStorage.addMessageId(
+                    sessionId = this.sessionId,
+                    messageId = messageId,
+                    index = answers.size
+                )
+            }
+    }
+
     fun addMessageIds(messageIds: Collection<MessageId>?) {
         messageIds
             ?.filter { it != NOT_SENT }
             ?.let { (this.messageIds as MutableList).addAll(it) }
     }
-
-
 
     override fun toString(): String {
         return "SessionState(roomId=$roomId, sessionId=$sessionId, type=$type, userId=$userId, chatId=$chatId, answers=$answers)"

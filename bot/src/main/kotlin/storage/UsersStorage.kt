@@ -8,6 +8,7 @@ import com.soywiz.klock.DateTimeTz
 import com.soywiz.klock.parse
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.runBlocking
 import lucher.LucherAnswers
 import lucher.LucherColor
 import mmpi.MmpiAnswers
@@ -50,36 +51,99 @@ class UsersStorage(database: FirebaseDatabase) {
         })
     }
 
-    suspend fun saveAllSessions(sessions: List<SessionState>): Result<Unit> {
+    suspend fun addSession(
+        session: SessionState
+    ): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
-        sessions.forEach {
-            activeSessionsRef
-                .child(it.sessionId.toString())
-                .setValue(it) { error: DatabaseError?, ref: DatabaseReference ->
-                    println("saveAllSessions(); session $it, ref: $ref, error: $error")
 
-                    val result = when (error == null) {
-                        true -> Result.Success(Unit)
-                        false -> Result.Error(error.details)
-                    }
-                    resultChannel.offer(result)
+        activeSessionsRef
+            .child(session.sessionId.toString())
+            .setValue(session) { error: DatabaseError?, _: DatabaseReference ->
+                println("addSession(); session $session, error: $error")
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
                 }
-        }
+                resultChannel.offer(result)
+            }
         return resultChannel.receive()
     }
 
+    suspend fun addAnswer(
+        sessionId: SessionId,
+        callback: Callback,
+        index: Int
+    ): Result<Unit> {
+        val resultChannel = Channel<Result<Unit>>(1)
+
+        activeSessionsRef
+            .child(sessionId.toString())
+            .child("answers")
+            .child(index.toString())
+            .setValue(callback) { error: DatabaseError?, _: DatabaseReference ->
+                println("addAnswer(); callback $callback")
+
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
+                }
+                resultChannel.offer(result)
+            }
+        return resultChannel.receive()
+    }
+
+    suspend fun addMessageId(
+        sessionId: SessionId,
+        messageId: MessageId,
+        index: Int
+    ): Result<Unit> {
+        val resultChannel = Channel<Result<Unit>>(1)
+
+        activeSessionsRef
+            .child(sessionId.toString())
+            .child("messageIds")
+            .child(index.toString())
+            .setValue(messageId) { error: DatabaseError?, _: DatabaseReference ->
+                println("addMessageId($messageId);")
+
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
+                }
+                resultChannel.offer(result)
+            }
+        return resultChannel.receive()
+    }
+
+//    suspend fun saveAllSessions(sessions: List<SessionState>): Result<Unit> {
+//        val resultChannel = Channel<Result<Unit>>(1)
+//        sessions.forEach {
+//            activeSessionsRef
+//                .child(it.sessionId.toString())
+//                .setValue(it) { error: DatabaseError?, ref: DatabaseReference ->
+//                    println("saveAllSessions(); session $it, ref: $ref, error: $error")
+//
+//                    val result = when (error == null) {
+//                        true -> Result.Success(Unit)
+//                        false -> Result.Error(error.details)
+//                    }
+//                    resultChannel.offer(result)
+//                }
+//        }
+//        return resultChannel.receive()
+//    }
+
     suspend fun takeAllSessions(): Result<List<SessionState>> {
-        val resultChannel = Channel<List<SessionState>>(1)
+        val resultChannel = Channel<Result<List<SessionState>>>(1)
 
         activeSessionsRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot?) {
                 println("getUserAnswers():onDataChange(): count = ${snapshot?.childrenCount}")
                 try {
                     val sessions = parseSessions(snapshot)
-                    activeSessionsRef.removeValueAsync()
-                    resultChannel.offer(sessions)
+                    resultChannel.offer(Result.Success(sessions))
                 } catch (e: Exception) {
-                    resultChannel.close(e)
+                    resultChannel.offer(Result.Error(message = "takeAllSessions()", exception = e))
                 } finally {
                     activeSessionsRef.removeEventListener(this)
                 }
@@ -91,7 +155,36 @@ class UsersStorage(database: FirebaseDatabase) {
                 resultChannel.close()
             }
         })
-        return Result.Success(resultChannel.receive())
+        return resultChannel.receive()
+    }
+
+    suspend fun clear(): Result<Unit> {
+        val resultChannel = Channel<Result<Unit>>(1)
+        activeSessionsRef
+            .removeValue { error, ref ->
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
+                }
+                resultChannel.offer(result)
+            }
+        return resultChannel.receive()
+    }
+
+    fun removeSession(sessionId: SessionId): Result<Unit> = runBlocking {
+        val resultChannel = Channel<Result<Unit>>(1)
+        activeSessionsRef
+            .child(sessionId.toString())
+            .removeValue { error, ref ->
+                println("removeSession($sessionId) ref: $ref, error: $error")
+
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
+                }
+                resultChannel.offer(result)
+            }
+        return@runBlocking resultChannel.receive()
     }
 
     fun getUser(userId: Long) = users[userId]
@@ -180,7 +273,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun clearUser(user: User) : Result<Unit> {
+    suspend fun clearUser(user: User): Result<Unit> {
         val resultChannel = Channel<Unit>(3)
         usersMmpiAnswersRef
             .child(user.id.toString())

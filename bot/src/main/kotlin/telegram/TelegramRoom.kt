@@ -12,6 +12,8 @@ import storage.CentralDataStorage.string
 import Result
 import io.ktor.util.*
 import io.ktor.util.collections.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 import models.TypeOfTest
 
 
@@ -25,23 +27,28 @@ class TelegramRoom(
     internal val sessions = ConcurrentMap<Long, TelegramSession<*>>()
     private val scope = GlobalScope
 
-    fun saveState(): Job {
-        return scope.launch {
-            val sessionsStates = sessions.map { it.value.state }
+//    private val mutex = Mutex()
+//    fun saveState() = runBlocking {
+//        mutex.lock()
+//        try {
+//            val sessionsStates = sessions.map { it.value.state }
+//
+//            CentralDataStorage.usersStorage.saveAllSessions(sessionsStates)
+//                .dealWithError {
+//                    userConnection.notifyAdmin(
+//                        "saveState(); error = ${it.message}",
+//                        it.exception
+//                    )
+//                    return@runBlocking
+//                }
+//        } finally {
+//            mutex.unlock()
+//        }
+//    }
 
-            CentralDataStorage.usersStorage.saveAllSessions(sessionsStates)
-                .dealWithError {
-                    userConnection.notifyAdmin(
-                        "saveState(); error = ${it.message}",
-                        it.exception
-                    )
-                    return@launch
-                }
-        }
-    }
-
-    fun restoreState(): Job {
-        return scope.launch {
+    fun restoreState() = runBlocking {
+//        mutex.lock()
+//        try {
             val storedSessionStates = CentralDataStorage.usersStorage.takeAllSessions()
 
             val storedSessions = (storedSessionStates as Result.Success).data
@@ -49,32 +56,38 @@ class TelegramRoom(
                     roomId == it.roomId
                 }
                 .map { sessionState ->
-                    val userId = sessionState.userId
-                    val user = CentralDataStorage.usersStorage.getUser(userId)!!
-
-                    val session = when (sessionState.type) {
-                        Mmpi566, Mmpi377 -> MmpiSession(
-                            user = user,
-                            roomId = roomId,
-                            chatId = sessionState.chatId,
-                            type = sessionState.type,
-                            userConnection = userConnection,
-                            onEndedCallback = { removeSession(it.sessionId) }
-                        )
-                        Lucher -> LucherSession(
-                            user = user,
-                            roomId = roomId,
-                            chatId = sessionState.chatId,
-                            userConnection = userConnection,
-                            onEndedCallback = { removeSession(it.sessionId) }
-                        )
-                    }
-                    session.applyState(sessionState)
-
+                    val session = restoreSession(sessionState)
                     Pair(session.sessionId, session)
                 }
             sessions.putAll(storedSessions)
+//        } finally {
+//            mutex.unlock()
+//        }
+    }
+
+    private suspend fun restoreSession(sessionState: SessionState): TelegramSession<Any> {
+        val userId = sessionState.userId
+        val user = CentralDataStorage.usersStorage.getUser(userId)!!
+
+        val session = when (sessionState.type) {
+            Mmpi566, Mmpi377 -> MmpiSession(
+                user = user,
+                roomId = roomId,
+                chatId = sessionState.chatId,
+                type = sessionState.type,
+                userConnection = userConnection,
+                onEndedCallback = { removeSession(it.sessionId) }
+            )
+            Lucher -> LucherSession(
+                user = user,
+                roomId = roomId,
+                chatId = sessionState.chatId,
+                userConnection = userConnection,
+                onEndedCallback = { removeSession(it.sessionId) }
+            )
         }
+        session.applyState(sessionState)
+        return session
     }
 
     fun welcomeUser(
@@ -220,9 +233,8 @@ class TelegramRoom(
                 }
             }
         } catch (e: Exception) {
-            val userId = chatInfo.userId
             userConnection.notifyAdmin("callbackQuery()", exception = e)
-            removeSession(userId)
+            removeSession(chatInfo.userId)
             userConnection.cleanUp(charId, session?.state?.messageIds)
         }
     }
@@ -265,8 +277,9 @@ class TelegramRoom(
         sessions[userId]!!.start()
     }
 
-    private fun removeSession(userId: Long) {
+    private fun removeSession(userId: SessionId) {
         userConnection.notifyAdmin("removeSession($userId)")
+        CentralDataStorage.usersStorage.removeSession(userId)
         sessions.remove(userId)
     }
 }

@@ -41,9 +41,9 @@ private fun Application.bindTToStartStopEvents(keepers: List<BotsKeeper>) {
             call.respond("Server is stopping!")
             notifyAdmins(keepers, "/_ah/stop is called")
 
-            keepers.forEach{
-                it.room.saveState()
-            }
+//            keepers.forEach{
+//                it.room.saveState()
+//            }
         }
         get("/_ah/start") {
             call.respond("Server is starting!")

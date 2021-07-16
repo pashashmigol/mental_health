@@ -37,14 +37,14 @@ internal class TelegramRoomTest {
         }
 
         assertEquals(11, originalRoom.sessions.size)
-        originalRoom.saveState()
+//        originalRoom.saveState()
 
         val restoredRoom = TelegramRoom(
             roomId = 0,
             userConnection = MockUserConnection
         )
 
-        restoredRoom.restoreState().join()
+        restoredRoom.restoreState()
         assertEquals(11, restoredRoom.sessions.size)
     }
 }

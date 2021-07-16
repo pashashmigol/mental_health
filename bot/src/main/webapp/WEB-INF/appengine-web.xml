@@ -2,10 +2,10 @@
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
     <application>mental-health-300314</application>
     <runtime>java11</runtime>
-    <threadsafe>true</threadsafe>
+    <threadsafe>false</threadsafe>
     <instance-class>B2</instance-class>
     <basic-scaling>
         <max-instances>1</max-instances>
-        <idle-timeout>10m</idle-timeout>
+        <idle-timeout>5m</idle-timeout>
     </basic-scaling>
 </appengine-web-app>

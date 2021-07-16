@@ -57,7 +57,7 @@ class LucherSession(
         val firstRoundAnswers = runRound(chatId, userConnection)
         askUserToWaitBeforeSecondRound(
             chatId,
-            minutes = LUCHER_TEST_TIMEOUT,
+            minutes = minutesBetweenRounds,
             sessionState = state,
             userConnection = userConnection
         )

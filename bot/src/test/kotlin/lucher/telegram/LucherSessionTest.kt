@@ -46,7 +46,7 @@ internal class LucherSessionTest {
 //    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `basic case`() = runBlocking {
 
-        val resultChannel = Channel<Unit>(2)
+        val resultChannel = Channel<Unit>(1)
         val lucherSession = createMockSession(resultChannel)
 
         lucherSession.start()
@@ -109,7 +109,7 @@ private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
     onEndedCallback = {
         resultChannel.offer(Unit)
     },
-    minutesBetweenRounds = 2,
+    minutesBetweenRounds = 0,
     user = CentralDataStorage.usersStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!,
     chatId = 0
 )
