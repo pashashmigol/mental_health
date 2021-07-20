@@ -26,15 +26,18 @@ data class Folder(val id: String, val link: String)
 object CentralDataStorage {
     private lateinit var connection: GoogleDriveConnection
     private lateinit var fonts: PdfFonts
+    private var testingMode: Boolean = false
 
     val lucherData get() = lucher
     val mmpi566Data get() = mmpi566
     val mmpi377Data get() = mmpi377
 
-    val usersStorage get() = _usersStorage
-    private val reportsStorage get() = _reportsStorage
+    val usersStorage get() = users
+    private val reportsStorage get() = reports
 
     fun init(launchMode: LaunchMode, testingMode: Boolean = false) {
+        this.testingMode = testingMode
+
         if (!this::connection.isInitialized) {
             connection = GoogleDriveConnection(launchMode, testingMode)
             fonts = PdfFonts(launchMode)
@@ -46,8 +49,8 @@ object CentralDataStorage {
     private lateinit var mmpi566: MmpiData
     private lateinit var mmpi377: MmpiData
 
-    private lateinit var _usersStorage: UsersStorage
-    private lateinit var _reportsStorage: ReportsStorage
+    private lateinit var users: UsersStorage
+    private lateinit var reports: ReportsStorage
 
     fun reload() {
         lucher = loadLucherData(connection)
@@ -55,8 +58,8 @@ object CentralDataStorage {
         mmpi566 = loadMmpiData(connection, Settings.MMPI_566_QUESTIONS_FILE_ID)
         mmpi377 = loadMmpiData(connection, Settings.MMPI_377_QUESTIONS_FILE_ID)
 
-        _usersStorage = UsersStorage(connection.database)
-        _reportsStorage = ReportsStorage(connection)
+        users = UsersStorage(connection.database)
+        reports = ReportsStorage(connection, testingMode)
     }
 
     private val messages: ResourceBundle = ResourceBundle.getBundle("Messages")
@@ -72,7 +75,7 @@ object CentralDataStorage {
     }
 
     suspend fun createUser(userId: Long, userName: String): Result<Unit> {
-        val folder = _reportsStorage.createUserFolder(userName)
+        val folder = reports.createUserFolder(userName)
             .dealWithError { return it }
 
         giveAccess(folder.id, connection)
@@ -83,13 +86,13 @@ object CentralDataStorage {
             googleDriveFolderUrl = folder.link,
             googleDriveFolderId = folder.id
         )
-        return _usersStorage.saveUser(user)
+        return users.saveUser(user)
     }
 
 
     suspend fun deleteUser(user: User): Result<Unit> {
         deleteFolder(user.googleDriveFolderId, connection)
-        return _usersStorage.clearUser(user)
+        return users.clearUser(user)
     }
 
     suspend fun saveMmpi(

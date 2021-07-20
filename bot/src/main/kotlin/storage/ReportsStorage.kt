@@ -9,10 +9,14 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import Result
 import Settings.ROOT_DIRECTORY_ID
+import Settings.TEST_ROOT_DIRECTORY_ID
 import models.User
 
 
-class ReportsStorage(private val connection: GoogleDriveConnection) {
+class ReportsStorage(
+    private val connection: GoogleDriveConnection,
+    private val testingMode: Boolean
+) {
 
     fun saveLucher(
         user: User,
@@ -81,8 +85,8 @@ class ReportsStorage(private val connection: GoogleDriveConnection) {
     fun createUserFolder(userName: String): Result<Folder> {
         val folderMetadata = File()
         folderMetadata.name = userName
-        folderMetadata.parents = listOf(ROOT_DIRECTORY_ID)
         folderMetadata.mimeType = "application/vnd.google-apps.folder"
+        folderMetadata.parents = if(testingMode) listOf(TEST_ROOT_DIRECTORY_ID) else listOf(ROOT_DIRECTORY_ID)
 
         val folder = connection.driveService.files()
             .create(folderMetadata)
