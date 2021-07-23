@@ -21,7 +21,7 @@ internal class MmpiPdfReportKtTest {
     @BeforeAll
     fun setup() {
         CentralDataStorage.init(
-            rootPath = LaunchMode.TESTS.rootPath,
+            launchMode = LaunchMode.TESTS,
             testingMode = true
         )
     }
@@ -51,7 +51,12 @@ internal class MmpiPdfReportKtTest {
             pdfFile.createNewFile()
             assertTrue(pdfFile.exists())
 
-            val user = User(id = -1, name = "Test User", googleDriveFolder = "")
+            val user = User(
+                id = -1,
+                name = "Test User",
+                googleDriveFolderUrl = "",
+                googleDriveFolderId = ""
+            )
 
             val mmpiAnswers = MmpiAnswers(
                 user = user,

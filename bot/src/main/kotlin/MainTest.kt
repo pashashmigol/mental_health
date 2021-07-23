@@ -1,12 +1,18 @@
+import io.ktor.util.*
 import storage.CentralDataStorage
+import telegram.BotLauncher
 import telegram.LaunchMode
-import telegram.launchBots
 
 /**
  * starts bot locally for debugging
  * */
+@InternalAPI
 fun main() {
     val launchMode = LaunchMode.LOCAL
-    CentralDataStorage.init(rootPath = launchMode.rootPath, testingMode = true)
-    launchBots(mode = launchMode, tokens = TESTING_TOKENS)
+    CentralDataStorage.init(launchMode = launchMode, testingMode = true)
+
+    BotLauncher(
+        mode = launchMode,
+        tokens = listOf(TESTING_TOKENS)
+    ).launchBots()
 }

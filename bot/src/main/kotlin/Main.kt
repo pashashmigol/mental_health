@@ -6,59 +6,32 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
 import storage.CentralDataStorage
-import telegram.BotsKeeper
-import telegram.LaunchMode
-import telegram.launchBots
-import telegram.notifyAdmin
+import telegram.*
 
 /**
  * used by App Engine to run bot on cloud
  * */
 @Suppress("unused") // Referenced in application.conf
 @KtorExperimentalAPI
+@InternalAPI
 fun Application.main() {
     val launchMode = LaunchMode.APP_ENGINE
-    CentralDataStorage.init(launchMode.rootPath)
+    CentralDataStorage.init(launchMode)
 
-    val botsKeepers = PRODUCTION_TOKENS.map { tokens ->
-        val botsKeeper = launchBots(mode = LaunchMode.APP_ENGINE, tokens)
-        Pair(botsKeeper, tokens)
-    }
+    val botLauncher = BotLauncher(
+        mode = LaunchMode.APP_ENGINE,
+        tokens = PRODUCTION_TOKENS
+    )
+    val botsKeepers = botLauncher.launchBots()
 
-    botsKeepers.forEach { (botsKeeper, tokens) ->
-        launch(botsKeeper, tokens)
-    }
+    bindToServerEvents(botsKeepers)
+    bindTelegramWebhooks(botsKeepers)
+    bindTToStartStopEvents(botsKeepers)
 }
 
-private fun Application.launch(botsKeeper: BotsKeeper, tokens: Tokens) {
-    val adminBot = botsKeeper.adminBot
 
-    environment.apply {
-        monitor.subscribe(ApplicationStarted) {
-            print("###(ApplicationStarted)")
-            adminBot.notifyAdmin(tokens.ADMIN_ID, "environment.monitor.subscribe(ApplicationStarted)")
-        }
-
-        monitor.subscribe(ApplicationStopPreparing) {
-            println("environment.monitor.subscribe(ApplicationStopPreparing)")
-            adminBot.notifyAdmin(tokens.ADMIN_ID, "environment.monitor.subscribe(ApplicationStopPreparing)")
-        }
-
-        monitor.subscribe(ApplicationStopping) {
-            println("environment.monitor.subscribe(ApplicationStopping)")
-            adminBot.notifyAdmin(tokens.ADMIN_ID, "environment.monitor.subscribe(ApplicationStopping)")
-        }
-
-        monitor.subscribe(ApplicationStopped) {
-            println("environment.monitor.subscribe(ApplicationStopping)")
-            adminBot.notifyAdmin(tokens.ADMIN_ID, "environment.monitor.subscribe(ApplicationStopped)")
-        }
-
-        LifecycleManager.getInstance().setShutdownHook {
-            print("###(setShutdownHook)")
-            adminBot.notifyAdmin(tokens.ADMIN_ID, "LifecycleManager.getInstance().setShutdownHook")
-        }
-    }
+@InternalAPI
+private fun Application.bindTToStartStopEvents(keepers: List<BotsKeeper>) {
 
     routing {
         get("/status") {
@@ -66,21 +39,67 @@ private fun Application.launch(botsKeeper: BotsKeeper, tokens: Tokens) {
         }
         get("/_ah/stop") {
             call.respond("Server is stopping!")
-            adminBot.notifyAdmin(tokens.ADMIN_ID,"/_ah/stop is called")
+            notifyAdmins(keepers, "/_ah/stop is called")
+
+//            keepers.forEach{
+//                it.room.saveState()
+//            }
         }
         get("/_ah/start") {
             call.respond("Server is starting!")
-            adminBot.notifyAdmin(tokens.ADMIN_ID,"/_ah/start is called")
+            notifyAdmins(keepers, "/_ah/start is called")
+
+            keepers.forEach{
+                it.room.restoreState()
+            }
         }
-        post("/${tokens.ADMIN}") {
-            val response = call.receiveText()
-            botsKeeper.adminBot.processUpdate(response)
-            call.respond(HttpStatusCode.OK)
+    }
+}
+
+@InternalAPI
+private fun Application.bindTelegramWebhooks(keepers: List<BotsKeeper>) {
+    routing {
+        keepers.forEach { keeper ->
+            post("/${keeper.tokens.ADMIN}") {
+                val response = call.receiveText()
+                keeper.adminBot.processUpdate(response)
+                call.respond(HttpStatusCode.OK)
+            }
+            post("/${keeper.tokens.CLIENT}") {
+                val response = call.receiveText()
+                keeper.clientBot.processUpdate(response)
+                call.respond(HttpStatusCode.OK)
+            }
         }
-        post("/${tokens.CLIENT}") {
-            val response = call.receiveText()
-            botsKeeper.clientBot.processUpdate(response)
-            call.respond(HttpStatusCode.OK)
+    }
+}
+
+@InternalAPI
+private fun Application.bindToServerEvents(keepers: List<BotsKeeper>) {
+    environment.apply {
+        monitor.subscribe(ApplicationStarted) {
+            notifyAdmins(keepers, "environment.monitor.subscribe(ApplicationStarted)")
         }
+        monitor.subscribe(ApplicationStopPreparing) {
+            notifyAdmins(keepers, "environment.monitor.subscribe(ApplicationStopPreparing)")
+        }
+        monitor.subscribe(ApplicationStopping) {
+            notifyAdmins(keepers, "environment.monitor.subscribe(ApplicationStopping)")
+        }
+        monitor.subscribe(ApplicationStopped) {
+            notifyAdmins(keepers, "environment.monitor.subscribe(ApplicationStopped)")
+        }
+        LifecycleManager.getInstance().setShutdownHook {
+            notifyAdmins(keepers, "LifecycleManager.getInstance().setShutdownHook")
+        }
+    }
+}
+
+@InternalAPI
+private fun notifyAdmins(keepers: List<BotsKeeper>, message: String) {
+    keepers.forEach { keeper ->
+        keeper.adminBot.notifyAdmin(
+            keeper.tokens.ADMIN_ID, message
+        )
     }
 }

@@ -4,25 +4,26 @@ import Gender
 import models.*
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
+import java.util.*
 
-class MmpiProcess(gender: Gender, val type: TestType) {
+class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
 
     internal data class State(
         val currentQuestionIndex: Int = -1,
         val questions: List<Question>,
-        val answers: List<Answer>,
+        val answers: SortedMap<Int, Answer>,
         val scales: Scales?
     )
 
-    private var state = when (type) {
-        TestType.Mmpi566 -> State(
+    private var state = when (typeOfTest) {
+        TypeOfTest.Mmpi566 -> State(
             questions = CentralDataStorage.mmpi566Data.questions(gender),
-            answers = emptyList(),
+            answers = sortedMapOf(),
             scales = CentralDataStorage.mmpi566Data.scales(gender)
         )
-        TestType.Mmpi377 -> State(
+        TypeOfTest.Mmpi377 -> State(
             questions = CentralDataStorage.mmpi377Data.questions(gender),
-            answers = emptyList(),
+            answers = sortedMapOf(),
             scales = CentralDataStorage.mmpi377Data.scales(gender)
         )
         else -> throw IllegalStateException()
@@ -33,21 +34,24 @@ class MmpiProcess(gender: Gender, val type: TestType) {
     val questions
         get() = state.questions
 
+    fun allQuestionsAreAnswered(): Boolean {
+        return state.answers.size == state.questions.size
+    }
+
+    fun setNextQuestionIndex(index: Int) {
+        state = state.copy(currentQuestionIndex = index)
+    }
+
+    fun submitAnswer(index: Int, answer: Answer) {
+        state = submitAnswer(state, index, answer)
+    }
+
+    fun hasNextQuestion(): Boolean = hasNextQuestion(state, typeOfTest)
 
     fun isItLastAskedQuestion(index: Int): Boolean {
         return index == state.currentQuestionIndex
     }
 
-    fun allQuestionsAreAnswered(): Boolean {
-        return state.answers.size == state.questions.size
-    }
-
-    fun submitAnswer(index: Int, answer: Answer) {
-        if (index < questions.size)
-            state = submitAnswer(state, index, answer)
-    }
-
-    fun hasNextQuestion(): Boolean = hasNextQuestion(state, type)
 
     fun nextQuestion(): Question {
         val (newState, question) = nextQuestion(state)
@@ -55,11 +59,12 @@ class MmpiProcess(gender: Gender, val type: TestType) {
         return question
     }
 
-    fun calculateResult() = calculateResult(state, type)
+    fun calculateResult() = calculateResult(state, typeOfTest)
 
     enum class Answer {
         Agree,
         Disagree;
+
         val text
             get() = when (this) {
                 Agree -> string("agree")
@@ -125,21 +130,16 @@ private fun submitAnswer(
     index: Int,
     answer: MmpiProcess.Answer
 ): MmpiProcess.State {
-    val answers = state.answers.toMutableList()
-
-    if (answers.lastIndex < index) {
-        answers.add(index, answer)
-    } else {
-        answers[index] = answer
-    }
+    val answers = state.answers
+    answers[index] = answer
 
     return state.copy(
-        answers = answers.toList()
+        answers = answers
     )
 }
 
-private fun hasNextQuestion(state: MmpiProcess.State, type: TestType): Boolean {
-    return state.currentQuestionIndex < type.size - 1
+private fun hasNextQuestion(state: MmpiProcess.State, typeOfTest: TypeOfTest): Boolean {
+    return state.currentQuestionIndex < typeOfTest.size - 1
 }
 
 private fun nextQuestion(state: MmpiProcess.State):
@@ -151,11 +151,13 @@ private fun nextQuestion(state: MmpiProcess.State):
     return Pair(newState, question)
 }
 
-private fun calculateResult(state: MmpiProcess.State, type: TestType): MmpiProcess.Result {
-    if (state.answers.size != type.size)
+private fun calculateResult(state: MmpiProcess.State, typeOfTest: TypeOfTest): MmpiProcess.Result {
+    if (state.answers.size != typeOfTest.size)
         throw RuntimeException("Not all questions are answered")
     if (state.scales == null)
         throw RuntimeException("Scales are not loaded")
 
-    return calculateMmpi(state.answers, state.scales)
+    val answers = state.answers.toSortedMap().values.toList()
+
+    return calculateMmpi(answers, state.scales)
 }

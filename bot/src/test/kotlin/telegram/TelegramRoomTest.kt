@@ -1,32 +1,63 @@
 package telegram
 
+import io.ktor.util.*
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import storage.CentralDataStorage
 
-import org.junit.jupiter.api.Assertions.*
-
+@InternalAPI
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TelegramRoomTest {
 
-    @Test
-    fun welcomeNewUser() {
+    @BeforeEach
+    fun setup() {
+        CentralDataStorage.init(
+            launchMode = LaunchMode.TESTS,
+            testingMode = true
+        )
     }
 
     @Test
-    fun launchMmpi566Test() {
-    }
+    fun `sessions saving`() = runBlocking {
+        val originalRoom = TelegramRoom(
+            roomId = 0,
+            userConnection = MockUserConnection
+        )
+        for (id in 0..10L) {
+            val chatInfo = mockChatInfo(id)
+            originalRoom.welcomeUser(
+                chatInfo = chatInfo,
+                userConnection = MockUserConnection
+            ).join()
 
-    @Test
-    fun launchMmpi377Test() {
-    }
+            originalRoom.launchMmpi377Test(chatInfo).join()
+        }
 
-    @Test
-    fun launchMmpiMockTest() {
-    }
+        assertEquals(11, originalRoom.sessions.size)
+//        originalRoom.saveState()
 
-    @Test
-    fun launchLucherTest() {
-    }
+        val restoredRoom = TelegramRoom(
+            roomId = 0,
+            userConnection = MockUserConnection
+        )
 
-    @Test
-    fun callbackQuery() {
+        restoredRoom.restoreState()
+        assertEquals(11, restoredRoom.sessions.size)
     }
+}
+
+object MockUserConnection : UserConnection {
+
+}
+
+private fun mockChatInfo(id: Long): ChatInfo {
+    return ChatInfo(
+        userId = id,
+        userName = "user $id",
+        chatId = id,
+        messageId = id
+    )
 }

@@ -1,21 +1,25 @@
 package telegram
 
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
-import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.TelegramFile
 import com.github.kotlintelegrambot.entities.inputmedia.GroupableMedia
 import com.github.kotlintelegrambot.entities.inputmedia.InputMediaPhoto
 import com.github.kotlintelegrambot.entities.inputmedia.MediaGroup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import io.ktor.util.*
 import lucher.LucherColor
 import lucher.url
+import java.util.concurrent.atomic.AtomicBoolean
 
+const val NOT_SENT = -1L
+
+@InternalAPI
 class TelegramUserConnection(
     private val adminId: Long,
     private val botKeeper: () -> BotsKeeper
 ) : UserConnection {
 
-    private val sentMessages = mutableMapOf<Long, Message>()
+    private val paused = AtomicBoolean(false)
 
     override fun sendMessageWithButtons(
         chatId: Long,
@@ -23,11 +27,19 @@ class TelegramUserConnection(
         buttons: List<Button>,
         placeButtonsVertically: Boolean
     ): Long {
+        if (paused.get()) {
+            return NOT_SENT
+        }
+
         val options =
             if (placeButtonsVertically) {
-                buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
+                buttons.map {
+                    listOf(InlineKeyboardButton.CallbackData(it.text, it.callback.makeString()))
+                }
             } else {
-                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
+                listOf(buttons.map {
+                    InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())
+                })
             }
 
         val result = botKeeper().clientBot.sendMessage(
@@ -35,43 +47,38 @@ class TelegramUserConnection(
             text = text,
             replyMarkup = InlineKeyboardMarkup.create(options)
         )
-        result.first?.body()?.result?.let { message ->
-            sentMessages[message.messageId] = message
-            return message.messageId
-        }
-        return -1
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
     override fun sendMessage(
         chatId: Long,
         text: String,
-        removeWhenSessionIsOver: Boolean
-    ) {
+    ): MessageId {
+        if (paused.get()) {
+            return NOT_SENT
+        }
         val result = botKeeper().clientBot.sendMessage(
             chatId = chatId,
             text = text
         )
-        if (removeWhenSessionIsOver) {
-            result.first?.body()?.result?.let { message ->
-                sentMessages[message.messageId] = message
-            }
-        }
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
     override fun notifyAdmin(
         text: String,
         exception: Throwable?
-    ) {
-        botKeeper().adminBot.notifyAdmin(
+    ): MessageId {
+        val result = botKeeper().adminBot.notifyAdmin(
             adminId = adminId,
             message = text,
             exception = exception
         )
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
-    override fun cleanUp() {
-        sentMessages.forEach {
-            botKeeper().clientBot.deleteMessage(it.value.chat.id, it.value.messageId)
+    override fun cleanUp(chatId: ChatId, messageIds: List<MessageId>?) {
+        messageIds?.forEach { messageId ->
+            botKeeper().clientBot.deleteMessage(chatId, messageId)
         }
     }
 
@@ -82,22 +89,26 @@ class TelegramUserConnection(
     override fun sendMessageWithLucherColor(
         chatId: Long,
         color: LucherColor
-    ) {
+    ): MessageId {
+        if (paused.get()) {
+            return NOT_SENT
+        }
         val result = botKeeper().clientBot.sendPhoto(
             caption = "${color.index} - ${color.name}",
             disableNotification = true,
             chatId = chatId,
             photo = color.url(),
         )
-        result.first?.body()?.result?.let { message ->
-            sentMessages[message.messageId] = message
-        }
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
-    override fun sendMessageWithLucherColors(
+    override fun sendMessagesWithLucherColors(
         chatId: Long,
         colors: Array<LucherColor>
-    ) {
+    ): List<MessageId> {
+        if (paused.get()) {
+            return listOf()
+        }
         val allOptions = colors.map { color ->
             InputMediaPhoto(
                 caption = "${color.index} - ${color.name}",
@@ -113,57 +124,56 @@ class TelegramUserConnection(
             mediaGroup = mediaGroup,
         )
 
-        result.first?.body()?.result?.let { messages ->
-            sentMessages.putAll(messages.map { it.messageId to it })
-        }
+        return result.first?.body()?.result?.map { it.messageId } ?: listOf()
     }
 
     override fun setButtonsForMessage(
-        chatId: Long,
-        messageId: Long,
+        chatId: ChatId,
+        messageId: MessageId?,
         buttons: MutableList<Button>,
         placeButtonsVertically: Boolean
-    ) {
+    ): MessageId {
+        if (paused.get()) {
+            return NOT_SENT
+        }
         val options =
             if (placeButtonsVertically) {
-                buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.data)) }
+                buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())) }
             } else {
-                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.data) })
+                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.callback.makeString()) })
             }
 
-        botKeeper().clientBot.editMessageReplyMarkup(
+        val result = botKeeper().clientBot.editMessageReplyMarkup(
             chatId = chatId,
             messageId = messageId,
             replyMarkup = InlineKeyboardMarkup.create(options)
         )
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
     }
 
-    override fun highlightAnswer(messageId: Long, answer: String) {
-        val message = sentMessages[messageId]
-
-        message?.let { mes ->
-            val buttons = mes.replyMarkup?.inlineKeyboard?.map {
-                it.map { button ->
-                    (button as InlineKeyboardButton.CallbackData)
-                    if (button.callbackData == answer) {
-
-                        InlineKeyboardButton.CallbackData(
-                            text = button.text + " + ",
-                            callbackData = button.callbackData
-                        )
-                    } else {
-                        button
-                    }
-                }
-            }
-            buttons?.let {
-                botKeeper().clientBot.editMessageReplyMarkup(
-                    chatId = mes.chat.id,
-                    messageId = messageId,
-                    replyMarkup = InlineKeyboardMarkup.create(buttons)
-                )
-            }
+    override fun highlightAnswer(
+        messageId: MessageId?,
+        chatId: ChatId,
+        buttons: List<Button>,
+        buttonToHighLight: Int
+    ): MessageId {
+        if (paused.get()) {
+            return NOT_SENT
         }
+        buttons
+            .mapIndexed { i: Int, button: Button ->
+                if (i == buttonToHighLight) button.copy(text = button.text + " + ") else button
+            }
+            .map { InlineKeyboardButton.CallbackData(it.text, it.callback.makeString()) }
+            .map { listOf(it) }
+            .let {
+                val result = botKeeper().clientBot.editMessageReplyMarkup(
+                    chatId = chatId,
+                    messageId = messageId,
+                    replyMarkup = InlineKeyboardMarkup.create(it)
+                )
+                return result.first?.body()?.result?.messageId ?: NOT_SENT
+            }
     }
 
     override fun updateMessage(
@@ -171,9 +181,12 @@ class TelegramUserConnection(
         messageId: Long,
         text: String,
         buttons: List<Button>
-    ) {
+    ): MessageId {
+        if (paused.get()) {
+            return NOT_SENT
+        }
         val markup = buttons.map {
-            InlineKeyboardButton.CallbackData(it.text, it.data)
+            InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())
         }
         val result = botKeeper().clientBot.editMessageText(
             chatId = chatId,
@@ -181,8 +194,14 @@ class TelegramUserConnection(
             text = text,
             replyMarkup = InlineKeyboardMarkup.create(markup)
         )
-        result.first?.body()?.result?.let { message ->
-            sentMessages[message.messageId] = message
-        }
+        return result.first?.body()?.result?.messageId ?: NOT_SENT
+    }
+
+    override fun pause() {
+        paused.set(true)
+    }
+
+    override fun resume() {
+        paused.set(false)
     }
 }

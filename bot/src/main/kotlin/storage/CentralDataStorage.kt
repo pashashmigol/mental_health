@@ -11,28 +11,36 @@ import mmpi.MmpiProcess
 import mmpi.report.pdfReportMmpi
 import mmpi.storage.loadMmpiData
 import models.Question
-import models.TestType
+import models.TypeOfTest
 import models.User
 import report.PdfFonts
 import java.util.*
 import java.text.MessageFormat
+import Result
+import telegram.LaunchMode
 
 typealias Link = String
+
+data class Folder(val id: String, val link: String)
 
 object CentralDataStorage {
     private lateinit var connection: GoogleDriveConnection
     private lateinit var fonts: PdfFonts
+    private var testingMode: Boolean = false
 
     val lucherData get() = lucher
     val mmpi566Data get() = mmpi566
     val mmpi377Data get() = mmpi377
-    val usersStorage get() = usersStorageRepository
-    private val reportsStorage get() = reportsStorageRepository
 
-    fun init(rootPath: String, testingMode: Boolean = false) {
+    val usersStorage get() = users
+    private val reportsStorage get() = reports
+
+    fun init(launchMode: LaunchMode, testingMode: Boolean = false) {
+        this.testingMode = testingMode
+
         if (!this::connection.isInitialized) {
-            connection = GoogleDriveConnection(rootPath, testingMode)
-            fonts = PdfFonts(rootPath)
+            connection = GoogleDriveConnection(launchMode, testingMode)
+            fonts = PdfFonts(launchMode)
             reload()
         }
     }
@@ -40,8 +48,9 @@ object CentralDataStorage {
     private lateinit var lucher: LucherData
     private lateinit var mmpi566: MmpiData
     private lateinit var mmpi377: MmpiData
-    private lateinit var usersStorageRepository: UsersStorage
-    private lateinit var reportsStorageRepository: ReportsStorage
+
+    private lateinit var users: UsersStorage
+    private lateinit var reports: ReportsStorage
 
     fun reload() {
         lucher = loadLucherData(connection)
@@ -49,8 +58,8 @@ object CentralDataStorage {
         mmpi566 = loadMmpiData(connection, Settings.MMPI_566_QUESTIONS_FILE_ID)
         mmpi377 = loadMmpiData(connection, Settings.MMPI_377_QUESTIONS_FILE_ID)
 
-        usersStorageRepository = UsersStorage(connection.database)
-        reportsStorageRepository = ReportsStorage(connection)
+        users = UsersStorage(connection.database)
+        reports = ReportsStorage(connection, testingMode)
     }
 
     private val messages: ResourceBundle = ResourceBundle.getBundle("Messages")
@@ -65,51 +74,64 @@ object CentralDataStorage {
         return messages.getString(key)
     }
 
-    fun createUser(userId: Long, userName: String) {
-        val (folderId, reportsFolderLink) = reportsStorageRepository.createFolder(userId.toString())
-        giveAccess(folderId, connection)
+    suspend fun createUser(userId: Long, userName: String): Result<Unit> {
+        val folder = reports.createUserFolder(userName)
+            .dealWithError { return it }
+
+        giveAccess(folder.id, connection)
 
         val user = User(
             id = userId,
             name = userName,
-            googleDriveFolder = reportsFolderLink
+            googleDriveFolderUrl = folder.link,
+            googleDriveFolderId = folder.id
         )
-        usersStorageRepository.add(user)
+        return users.saveUser(user)
     }
 
-    fun saveMmpi(
+
+    suspend fun deleteUser(user: User): Result<Unit> {
+        deleteFolder(user.googleDriveFolderId, connection)
+        return users.clearUser(user)
+    }
+
+    suspend fun saveMmpi(
         user: User,
-        type: TestType,
+        typeOfTest: TypeOfTest,
         result: MmpiProcess.Result,
         questions: List<Question>,
         answers: MmpiAnswers,
         saveAnswers: Boolean
-    ): Link {
+    ): Result<Folder> {
         if (saveAnswers) {
-            usersStorage.saveAnswers(answers)
+            usersStorage.saveAnswers(answers).dealWithError {
+                return it
+            }
         }
         val pdfStr = pdfReportMmpi(
             questions = questions,
             answers = answers,
             result = result,
         )
-        return reportsStorage.saveMmpi(user.id, pdfStr, type)
+        return reportsStorage.saveMmpi(user, pdfStr, typeOfTest)
     }
 
-    fun saveLucher(
+    suspend fun saveLucher(
         user: User,
         answers: LucherAnswers,
         result: LucherResult,
         saveAnswers: Boolean
-    ): String {
+    ): Result<Folder> {
         if (saveAnswers) {
-            usersStorage.saveAnswers(answers)
+            usersStorage.saveAnswers(answers).dealWithError {
+                return it
+            }
         }
 
         val bytes = pdfReportLucher(
             answers = answers,
             result = result
         )
-        return reportsStorage.saveLucher(user.id, bytes)
+        return reportsStorage.saveLucher(user, bytes)
     }
 }

@@ -1,8 +1,13 @@
 package telegram
 
+import Tokens
 import com.github.kotlintelegrambot.Bot
+import io.ktor.util.*
 
-class BotsKeeper {
-    lateinit var adminBot: Bot
-    lateinit var clientBot: Bot
-}
+@InternalAPI
+class BotsKeeper(
+    val tokens: Tokens,
+    val room: TelegramRoom,
+    val adminBot: Bot,
+    val clientBot: Bot
+)
