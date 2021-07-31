@@ -19,7 +19,7 @@ import kotlinx.coroutines.sync.withLock
 import models.TypeOfTest
 import storage.Folder
 
-typealias OnUserChoseColor = (callback: Callback, messageId: MessageId?) -> Unit
+private typealias OnUserChoseColor = (callback: Callback, messageId: MessageId?) -> Unit
 
 class LucherSession(
     override val user: User,
@@ -87,7 +87,6 @@ class LucherSession(
         chatId: ChatId,
         userConnection: UserConnection?
     ): List<LucherColor> {
-
         val shownOptions: MutableList<LucherColor> = LucherColor.values().toMutableList()
 
         val colorIds: List<MessageId>? = userConnection?.sendMessagesWithLucherColors(chatId, LucherColor.values())
@@ -142,8 +141,6 @@ class LucherSession(
     }
 
     private val mutex = Mutex()
-
-    //    override suspend fun onAnswer(messageId: Long, data: String): Result<Unit> {
     override suspend fun onAnswer(callback: Callback, messageId: MessageId?): Result<Unit> {
         mutex.withLock {
             var limit = 1000

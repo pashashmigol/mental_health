@@ -35,27 +35,25 @@ fun launchClientBot(
         dispatch {
             command("mmpi566") {
                 println("mmpi566")
-                telegramRoom.launchMmpi566Test(
-                    chatInfo()
-                )
+                telegramRoom.launchMmpi566(chatInfo())
             }
             command("mmpi377") {
                 println("mmpi377")
-                telegramRoom.launchMmpi377Test(
-                    chatInfo()
-                )
+                telegramRoom.launchMmpi377(chatInfo())
             }
             command("lucher") {
-                telegramRoom.launchLucherTest(chatInfo())
+                println("lucher")
+                telegramRoom.launchLucher(chatInfo())
+            }
+            command("quiz") {
+                println("quiz")
+                telegramRoom.launchDailyQuiz(chatInfo())
             }
             command("start") {
                 telegramRoom.welcomeUser(
                     chatInfo(),
                     TelegramUserConnection(adminId) { botsKeeper() }
                 )
-            }
-            command("saveState") {
-//                telegramRoom.saveState()
             }
             command("restoreState") {
                 telegramRoom.restoreState()

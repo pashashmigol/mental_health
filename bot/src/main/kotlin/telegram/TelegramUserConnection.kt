@@ -138,9 +138,13 @@ class TelegramUserConnection(
         }
         val options =
             if (placeButtonsVertically) {
-                buttons.map { listOf(InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())) }
+                buttons.map {
+                    listOf(InlineKeyboardButton.CallbackData(it.text, it.callback.makeString()))
+                }
             } else {
-                listOf(buttons.map { InlineKeyboardButton.CallbackData(it.text, it.callback.makeString()) })
+                listOf(buttons.map {
+                    InlineKeyboardButton.CallbackData(it.text, it.callback.makeString())
+                })
             }
 
         val result = botKeeper().clientBot.editMessageReplyMarkup(

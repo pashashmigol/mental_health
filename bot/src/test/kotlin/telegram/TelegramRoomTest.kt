@@ -33,7 +33,7 @@ internal class TelegramRoomTest {
                 userConnection = MockUserConnection
             ).join()
 
-            originalRoom.launchMmpi377Test(chatInfo).join()
+            originalRoom.launchMmpi377(chatInfo).join()
         }
 
         assertEquals(11, originalRoom.sessions.size)
