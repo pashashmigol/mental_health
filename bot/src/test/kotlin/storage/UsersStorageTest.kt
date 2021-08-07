@@ -21,7 +21,7 @@ import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assertions.fail
-import telegram.Callback
+import telegram.QuizButton
 import telegram.SessionState
 import java.util.concurrent.TimeUnit
 
@@ -155,21 +155,21 @@ internal class UsersStorageTest {
 
             mmpi566.saveMessageId(index + 1L)
             mmpi566.saveAnswer(
-                Callback.Mmpi(
+                QuizButton.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 )
             )
             mmpi377.saveMessageId(index * 2 + 1L)
             mmpi377.saveAnswer(
-                Callback.Mmpi(
+                QuizButton.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 )
             )
             lucher.saveMessageId(index * 3 + 1L)
             lucher.saveAnswer(
-                Callback.Lucher(
+                QuizButton.Lucher(
                     answer = LucherColor.Gray
                 )
             )

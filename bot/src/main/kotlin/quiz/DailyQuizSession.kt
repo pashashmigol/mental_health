@@ -1,25 +1,21 @@
 package quiz
 
-import Result
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.receiveAsFlow
 import models.Question
 import models.TypeOfTest
 import models.User
 import storage.CentralDataStorage
 import telegram.*
-import kotlin.random.Random
 
-private typealias onAnswered = (callback: Callback, messageId: MessageId?) -> Unit
+private typealias onAnswered = (quizButton: QuizButton, messageId: MessageId?) -> Unit
 
 class DailyQuizSession(
-    override val user: User,
-    override val roomId: RoomId,
-    override val chatId: ChatId,
+    user: User,
+    roomId: RoomId,
+    chatId: ChatId,
     userConnection: UserConnection,
-    override val onEndedCallback: OnEnded
+    onEndedCallback: OnEnded
 ) : TelegramSession<Unit>(
     user,
     chatId,
@@ -34,6 +30,8 @@ class DailyQuizSession(
         val data: DailyQuizData = CentralDataStorage.dailyQuizData
 
         data.morningQuestions.forEach { ask(it) }
+
+//        answers.take()
         userConnection.cleanUp(
             chatId = chatId,
             messageIds = state.messageIds
@@ -44,6 +42,8 @@ class DailyQuizSession(
             chatId = chatId,
             messageIds = state.messageIds
         )
+
+        onEndedCallback(this)
     }
 
     private suspend fun ask(question: Question) {
@@ -55,30 +55,45 @@ class DailyQuizSession(
             buttons = DailyQuizAnswer.values().map { answer: DailyQuizAnswer ->
                 Button(
                     text = answer.title,
-                    callback = Callback.DailyQuiz(answer)
+                    quizButton = QuizButton.DailyQuiz(answer)
                 )
             }
         ).let { state.addMessageId(it) }
 
-        onAnswered = { _: Callback, _: MessageId? ->
+        onAnswered = { _: QuizButton, _: MessageId? ->
             channel.offer(Unit)
         }
         channel.receive()
+        channel.receiveAsFlow()
     }
 
-    private val mutex = Mutex()
-    override suspend fun onAnswer(callback: Callback, messageId: MessageId?): Result<Unit> {
-        mutex.withLock {
-            var limit = 1000
-            while (onAnswered == null) {
-                limit--
-                if (limit == 0) {
-                    return Result.Error("timeout")
-                }
-                delay(1)
-            }
-            onAnswered?.invoke(callback, messageId) ?: Result.Error("onAnswer is null")
-        }
-        return Result.Success(Unit)
-    }
+//    private val lock = ReentrantLock()
+
+
+
+//    override suspend fun onAnswer(callback: Callback, messageId: MessageId?): Result<Unit> {
+//
+//        val condition = lock.newCondition()
+//
+//
+//        lock.lock()
+//        try {
+////            var limit = 1000
+//            while (onAnswered == null) {
+//                condition.awaitNanos(10000L)
+//            }
+////            while (onAnswered == null) {
+////                limit--
+////                if (limit == 0) {
+////                    return Result.Error("timeout")
+////                }
+////                delay(1)
+////            }
+//            onAnswered!!.invoke(callback, messageId) ?: Result.Error("onAnswer is null")
+//
+//        } finally {
+//            lock.unlock()
+//        }
+//        return Result.Success(Unit)
+//    }
 }

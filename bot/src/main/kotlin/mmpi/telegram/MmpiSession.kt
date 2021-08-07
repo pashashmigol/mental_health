@@ -1,7 +1,6 @@
 package mmpi.telegram
 
 import Gender
-import kotlinx.coroutines.channels.Channel
 import mmpi.*
 import models.TypeOfTest
 import models.User
@@ -10,29 +9,31 @@ import telegram.helpers.showResult
 import Result
 import com.soywiz.klock.DateTimeTz
 import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import telegram.*
 
-private typealias OnAnswerReceived = suspend (callback: Callback, messageId: MessageId?) -> Result<MessageId>
 /**For testing only*/
 private typealias OnFinished = ((answers: List<MmpiProcess.Answer>) -> Unit)?
 
 class MmpiSession(
-    override val user: User,
-    override val roomId: RoomId,
-    override val chatId: ChatId,
-    override val type: TypeOfTest,
+    user: User,
+    roomId: RoomId,
+    chatId: ChatId,
+    type: TypeOfTest,
     userConnection: UserConnection,
-    override val onEndedCallback: OnEnded
-) : TelegramSession<Long>(user, chatId, roomId, type, userConnection, onEndedCallback) {
-
+    onEndedCallback: OnEnded
+) : TelegramSession<Long>(
+    user = user,
+    roomId = roomId,
+    chatId = chatId,
+    type = type,
+    userConnection = userConnection,
+    onEndedCallback = onEndedCallback
+) {
     companion object {
         val scope = GlobalScope
     }
 
     internal var testingCallback: OnFinished = null
-    private var onAnswer: OnAnswerReceived? = null
     private var ongoingProcess: MmpiProcess? = null
 
     override suspend fun start() {
@@ -58,27 +59,7 @@ class MmpiSession(
     }
 
     private suspend fun waitForGenderChosen(): Gender {
-        val gChannel = Channel<Gender>(1)
-
-        onAnswer = { callback: Callback, messageId: MessageId? ->
-            callback as Callback.GenderAnswer
-            onAnswer = null
-
-            val index = Gender.values().indexOfFirst {
-                it == callback.answer
-            }
-            messageId?.let {
-                userConnection.highlightAnswer(
-                    messageId = messageId,
-                    chatId = chatId,
-                    buttons = genderButtons(),
-                    buttonToHighLight = index
-                )
-            }
-            gChannel.offer(callback.answer)
-            Result.Success(0)
-        }
-        return gChannel.receive()
+        return (waitForAnswer().quizButton as QuizButton.GenderAnswer).answer
     }
 
     private suspend fun collectAllAnswers(
@@ -89,25 +70,25 @@ class MmpiSession(
         sendFirstQuestion(ongoingProcess, userConnection)
             .apply { state.addMessageId(this) }
 
-        onAnswer = { callback: Callback, messageId: MessageId? ->
-            callback as Callback.Mmpi
+        while (ongoingProcess.hasNextQuestion()) {
+            val quizButtonClick = waitForAnswer()
+            val mmpiButton = quizButtonClick.quizButton as QuizButton.Mmpi
 
-            val question = ongoingProcess.questions[callback.index]
-
+            ongoingProcess.submitAnswer(
+                mmpiButton.index, mmpiButton.answer
+            )
+            val question = ongoingProcess.questions[mmpiButton.index]
             val index = question.options.indexOfFirst {
-                it.tag == callback.answer.name
+                it.tag == mmpiButton.answer.name
             }
             userConnection.highlightAnswer(
-                messageId = messageId,
+                messageId = quizButtonClick.messageId,
                 chatId = chatId,
                 buttons = mmpiButtons(question),
                 buttonToHighLight = index
             )
-            ongoingProcess.submitAnswer(
-                callback.index, callback.answer
-            )
-            if (ongoingProcess.hasNextQuestion()
-                && ongoingProcess.isItLastAskedQuestion(callback.index)
+            if (//ongoingProcess.hasNextQuestion() &&
+                ongoingProcess.isItLastAskedQuestion(mmpiButton.index)
             ) {
                 sendNextQuestion(ongoingProcess, userConnection)
                     .apply { state.addMessageId(this) }
@@ -115,7 +96,6 @@ class MmpiSession(
             if (ongoingProcess.allQuestionsAreAnswered()) {
                 finishTesting(ongoingProcess, user, gender, userConnection)
             }
-            Result.Success(messageId ?: NOT_SENT)
         }
     }
 
@@ -123,7 +103,7 @@ class MmpiSession(
         super.applyState(state)
 
         val index: Int = state.answers
-            .filterIsInstance(Callback.Mmpi::class.java)
+            .filterIsInstance(QuizButton.Mmpi::class.java)
             .maxOfOrNull { it.index } ?: 0
 
         ongoingProcess?.setNextQuestionIndex(index + 1)
@@ -135,7 +115,6 @@ class MmpiSession(
         gender: Gender,
         userConnection: UserConnection,
     ): Result<Unit> {
-        onAnswer = null
         val result = ongoingProcess.calculateResult()
 
         val answers = MmpiAnswers(
@@ -180,15 +159,5 @@ class MmpiSession(
             buttons = mmpiButtons(question)
         )
         return messageId
-    }
-
-    private val mutex = Mutex()
-    override suspend fun onAnswer(callback: Callback, messageId: MessageId?): Result<Long> {
-        mutex.withLock {
-            while (onAnswer == null) {
-                delay(1)
-            }
-            return onAnswer?.invoke(callback, messageId) ?: Result.Error("onAnswer is null")
-        }
     }
 }

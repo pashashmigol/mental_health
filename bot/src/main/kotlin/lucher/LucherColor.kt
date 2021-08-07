@@ -1,7 +1,7 @@
 package lucher
 
 import telegram.Button
-import telegram.Callback
+import telegram.QuizButton
 
 enum class LucherColor(val index: Int) {
     Gray(index = 0),
@@ -43,5 +43,5 @@ fun LucherColor.toARGB(): Int = when (this) {
 }
 
 fun LucherColor.callbackData() =
-    Button(text = "$index - $name", callback = Callback.Lucher(this))
+    Button(text = "$index - $name", quizButton = QuizButton.Lucher(this))
 

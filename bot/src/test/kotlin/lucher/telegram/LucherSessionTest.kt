@@ -15,6 +15,7 @@ import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import telegram.*
+import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 444L
 
@@ -42,7 +43,7 @@ internal class LucherSessionTest {
     }
 
     @Test
-//    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `basic case`() = runBlocking {
 
         val resultChannel = Channel<Unit>(1)
@@ -58,16 +59,18 @@ internal class LucherSessionTest {
         )
 
         //complete first round
-        LucherColor.values().forEach {
+        LucherColor.values().forEachIndexed { i: Int, color: LucherColor ->
             lucherSession.sendAnswer(
-                Callback.Lucher(it)
+                QuizButton.Lucher(answer = color),
+                messageId = i.toLong()
             )
         }
 
         //complete second round
-        LucherColor.values().forEach {
+        LucherColor.values().forEachIndexed { i: Int, color: LucherColor ->
             lucherSession.sendAnswer(
-                Callback.Lucher(it)
+                quizButton = QuizButton.Lucher(color),
+                messageId = i.toLong()
             )
         }
         resultChannel.receive()

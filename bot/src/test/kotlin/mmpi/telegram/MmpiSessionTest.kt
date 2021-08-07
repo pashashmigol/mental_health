@@ -58,9 +58,10 @@ internal class MmpiSessionTest {
         session.start()
 
         val res = session.sendAnswer(
-            Callback.GenderAnswer(
+            quizButton = QuizButton.GenderAnswer(
                 answer = Gender.Male
-            )
+            ),
+            messageId = NOT_SENT
         )
         assertTrue(res is Result.Success, "$res")
 
@@ -72,10 +73,11 @@ internal class MmpiSessionTest {
 
         repeat(TypeOfTest.Mmpi566.size) {
             val answerResult = session.sendAnswer(
-                Callback.Mmpi(
+                quizButton = QuizButton.Mmpi(
                     index = it,
                     answer = MmpiProcess.Answer.Agree
-                )
+                ),
+                messageId = NOT_SENT
             )
             assertTrue(answerResult is Result.Success, "$answerResult")
         }
@@ -106,9 +108,10 @@ internal class MmpiSessionTest {
 
         do {
             val res = session.sendAnswer(
-                Callback.GenderAnswer(
+                quizButton = QuizButton.GenderAnswer(
                     answer = Gender.Male
-                )
+                ),
+                messageId = NOT_SENT
             )
             assertTrue(res is Result.Success, "$res")
         } while (res is Result.Error)
@@ -126,19 +129,20 @@ internal class MmpiSessionTest {
         val index = answersIds.next()
 
         val res = session.sendAnswer(
-            Callback.Mmpi(
+            quizButton = QuizButton.Mmpi(
                 index = index,
                 answer = MmpiProcess.Answer.Agree
-            )
+            ),
+            messageId = NOT_SENT
         )
         assertTrue(res is Result.Success, "$res")
 
         if (it % 2 == 0) {//edit given answer
             session.sendAnswer(
-                Callback.Mmpi(
+                quizButton = QuizButton.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Disagree
-                )
+                ), messageId = NOT_SENT
             )
         }
     }

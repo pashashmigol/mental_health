@@ -72,7 +72,7 @@ class UsersStorage(database: FirebaseDatabase) {
 
     suspend fun addAnswer(
         sessionId: SessionId,
-        callback: Callback,
+        quizButton: QuizButton,
         index: Int
     ): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
@@ -81,8 +81,8 @@ class UsersStorage(database: FirebaseDatabase) {
             .child(sessionId.toString())
             .child("answers")
             .child(index.toString())
-            .setValue(callback) { error: DatabaseError?, _: DatabaseReference ->
-                println("addAnswer(); callback $callback")
+            .setValue(quizButton) { error: DatabaseError?, _: DatabaseReference ->
+                println("addAnswer(); callback $quizButton")
 
                 val result = when (error == null) {
                     true -> Result.Success(Unit)
@@ -116,24 +116,6 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-//    suspend fun saveAllSessions(sessions: List<SessionState>): Result<Unit> {
-//        val resultChannel = Channel<Result<Unit>>(1)
-//        sessions.forEach {
-//            activeSessionsRef
-//                .child(it.sessionId.toString())
-//                .setValue(it) { error: DatabaseError?, ref: DatabaseReference ->
-//                    println("saveAllSessions(); session $it, ref: $ref, error: $error")
-//
-//                    val result = when (error == null) {
-//                        true -> Result.Success(Unit)
-//                        false -> Result.Error(error.details)
-//                    }
-//                    resultChannel.offer(result)
-//                }
-//        }
-//        return resultChannel.receive()
-//    }
-
     suspend fun takeAllSessions(): Result<List<SessionState>> {
         val resultChannel = Channel<Result<List<SessionState>>>(1)
 
@@ -162,7 +144,7 @@ class UsersStorage(database: FirebaseDatabase) {
     suspend fun clear(): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
         activeSessionsRef
-            .removeValue { error, ref ->
+            .removeValue { error, _ ->
                 val result = when (error == null) {
                     true -> Result.Success(Unit)
                     false -> Result.Error(error.details)
@@ -374,16 +356,16 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
 
         (sessionMap["answers"] as? ArrayList<HashMap<String, Any>>)
             ?.forEach {
-                val type = Callback.Type.valueOf(it["type"] as String)
+                val type = QuizButton.Type.valueOf(it["type"] as String)
                 val index = (it["index"] as? Long)?.toInt()
                 val answer = it["answer"] as String
 
                 val callback = when (type) {
-                    Callback.Type.Gender -> Callback.GenderAnswer(Gender.valueOf(answer))
-                    Callback.Type.Mmpi -> Callback.Mmpi(index!!, MmpiProcess.Answer.valueOf(answer))
-                    Callback.Type.Lucher -> Callback.Lucher(LucherColor.valueOf(answer))
-                    Callback.Type.NewTestRequest -> Callback.NewTest(TypeOfTest.valueOf(answer))
-                    Callback.Type.DailyQuiz -> Callback.DailyQuiz(DailyQuizAnswer.valueOf(answer))
+                    QuizButton.Type.Gender -> QuizButton.GenderAnswer(Gender.valueOf(answer))
+                    QuizButton.Type.Mmpi -> QuizButton.Mmpi(index!!, MmpiProcess.Answer.valueOf(answer))
+                    QuizButton.Type.Lucher -> QuizButton.Lucher(LucherColor.valueOf(answer))
+                    QuizButton.Type.NewTestRequest -> QuizButton.NewTest(TypeOfTest.valueOf(answer))
+                    QuizButton.Type.DailyQuiz -> QuizButton.DailyQuiz(DailyQuizAnswer.valueOf(answer))
                 }
 
                 sessionState.addAnswer(callback)

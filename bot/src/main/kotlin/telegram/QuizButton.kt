@@ -6,8 +6,7 @@ import mmpi.MmpiProcess
 import models.TypeOfTest
 import quiz.DailyQuizAnswer
 
-sealed class Callback(val type: Type) {
-
+sealed class QuizButton(val type: Type) {
     enum class Type {
         Gender, Mmpi, Lucher, NewTestRequest, DailyQuiz
     }
@@ -15,21 +14,21 @@ sealed class Callback(val type: Type) {
     abstract fun makeString(): String
 
     companion object {
-        fun fromString(data: String): Callback {
+        fun fromString(data: String): QuizButton {
 
             val (typeStr, valueStr, indexStr) = data.split(":")
 
             return when (Type.valueOf(typeStr)) {
                 Type.NewTestRequest -> NewTest(TypeOfTest.valueOf(valueStr))
                 Type.Gender -> GenderAnswer(Gender.valueOf(valueStr))
-                Type.Mmpi -> Mmpi(index = indexStr.toInt(), MmpiProcess.Answer.valueOf(valueStr))
+                Type.Mmpi -> Mmpi(indexStr.toInt(), MmpiProcess.Answer.valueOf(valueStr))
                 Type.Lucher -> Lucher(LucherColor.valueOf(valueStr))
                 Type.DailyQuiz -> DailyQuiz(DailyQuizAnswer.valueOf(valueStr))
             }
         }
     }
 
-    class GenderAnswer(val answer: Gender) : Callback(Type.Gender) {
+    class GenderAnswer(val answer: Gender) : QuizButton(Type.Gender) {
         override fun makeString() = "${Type.Gender}:$answer:"
 
         override fun equals(other: Any?): Boolean {
@@ -50,7 +49,7 @@ sealed class Callback(val type: Type) {
         }
     }
 
-    class Mmpi(val index: Int, val answer: MmpiProcess.Answer) : Callback(Type.Mmpi) {
+    class Mmpi(val index: Int, val answer: MmpiProcess.Answer) : QuizButton(Type.Mmpi) {
         override fun makeString() = "${Type.Mmpi}:$answer:$index"
 
         override fun equals(other: Any?): Boolean {
@@ -71,7 +70,7 @@ sealed class Callback(val type: Type) {
         }
     }
 
-    class Lucher(val answer: LucherColor) : Callback(Type.Lucher) {
+    class Lucher(val answer: LucherColor) : QuizButton(Type.Lucher) {
         override fun makeString() = "${Type.Lucher}:$answer:"
 
         override fun equals(other: Any?): Boolean {
@@ -92,7 +91,7 @@ sealed class Callback(val type: Type) {
         }
     }
 
-    class NewTest(val typeOfTest: TypeOfTest) : Callback(Type.NewTestRequest) {
+    class NewTest(val typeOfTest: TypeOfTest) : QuizButton(Type.NewTestRequest) {
         override fun makeString() = "${Type.NewTestRequest}:$typeOfTest:"
 
         override fun equals(other: Any?): Boolean {
@@ -113,7 +112,7 @@ sealed class Callback(val type: Type) {
         }
     }
 
-    class DailyQuiz(val answer: DailyQuizAnswer) : Callback(Type.DailyQuiz) {
+    class DailyQuiz(val answer: DailyQuizAnswer) : QuizButton(Type.DailyQuiz) {
         override fun makeString() = "${Type.DailyQuiz}:$answer:"
     }
 }

@@ -8,28 +8,28 @@ import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
 
-internal class CallbackTest {
+internal class QuizButtonTest {
 
     @Test
     fun `makeString Gender`() {
-        assertEquals("Gender:Male:", Callback.GenderAnswer(Gender.Male).makeString())
+        assertEquals("Gender:Male:", QuizButton.GenderAnswer(Gender.Male).makeString())
     }
 
     @Test
     fun `fromString Gender`() {
-        val genderCallback = Callback.fromString("Gender:Male:") as Callback.GenderAnswer
+        val genderCallback = QuizButton.fromString("Gender:Male:") as QuizButton.GenderAnswer
         assertEquals(Gender.Male, genderCallback.answer)
     }
 
     @Test
     fun `makeString Mmpi`() {
-        val mmpiAnswer = Callback.Mmpi(index = 5, answer = MmpiProcess.Answer.Agree)
+        val mmpiAnswer = QuizButton.Mmpi(index = 5, answer = MmpiProcess.Answer.Agree)
         assertEquals("Mmpi:Agree:5", mmpiAnswer.makeString())
     }
 
     @Test
     fun `fromString Mmpi`() {
-        val mmpiCallback = Callback.fromString("Mmpi:Agree:5") as Callback.Mmpi
+        val mmpiCallback = QuizButton.fromString("Mmpi:Agree:5") as QuizButton.Mmpi
 
         assertEquals(
             MmpiProcess.Answer.Agree,
@@ -40,13 +40,13 @@ internal class CallbackTest {
 
     @Test
     fun `makeString Lucher`() {
-        val lucherAnswer = Callback.Lucher(answer = LucherColor.Blue)
+        val lucherAnswer = QuizButton.Lucher(answer = LucherColor.Blue)
         assertEquals("Lucher:Blue:", lucherAnswer.makeString())
     }
 
     @Test
     fun `fromString Lucher`() {
-        val lucherCallback = Callback.fromString("Lucher:Blue:") as Callback.Lucher
+        val lucherCallback = QuizButton.fromString("Lucher:Blue:") as QuizButton.Lucher
 
         assertEquals(
             LucherColor.Blue,
@@ -56,13 +56,13 @@ internal class CallbackTest {
 
     @Test
     fun `makeString NewTestRequest`() {
-        val newTestRequest = Callback.NewTest(TypeOfTest.Mmpi566)
+        val newTestRequest = QuizButton.NewTest(TypeOfTest.Mmpi566)
         assertEquals("NewTestRequest:Mmpi566:", newTestRequest.makeString())
     }
 
     @Test
     fun `fromString NewTestRequest`() {
-        val newTestRequest = Callback.fromString("NewTestRequest:Mmpi566:") as Callback.NewTest
+        val newTestRequest = QuizButton.fromString("NewTestRequest:Mmpi566:") as QuizButton.NewTest
 
         assertEquals(
             TypeOfTest.Mmpi566,

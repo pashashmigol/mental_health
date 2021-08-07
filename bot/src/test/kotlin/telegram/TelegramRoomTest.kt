@@ -2,6 +2,7 @@ package telegram
 
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
+import lucher.LucherColor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,10 +35,14 @@ internal class TelegramRoomTest {
             ).join()
 
             originalRoom.launchMmpi377(chatInfo).join()
+
+//            originalRoom.sessions[chatInfo.userId]!!.sendAnswer(
+//                quizButton = QuizButton.Lucher(LucherColor.Blue),
+//                messageId = NOT_SENT
+//            )
         }
 
         assertEquals(11, originalRoom.sessions.size)
-//        originalRoom.saveState()
 
         val restoredRoom = TelegramRoom(
             roomId = 0,
@@ -49,9 +54,7 @@ internal class TelegramRoomTest {
     }
 }
 
-object MockUserConnection : UserConnection {
-
-}
+object MockUserConnection : UserConnection
 
 private fun mockChatInfo(id: Long): ChatInfo {
     return ChatInfo(

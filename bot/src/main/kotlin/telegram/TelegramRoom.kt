@@ -96,13 +96,13 @@ class TelegramRoom(
                 )
             }
 
-            val lucher = Callback.NewTest(typeOfTest = Lucher)
-            val mmpi566 = Callback.NewTest(typeOfTest = Mmpi566)
-            val mmpi377 = Callback.NewTest(typeOfTest = Mmpi377)
-            val dailyQuiz = Callback.NewTest(typeOfTest = DailyQuiz)
+            val lucher = QuizButton.NewTest(typeOfTest = Lucher)
+            val mmpi566 = QuizButton.NewTest(typeOfTest = Mmpi566)
+            val mmpi377 = QuizButton.NewTest(typeOfTest = Mmpi377)
+            val dailyQuiz = QuizButton.NewTest(typeOfTest = DailyQuiz)
 
             userConnection.sendMessageWithButtons(
-                chatInfo.chatId,
+                chatId = chatInfo.chatId,
                 text = string("choose_test"),
                 buttons = listOf(
                     Button(string("lucher"), lucher),
@@ -231,11 +231,11 @@ class TelegramRoom(
         val messageId = chatInfo.messageId
 
         try {
-            when (val callback = Callback.fromString(data)) {
-                is Callback.GenderAnswer, is Callback.Lucher, is Callback.Mmpi, is Callback.DailyQuiz -> {
+            when (val callback = QuizButton.fromString(data)) {
+                is QuizButton.GenderAnswer, is QuizButton.Lucher, is QuizButton.Mmpi, is QuizButton.DailyQuiz -> {
                     session?.sendAnswer(callback, messageId)
                 }
-                is Callback.NewTest -> {
+                is QuizButton.NewTest -> {
                     userConnection.notifyAdmin("no session with id $userId, just ${formatSessionsList()}")
                     launchTest(
                         chatInfo = chatInfo,
