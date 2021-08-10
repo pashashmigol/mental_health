@@ -1,14 +1,12 @@
 package quiz
 
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
+import com.soywiz.klock.DateTimeTz
 import models.Question
 import models.TypeOfTest
 import models.User
 import storage.CentralDataStorage
 import telegram.*
 
-private typealias onAnswered = (quizButton: QuizButton, messageId: MessageId?) -> Unit
 
 class DailyQuizSession(
     user: User,
@@ -24,76 +22,48 @@ class DailyQuizSession(
     userConnection,
     onEndedCallback
 ) {
-    private var onAnswered: onAnswered? = null
-
     override suspend fun start() {
         val data: DailyQuizData = CentralDataStorage.dailyQuizData
 
-        data.morningQuestions.forEach { ask(it) }
-
-//        answers.take()
+        val answers = DailyQuizAnswers(
+            user = user,
+            date = DateTimeTz.nowLocal(),
+            answers = data.morningQuestions.map {
+                ask(it)
+            }
+        )
+        CentralDataStorage.usersStorage.saveDailyQuizAnswers(
+            user = user,
+            answers = answers,
+        )
         userConnection.cleanUp(
             chatId = chatId,
             messageIds = state.messageIds
         )
-
         data.eveningQuestions.forEach { ask(it) }
         userConnection.cleanUp(
             chatId = chatId,
             messageIds = state.messageIds
         )
-
         onEndedCallback(this)
     }
 
-    private suspend fun ask(question: Question) {
-        val channel = Channel<Unit>(0)
-
+    private suspend fun ask(question: Question): DailyQuizAnswers.Answer {
         userConnection.sendMessageWithButtons(
             chatId = chatId,
             text = question.text,
-            buttons = DailyQuizAnswer.values().map { answer: DailyQuizAnswer ->
+            buttons = DailyQuizAnswers.Option.values().map { option ->
                 Button(
-                    text = answer.title,
-                    quizButton = QuizButton.DailyQuiz(answer)
+                    text = option.title,
+                    quizButton = QuizButton.DailyQuiz(option)
                 )
             }
         ).let { state.addMessageId(it) }
 
-        onAnswered = { _: QuizButton, _: MessageId? ->
-            channel.offer(Unit)
-        }
-        channel.receive()
-        channel.receiveAsFlow()
+        return DailyQuizAnswers.Answer(
+            questionIndex = question.index,
+            questionText= question.text,
+            option = (waitForAnswer().quizButton as QuizButton.DailyQuiz).answer
+        )
     }
-
-//    private val lock = ReentrantLock()
-
-
-
-//    override suspend fun onAnswer(callback: Callback, messageId: MessageId?): Result<Unit> {
-//
-//        val condition = lock.newCondition()
-//
-//
-//        lock.lock()
-//        try {
-////            var limit = 1000
-//            while (onAnswered == null) {
-//                condition.awaitNanos(10000L)
-//            }
-////            while (onAnswered == null) {
-////                limit--
-////                if (limit == 0) {
-////                    return Result.Error("timeout")
-////                }
-////                delay(1)
-////            }
-//            onAnswered!!.invoke(callback, messageId) ?: Result.Error("onAnswer is null")
-//
-//        } finally {
-//            lock.unlock()
-//        }
-//        return Result.Success(Unit)
-//    }
 }

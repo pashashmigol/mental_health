@@ -21,6 +21,7 @@ import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assertions.fail
+import quiz.DailyQuizAnswers
 import telegram.QuizButton
 import telegram.SessionState
 import java.util.concurrent.TimeUnit
@@ -36,13 +37,19 @@ internal class UsersStorageTest {
         )
     }
 
+    @BeforeEach
+    @Timeout(value = 60, unit = TimeUnit.SECONDS)
+    fun clear() = runBlocking{
+        CentralDataStorage.usersStorage.clear()
+    }
+
     @Test
     @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `mmpi answers saving`() = runBlocking {
         val user = createUser(333L, "mmpi answers saving")
 
         val mockAnswers = createMmpiAnswers(user, Gender.Female)
-        val saveResult = CentralDataStorage.usersStorage.saveAnswers(mockAnswers)
+        val saveResult = CentralDataStorage.usersStorage.saveMmpiAnswers(mockAnswers)
         assertTrue(saveResult is Result.Success)
 
         val receivedAnswers = (CentralDataStorage.usersStorage
@@ -55,12 +62,12 @@ internal class UsersStorageTest {
     }
 
     @Test
-    @Timeout(value = 20, unit = TimeUnit.SECONDS)
+    @Timeout(value = 40, unit = TimeUnit.SECONDS)
     fun `Lucher answers saving`() = runBlocking {
         val user = createUser(222L, "Lucher answers saving")
 
         val mockAnswers = createLucherAnswers(user)
-        val saveResult = CentralDataStorage.usersStorage.saveAnswers(mockAnswers)
+        val saveResult = CentralDataStorage.usersStorage.saveLucherAnswers(mockAnswers)
         assertTrue(saveResult is Result.Success)
 
         val receivedAnswers = (CentralDataStorage.usersStorage
@@ -73,20 +80,39 @@ internal class UsersStorageTest {
     }
 
     @Test
-//    @Timeout(value = 20, unit = TimeUnit.SECONDS)
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun `session's states saving`() = runBlocking {
-        CentralDataStorage.usersStorage.clear()
         val originalSessions: List<SessionState> = createSessions()
-//        CentralDataStorage.usersStorage.saveAllSessions(originalSessions)
-
         val storageResult = CentralDataStorage.usersStorage.takeAllSessions()
 
         if (storageResult is Result.Error) {
             fail<Exception>(storageResult.exception)
         }
         val sessionsFromStorage = (storageResult as Result.Success).data
-
         assertArrayEquals(originalSessions.toTypedArray(), sessionsFromStorage.toTypedArray())
+    }
+
+    @Test
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
+    fun `daily quiz answers saving`() = runBlocking {
+        val user = createUser(334L, "daily quiz answers saving")
+
+        val mockAnswers = createDailyQuizAnswers(user)
+        val saveResult = CentralDataStorage.usersStorage.saveDailyQuizAnswers(
+            user = user,
+            answers = mockAnswers
+        )
+
+        assertTrue(saveResult is Result.Success)
+
+        val receivedAnswers = (CentralDataStorage.usersStorage
+            .getUserAnswers(user = user) as Result.Success)
+            .data.first()
+
+        assertEquals(mockAnswers, receivedAnswers)
+        CentralDataStorage.deleteUser(user)
+
+        Unit
     }
 
     private suspend fun createUser(userId: Long, userName: String): User {
@@ -115,6 +141,26 @@ internal class UsersStorageTest {
             answersList = justFewAnswers
         )
     }
+
+    private fun createDailyQuizAnswers(user: User): DailyQuizAnswers {
+        val date = DateTime.EPOCH.plus(DateTimeSpan(seconds = 5)).utc
+
+        return DailyQuizAnswers(
+            user = user,
+            date = date,
+            answers = listOf(
+                createDailyQuizAnswer(0),
+                createDailyQuizAnswer(1),
+                createDailyQuizAnswer(2)
+            )
+        )
+    }
+
+    private fun createDailyQuizAnswer(index: Int) = DailyQuizAnswers.Answer(
+        questionIndex = index,
+        questionText = "question $index",
+        option = DailyQuizAnswers.Option.AWFUL
+    )
 
     private fun createLucherAnswers(user: User): LucherAnswers {
         return LucherAnswers(
@@ -150,7 +196,6 @@ internal class UsersStorageTest {
             type = TypeOfTest.Lucher
         ).apply { addToStorage() }
 
-//        CentralDataStorage.usersStorage.
         for (index in 0..20) {
 
             mmpi566.saveMessageId(index + 1L)

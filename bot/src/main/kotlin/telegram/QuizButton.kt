@@ -4,7 +4,7 @@ import Gender
 import lucher.LucherColor
 import mmpi.MmpiProcess
 import models.TypeOfTest
-import quiz.DailyQuizAnswer
+import quiz.DailyQuizAnswers
 
 sealed class QuizButton(val type: Type) {
     enum class Type {
@@ -23,7 +23,7 @@ sealed class QuizButton(val type: Type) {
                 Type.Gender -> GenderAnswer(Gender.valueOf(valueStr))
                 Type.Mmpi -> Mmpi(indexStr.toInt(), MmpiProcess.Answer.valueOf(valueStr))
                 Type.Lucher -> Lucher(LucherColor.valueOf(valueStr))
-                Type.DailyQuiz -> DailyQuiz(DailyQuizAnswer.valueOf(valueStr))
+                Type.DailyQuiz -> DailyQuiz(DailyQuizAnswers.Option.valueOf(valueStr))
             }
         }
     }
@@ -112,7 +112,7 @@ sealed class QuizButton(val type: Type) {
         }
     }
 
-    class DailyQuiz(val answer: DailyQuizAnswer) : QuizButton(Type.DailyQuiz) {
+    class DailyQuiz(val answer: DailyQuizAnswers.Option) : QuizButton(Type.DailyQuiz) {
         override fun makeString() = "${Type.DailyQuiz}:$answer:"
     }
 }

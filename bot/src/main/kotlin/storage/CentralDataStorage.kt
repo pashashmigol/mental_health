@@ -108,7 +108,7 @@ object CentralDataStorage {
         saveAnswers: Boolean
     ): Result<Folder> {
         if (saveAnswers) {
-            usersStorage.saveAnswers(answers).dealWithError {
+            usersStorage.saveMmpiAnswers(answers).dealWithError {
                 return it
             }
         }
@@ -127,7 +127,7 @@ object CentralDataStorage {
         saveAnswers: Boolean
     ): Result<Folder> {
         if (saveAnswers) {
-            usersStorage.saveAnswers(answers).dealWithError {
+            usersStorage.saveLucherAnswers(answers).dealWithError {
                 return it
             }
         }
