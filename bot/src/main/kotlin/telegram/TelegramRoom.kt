@@ -1,18 +1,15 @@
 package telegram
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import lucher.telegram.LucherSession
 import mmpi.telegram.MmpiSession
 import models.TypeOfTest.*
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 
-import Result
 import io.ktor.util.*
 import io.ktor.util.collections.*
-import kotlinx.coroutines.runBlocking
+import io.ktor.utils.io.*
+import kotlinx.coroutines.*
 import models.TypeOfTest
 import quiz.DailyQuizSession
 
@@ -27,10 +24,21 @@ class TelegramRoom(
     internal val sessions = ConcurrentMap<Long, TelegramSession<*>>()
     private val scope = GlobalScope
 
-    fun restoreState() = runBlocking {
-        val storedSessionStates = CentralDataStorage.usersStorage.takeAllSessions()
+    private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
+        userConnection.notifyAdmin("TelegramRoom error: ${exception.stackTraceToString()}", exception)
+        print("TelegramRoom error: ${exception.message}")
+        exception.printStack()
+    }
 
-        val storedSessions = (storedSessionStates as Result.Success).data
+    fun restoreState() = runBlocking(exceptionHandler) {
+        val storedSessionStates = CentralDataStorage.usersStorage
+            .takeAllSessions()
+            .dealWithError {
+                println("TelegramRoom error: ${it.message}")
+                it.exception?.printStackTrace()
+                return@runBlocking
+            }
+        val storedSessions = storedSessionStates
             .filter {
                 roomId == it.roomId
             }
@@ -65,6 +73,7 @@ class TelegramRoom(
                 user = user,
                 roomId = roomId,
                 chatId = sessionState.chatId,
+                dayTime = DailyQuizSession.Time.MORNING,
                 userConnection = userConnection,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
@@ -135,10 +144,8 @@ class TelegramRoom(
                 userConnection = userConnection,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
+            sessions[userId]!!.start()
 
-            user.apply {
-                sessions[userId]!!.start()
-            }
         } catch (e: Exception) {
             userConnection.notifyAdmin("launchMmpi566Test()", exception = e)
         }
@@ -146,85 +153,72 @@ class TelegramRoom(
 
     fun launchMmpi377(
         chatInfo: ChatInfo
-    ) = scope.launch {
-        try {
-            println("$TAG: launchMmpi377Test();")
-            val userId = chatInfo.userId
-            val user = CentralDataStorage.usersStorage.getUser(userId)!!
+    ) = scope.launch(exceptionHandler) {
+        println("$TAG: launchMmpi377Test();")
+        val userId = chatInfo.userId
+        val user = CentralDataStorage.usersStorage.getUser(userId)!!
 
-            userConnection.notifyAdmin("launchMmpi377Test(); chatInfo = $chatInfo")
+        userConnection.notifyAdmin("launchMmpi377Test(); chatInfo = $chatInfo")
 
-            removeSession(userId)
-            sessions[userId] = MmpiSession(
-                user = user,
-                roomId = roomId,
-                chatId = chatInfo.chatId,
-                type = Mmpi377,
-                userConnection = userConnection,
-            ) { removeSession(it.sessionId) }
+        removeSession(userId)
+        sessions[userId] = MmpiSession(
+            user = user,
+            roomId = roomId,
+            chatId = chatInfo.chatId,
+            type = Mmpi377,
+            userConnection = userConnection,
+        ) { removeSession(it.sessionId) }
 
-            sessions[userId]!!.start()
-        } catch (e: Exception) {
-            userConnection.notifyAdmin("launchMmpi377Test()", exception = e)
-        }
+        sessions[userId]!!.start()
     }
 
     fun launchLucher(
         chatInfo: ChatInfo
-    ) = scope.launch {
-        try {
-            println("$TAG: launchLucherTest();")
-            val userId = chatInfo.userId
-            val chatId = chatInfo.chatId
-            val user = CentralDataStorage.usersStorage.getUser(userId)!!
+    ) = scope.launch(exceptionHandler) {
+        println("$TAG: launchLucherTest();")
+        val userId = chatInfo.userId
+        val chatId = chatInfo.chatId
+        val user = CentralDataStorage.usersStorage.getUser(userId)!!
 
-            userConnection.notifyAdmin("launchLucherTest(); chatInfo = $chatInfo")
+        userConnection.notifyAdmin("launchLucherTest(); chatInfo = $chatInfo")
 
-            removeSession(userId)
-            sessions[userId] = LucherSession(
-                user = user,
-                chatId = chatId,
-                roomId = roomId,
-                userConnection = userConnection,
-            ) { removeSession(it.sessionId) }
+        removeSession(userId)
+        sessions[userId] = LucherSession(
+            user = user,
+            chatId = chatId,
+            roomId = roomId,
+            userConnection = userConnection,
+        ) { removeSession(it.sessionId) }
 
-            sessions[userId]!!.start()
-
-        } catch (e: Exception) {
-            userConnection.notifyAdmin("launchLucherTest()", exception = e)
-        }
+        sessions[userId]!!.start()
     }
 
     fun launchDailyQuiz(
         chatInfo: ChatInfo
-    ) = scope.launch {
-        try {
-            println("$TAG: launchLucherTest();")
-            val userId = chatInfo.userId
-            val chatId = chatInfo.chatId
-            val user = CentralDataStorage.usersStorage.getUser(userId)!!
+    ) = scope.launch(exceptionHandler) {
+        println("$TAG: launchLucherTest();")
+        val userId = chatInfo.userId
+        val chatId = chatInfo.chatId
+        val user = CentralDataStorage.usersStorage.getUser(userId)!!
 
-            userConnection.notifyAdmin("launchLucherTest(); chatInfo = $chatInfo")
+        userConnection.notifyAdmin("launchLucherTest(); chatInfo = $chatInfo")
 
-            removeSession(userId)
-            sessions[userId] = DailyQuizSession(
-                user = user,
-                chatId = chatId,
-                roomId = roomId,
-                userConnection = userConnection,
-            ) { removeSession(it.sessionId) }
+        removeSession(userId)
+        sessions[userId] = DailyQuizSession(
+            user = user,
+            chatId = chatId,
+            dayTime = DailyQuizSession.Time.MORNING,
+            roomId = roomId,
+            userConnection = userConnection,
+        ) { removeSession(it.sessionId) }
 
-            sessions[userId]!!.start()
-
-        } catch (e: Exception) {
-            userConnection.notifyAdmin("launchLucherTest()", exception = e)
-        }
+        sessions[userId]!!.start()
     }
 
     fun callbackQuery(
         chatInfo: ChatInfo,
         data: String
-    ) = scope.launch {
+    ) = scope.launch(exceptionHandler) {
         val userId: UserId = chatInfo.userId
         val charId: ChatId = chatInfo.chatId
         val session = sessions[userId]
@@ -289,6 +283,7 @@ class TelegramRoom(
                 user = user,
                 roomId = roomId,
                 chatId = chatId,
+                dayTime = DailyQuizSession.Time.MORNING,
                 userConnection = userConnection,
             ) { removeSession(it.sessionId) }
         }

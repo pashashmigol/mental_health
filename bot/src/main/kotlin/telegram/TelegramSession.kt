@@ -2,8 +2,12 @@ package telegram
 
 import models.User
 import Result
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import lucher.telegram.LucherSession
 import models.TypeOfTest
+import storage.CentralDataStorage
 
 typealias OnEnded = (TelegramSession<Any>) -> Unit
 typealias MessageId = Long
@@ -33,7 +37,17 @@ abstract class TelegramSession<out T>(
         )
     }
 
-    abstract suspend fun start()
+    suspend fun start() {
+        val handler = CoroutineExceptionHandler { _, exception ->
+            userConnection.notifyAdmin("Session $type error: ${exception.stackTraceToString()}", exception)
+            userConnection.sendMessage(chatId, "Session $type error: ${exception.stackTraceToString()}")
+            userConnection.sendMessage(chatId, CentralDataStorage.string("start_again"))
+        }
+        state.addToStorage()
+        LucherSession.scope.launch(handler) { executeTesting(user, chatId) }
+    }
+
+    internal abstract suspend fun executeTesting(user: User, chatId: Long)
 
     private val answers = Channel<QuizButtonClick>(10)
 

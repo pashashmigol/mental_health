@@ -1,19 +1,15 @@
 package lucher.telegram
 
 import Settings.LUCHER_TEST_TIMEOUT
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import lucher.*
 import models.User
 import storage.CentralDataStorage
 import storage.CentralDataStorage.string
 import telegram.*
 import telegram.helpers.showResult
-import Result
 import com.soywiz.klock.DateTimeTz
 import models.TypeOfTest
-import storage.Folder
 
 
 class LucherSession(
@@ -25,8 +21,8 @@ class LucherSession(
     onEndedCallback: OnEnded
 ) : TelegramSession<Unit>(
     user = user,
-    roomId = chatId,
-    chatId = roomId,
+    roomId = roomId,
+    chatId = chatId,
     type = TypeOfTest.Lucher,
     userConnection = userConnection,
     onEndedCallback = onEndedCallback
@@ -35,16 +31,7 @@ class LucherSession(
         val scope = GlobalScope
     }
 
-    override suspend fun start() {
-        val handler = CoroutineExceptionHandler { _, exception ->
-            userConnection.notifyAdmin("LucherSession error: ${exception.stackTraceToString()}", exception)
-            userConnection.sendMessage(chatId, "LucherSession error: ${exception.stackTraceToString()}")
-            userConnection.sendMessage(chatId, string("start_again"))
-        }
-        scope.launch(handler) { executeTesting(user, chatId) }
-    }
-
-    private suspend fun executeTesting(user: User, chatId: Long) {
+    override suspend fun executeTesting(user: User, chatId: Long) {
 
         val firstRoundAnswers = runRound(chatId, userConnection)
         askUserToWaitBeforeSecondRound(
@@ -55,7 +42,7 @@ class LucherSession(
         )
         val secondRoundAnswers = runRound(chatId, userConnection)
 
-        val answers = LucherAnswers(
+        val answers = LucherAnswersContainer(
             user = user,
             date = DateTimeTz.nowLocal(),
             firstRound = firstRoundAnswers,
@@ -68,11 +55,13 @@ class LucherSession(
             answers = answers,
             result = result,
             saveAnswers = true
-        ) as Result.Success<Folder>
+        ).dealWithError { error ->
+            throw error.exception ?: RuntimeException(error.message)
+        }
 
         onEndedCallback(this)
 
-        showResult(user, folderLink.data.link, userConnection)
+        showResult(user, folderLink.link, userConnection)
     }
 
     private suspend fun runRound(

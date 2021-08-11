@@ -5,7 +5,7 @@ import com.itextpdf.text.*
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
-import mmpi.MmpiAnswers
+import mmpi.MmpiAnswersContainer
 import mmpi.MmpiProcess
 import models.Question
 import org.apache.batik.transcoder.TranscoderInput
@@ -16,7 +16,7 @@ import storage.CentralDataStorage.pdfFonts
 
 fun pdfReportMmpi(
     questions: List<Question>,
-    answers: MmpiAnswers,
+    answers: MmpiAnswersContainer,
     result: MmpiProcess.Result
 ): ByteArray {
     val document = Document()

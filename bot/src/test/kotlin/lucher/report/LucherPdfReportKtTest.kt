@@ -1,7 +1,7 @@
 package lucher.report
 
 import com.soywiz.klock.DateTimeTz
-import lucher.LucherAnswers
+import lucher.LucherAnswersContainer
 import lucher.LucherColor
 import lucher.calculateLucher
 import models.User
@@ -38,7 +38,7 @@ internal class LucherPdfReportKtTest {
             googleDriveFolderId = ""
         )
 
-        val answers = LucherAnswers(
+        val answers = LucherAnswersContainer(
             user = user,
             date = DateTimeTz.nowLocal(),
             firstRound = LucherColor.values().toList(),

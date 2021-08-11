@@ -17,7 +17,7 @@ data class AllPairs(
     val contraversedPairs: List<LucherElement>
 )
 
-fun calculateLucher(answers: LucherAnswers, meanings: Map<String, String>): LucherResult {
+fun calculateLucher(answers: LucherAnswersContainer, meanings: Map<String, String>): LucherResult {
 
     val firstTouchAnswers = answers.firstRound.map { it.index.toString() }
     val secondTouchAnswers = answers.secondRound.map { it.index.toString() }

@@ -11,17 +11,20 @@ import models.User
 import telegram.LaunchMode
 import Result
 import com.soywiz.klock.DateTimeSpan
-import lucher.LucherAnswers
+import lucher.LucherAnswersContainer
 import lucher.LucherColor
 import lucher.roundAnswers
-import mmpi.MmpiAnswers
+import mmpi.MmpiAnswersContainer
 import mmpi.MmpiProcess
 import mmpi.justFewAnswers
+import models.AnswersContainer
 import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assertions.fail
-import quiz.DailyQuizAnswers
+import quiz.DailyQuizAnswer
+import quiz.DailyQuizAnswersContainer
+import quiz.DailyQuizOptions
 import telegram.QuizButton
 import telegram.SessionState
 import java.util.concurrent.TimeUnit
@@ -35,11 +38,6 @@ internal class UsersStorageTest {
             launchMode = LaunchMode.TESTS,
             testingMode = true
         )
-    }
-
-    @BeforeEach
-    @Timeout(value = 60, unit = TimeUnit.SECONDS)
-    fun clear() = runBlocking{
         CentralDataStorage.usersStorage.clear()
     }
 
@@ -52,9 +50,12 @@ internal class UsersStorageTest {
         val saveResult = CentralDataStorage.usersStorage.saveMmpiAnswers(mockAnswers)
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers = (CentralDataStorage.usersStorage
-            .getUserAnswers(user = user) as Result.Success)
-            .data.first()
+        val receivedAnswers = CentralDataStorage.usersStorage
+            .getUserAnswers(user = user)
+            .dealWithError {
+                fail(it.exception)
+            }
+            .first()
 
         assertEquals(mockAnswers, receivedAnswers)
         CentralDataStorage.deleteUser(user)
@@ -70,9 +71,12 @@ internal class UsersStorageTest {
         val saveResult = CentralDataStorage.usersStorage.saveLucherAnswers(mockAnswers)
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers = (CentralDataStorage.usersStorage
-            .getUserAnswers(user = user) as Result.Success)
-            .data[0]
+        val receivedAnswers = CentralDataStorage.usersStorage
+            .getUserAnswers(user)
+            .dealWithError {
+                fail(it.exception)
+            }
+            .first()
 
         assertEquals(mockAnswers, receivedAnswers)
         CentralDataStorage.deleteUser(user)
@@ -80,9 +84,14 @@ internal class UsersStorageTest {
     }
 
     @Test
-    @Timeout(value = 20, unit = TimeUnit.SECONDS)
+    @Timeout(value = 40, unit = TimeUnit.SECONDS)
     fun `session's states saving`() = runBlocking {
         val originalSessions: List<SessionState> = createSessions()
+
+        originalSessions.forEach {
+            it.addToStorage()
+        }
+
         val storageResult = CentralDataStorage.usersStorage.takeAllSessions()
 
         if (storageResult is Result.Error) {
@@ -93,7 +102,7 @@ internal class UsersStorageTest {
     }
 
     @Test
-    @Timeout(value = 20, unit = TimeUnit.SECONDS)
+    @Timeout(value = 40, unit = TimeUnit.SECONDS)
     fun `daily quiz answers saving`() = runBlocking {
         val user = createUser(334L, "daily quiz answers saving")
 
@@ -105,9 +114,12 @@ internal class UsersStorageTest {
 
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers = (CentralDataStorage.usersStorage
-            .getUserAnswers(user = user) as Result.Success)
-            .data.first()
+        val receivedAnswers: AnswersContainer = CentralDataStorage.usersStorage
+            .getUserAnswers(user = user)
+            .dealWithError {
+                fail(it.exception)
+            }
+            .first()
 
         assertEquals(mockAnswers, receivedAnswers)
         CentralDataStorage.deleteUser(user)
@@ -133,8 +145,8 @@ internal class UsersStorageTest {
         return user!!
     }
 
-    private fun createMmpiAnswers(user: User, gender: Gender): MmpiAnswers {
-        return MmpiAnswers(
+    private fun createMmpiAnswers(user: User, gender: Gender): MmpiAnswersContainer {
+        return MmpiAnswersContainer(
             user = user,
             date = DateTime.EPOCH.plus(DateTimeSpan(seconds = 1)).utc,
             gender = gender,
@@ -142,10 +154,10 @@ internal class UsersStorageTest {
         )
     }
 
-    private fun createDailyQuizAnswers(user: User): DailyQuizAnswers {
+    private fun createDailyQuizAnswers(user: User): DailyQuizAnswersContainer {
         val date = DateTime.EPOCH.plus(DateTimeSpan(seconds = 5)).utc
 
-        return DailyQuizAnswers(
+        return DailyQuizAnswersContainer(
             user = user,
             date = date,
             answers = listOf(
@@ -156,14 +168,14 @@ internal class UsersStorageTest {
         )
     }
 
-    private fun createDailyQuizAnswer(index: Int) = DailyQuizAnswers.Answer(
+    private fun createDailyQuizAnswer(index: Int) = DailyQuizAnswer.Option(
         questionIndex = index,
         questionText = "question $index",
-        option = DailyQuizAnswers.Option.AWFUL
+        option = DailyQuizOptions.AWFUL
     )
 
-    private fun createLucherAnswers(user: User): LucherAnswers {
-        return LucherAnswers(
+    private fun createLucherAnswers(user: User): LucherAnswersContainer {
+        return LucherAnswersContainer(
             user = user,
             date = DateTime.EPOCH.plus(DateTimeSpan(seconds = 2)).utc,
             firstRound = roundAnswers(),
@@ -178,26 +190,23 @@ internal class UsersStorageTest {
             roomId = 0,
             sessionId = 0,
             type = TypeOfTest.Mmpi566
-        ).apply { addToStorage() }
-
+        )
         val mmpi377 = SessionState(
             userId = 0,
             chatId = 0,
             roomId = 0,
             sessionId = 1,
             type = TypeOfTest.Mmpi377
-        ).apply { addToStorage() }
-
+        )
         val lucher = SessionState(
             userId = 0,
             chatId = 0,
             roomId = 0,
             sessionId = 2,
             type = TypeOfTest.Lucher
-        ).apply { addToStorage() }
+        )
 
         for (index in 0..20) {
-
             mmpi566.saveMessageId(index + 1L)
             mmpi566.saveAnswer(
                 QuizButton.Mmpi(

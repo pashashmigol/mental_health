@@ -1,11 +1,11 @@
 package storage
 
-import lucher.LucherAnswers
+import lucher.LucherAnswersContainer
 import lucher.LucherData
 import lucher.LucherResult
 import lucher.loadLucherData
 import lucher.report.pdfReportLucher
-import mmpi.MmpiAnswers
+import mmpi.MmpiAnswersContainer
 import mmpi.MmpiData
 import mmpi.MmpiProcess
 import mmpi.report.pdfReportMmpi
@@ -104,7 +104,7 @@ object CentralDataStorage {
         typeOfTest: TypeOfTest,
         result: MmpiProcess.Result,
         questions: List<Question>,
-        answers: MmpiAnswers,
+        answers: MmpiAnswersContainer,
         saveAnswers: Boolean
     ): Result<Folder> {
         if (saveAnswers) {
@@ -122,7 +122,7 @@ object CentralDataStorage {
 
     suspend fun saveLucher(
         user: User,
-        answers: LucherAnswers,
+        answers: LucherAnswersContainer,
         result: LucherResult,
         saveAnswers: Boolean
     ): Result<Folder> {

@@ -2,23 +2,28 @@ package telegram
 
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
-import lucher.LucherColor
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import storage.CentralDataStorage
+import java.util.concurrent.TimeUnit
 
 @InternalAPI
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TelegramRoomTest {
 
-    @BeforeEach
+    @BeforeAll
     fun setup() {
         CentralDataStorage.init(
             launchMode = LaunchMode.TESTS,
             testingMode = true
         )
+        CentralDataStorage.usersStorage.clear()
+    }
+
+    @AfterAll
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
+    fun clear() {
+        CentralDataStorage.usersStorage.clear()
     }
 
     @Test
@@ -27,22 +32,22 @@ internal class TelegramRoomTest {
             roomId = 0,
             userConnection = MockUserConnection
         )
-        for (id in 0..10L) {
-            val chatInfo = mockChatInfo(id)
-            originalRoom.welcomeUser(
-                chatInfo = chatInfo,
-                userConnection = MockUserConnection
+        for (id in 0..36L step 4) {
+            originalRoom.launchMmpi377(
+                launchSession(id, originalRoom)
             ).join()
-
-            originalRoom.launchMmpi377(chatInfo).join()
-
-//            originalRoom.sessions[chatInfo.userId]!!.sendAnswer(
-//                quizButton = QuizButton.Lucher(LucherColor.Blue),
-//                messageId = NOT_SENT
-//            )
+            originalRoom.launchMmpi566(
+                launchSession(id + 1, originalRoom)
+            ).join()
+            originalRoom.launchLucher(
+                launchSession(id + 2, originalRoom)
+            ).join()
+            originalRoom.launchDailyQuiz(
+                launchSession(id + 3, originalRoom)
+            ).join()
         }
 
-        assertEquals(11, originalRoom.sessions.size)
+        assertEquals(40, originalRoom.sessions.size)
 
         val restoredRoom = TelegramRoom(
             roomId = 0,
@@ -50,17 +55,24 @@ internal class TelegramRoomTest {
         )
 
         restoredRoom.restoreState()
-        assertEquals(11, restoredRoom.sessions.size)
+        assertEquals(40, restoredRoom.sessions.size)
     }
 }
 
 object MockUserConnection : UserConnection
 
-private fun mockChatInfo(id: Long): ChatInfo {
-    return ChatInfo(
+@InternalAPI
+private suspend fun launchSession(id: Long, originalRoom: TelegramRoom): ChatInfo {
+    val chatInfo = ChatInfo(
         userId = id,
         userName = "user $id",
         chatId = id,
         messageId = id
     )
+    originalRoom.welcomeUser(
+        chatInfo = chatInfo,
+        userConnection = MockUserConnection
+    ).join()
+
+    return chatInfo
 }

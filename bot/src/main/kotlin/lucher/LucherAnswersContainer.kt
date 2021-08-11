@@ -1,21 +1,21 @@
 package lucher
 
 import com.soywiz.klock.DateTimeTz
-import models.Answers
+import models.AnswersContainer
 import models.User
 
-class LucherAnswers(
+class LucherAnswersContainer(
     user: User,
     date: DateTimeTz,
     val firstRound: List<LucherColor>,
     val secondRound: List<LucherColor>
-) : Answers(user, date) {
+) : AnswersContainer(user, date) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as LucherAnswers
+        other as LucherAnswersContainer
 
         if (firstRound != other.firstRound) return false
         if (secondRound != other.secondRound) return false

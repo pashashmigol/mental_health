@@ -36,17 +36,7 @@ class MmpiSession(
     internal var testingCallback: OnFinished = null
     private var ongoingProcess: MmpiProcess? = null
 
-    override suspend fun start() {
-        val handler = CoroutineExceptionHandler { _, exception ->
-            print(exception)
-            userConnection.notifyAdmin("MmpiSession error", exception)
-            userConnection.sendMessage(chatId, CentralDataStorage.string("start_again"))
-        }
-        state.addToStorage()
-        scope.launch(handler) { executeTesting(user) }
-    }
-
-    private suspend fun executeTesting(user: User) {
+    override suspend fun executeTesting(user: User, chatId: Long) {
         askGender(
             userId = sessionId,
             connection = userConnection
@@ -87,9 +77,7 @@ class MmpiSession(
                 buttons = mmpiButtons(question),
                 buttonToHighLight = index
             )
-            if (//ongoingProcess.hasNextQuestion() &&
-                ongoingProcess.isItLastAskedQuestion(mmpiButton.index)
-            ) {
+            if (ongoingProcess.itLastAskedQuestion(mmpiButton.index)) {
                 sendNextQuestion(ongoingProcess, userConnection)
                     .apply { state.addMessageId(this) }
             }
@@ -117,7 +105,7 @@ class MmpiSession(
     ): Result<Unit> {
         val result = ongoingProcess.calculateResult()
 
-        val answers = MmpiAnswers(
+        val answers = MmpiAnswersContainer(
             user = user,
             date = DateTimeTz.nowLocal(),
             gender = gender,

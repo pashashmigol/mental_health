@@ -2,21 +2,21 @@ package mmpi
 
 import Gender
 import com.soywiz.klock.DateTimeTz
-import models.Answers
+import models.AnswersContainer
 import models.User
 
-class MmpiAnswers(
+class MmpiAnswersContainer(
     user: User,
     date: DateTimeTz,
     val gender: Gender,
     val answersList: List<MmpiProcess.Answer>
-) : Answers(user, date) {
+) : AnswersContainer(user, date) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as MmpiAnswers
+        other as MmpiAnswersContainer
 
         if (user != other.user) return false
         if (date != other.date) return false

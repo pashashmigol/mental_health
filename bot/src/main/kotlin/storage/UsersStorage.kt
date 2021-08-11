@@ -9,14 +9,16 @@ import com.soywiz.klock.parse
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.runBlocking
-import lucher.LucherAnswers
+import lucher.LucherAnswersContainer
 import lucher.LucherColor
-import mmpi.MmpiAnswers
+import mmpi.MmpiAnswersContainer
 import mmpi.MmpiProcess
-import models.Answers
+import models.AnswersContainer
 import models.TypeOfTest
 import models.User
-import quiz.DailyQuizAnswers
+import quiz.DailyQuizAnswer
+import quiz.DailyQuizAnswersContainer
+import quiz.DailyQuizOptions
 import telegram.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
@@ -56,7 +58,7 @@ class UsersStorage(database: FirebaseDatabase) {
 
     suspend fun saveDailyQuizAnswers(
         user: User,
-        answers: DailyQuizAnswers
+        answers: DailyQuizAnswersContainer
     ): Result<Unit> {
         val dateString = answers.date.toString(DateFormat.DEFAULT_FORMAT)
 
@@ -65,7 +67,7 @@ class UsersStorage(database: FirebaseDatabase) {
             put("date", dateString)
             put("answersList", answers.answers)
         }
-        val resultChannel = Channel<Result<Unit>>()
+        val resultChannel = Channel<Result<Unit>>(1)
 
         dailyQuizAnswersRef
             .child(user.id.toString())
@@ -171,7 +173,7 @@ class UsersStorage(database: FirebaseDatabase) {
     }
 
     fun clear() {
-        val resultChannel = Channel<Result<Unit>>()
+        val resultChannel = Channel<Result<Unit>>(5)
         activeSessionsRef
             .removeValue { error, _ ->
                 val result = when (error == null) {
@@ -197,6 +199,14 @@ class UsersStorage(database: FirebaseDatabase) {
                 resultChannel.offer(result)
             }
         dailyQuizAnswersRef
+            .removeValue { error, _ ->
+                val result = when (error == null) {
+                    true -> Result.Success(Unit)
+                    false -> Result.Error(error.details)
+                }
+                resultChannel.offer(result)
+            }
+        usersInfoRef
             .removeValue { error, _ ->
                 val result = when (error == null) {
                     true -> Result.Success(Unit)
@@ -247,7 +257,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun saveMmpiAnswers(answers: MmpiAnswers): Result<Unit> {
+    suspend fun saveMmpiAnswers(answers: MmpiAnswersContainer): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
 
         val hashMap = HashMap<String, Any>().apply {
@@ -278,7 +288,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun saveLucherAnswers(answers: LucherAnswers): Result<Unit> {
+    suspend fun saveLucherAnswers(answers: LucherAnswersContainer): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
 
         val hashMap = HashMap<String, Any>().apply {
@@ -333,8 +343,8 @@ class UsersStorage(database: FirebaseDatabase) {
         return Result.Success(Unit)
     }
 
-    suspend fun getUserAnswers(user: User): Result<List<Answers>> {
-        val resultChannel = Channel<List<Answers>>()
+    suspend fun getUserAnswers(user: User): Result<List<AnswersContainer>> {
+        val resultChannel = Channel<List<AnswersContainer>>(3)
 
         mmpiAnswersRef
             .child(user.id.toString())
@@ -444,7 +454,10 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
                         QuizButton.NewTest(TypeOfTest.valueOf(answer))
                     }
                     QuizButton.Type.DailyQuiz -> {
-                        QuizButton.DailyQuiz(DailyQuizAnswers.Option.valueOf(answer))
+                        QuizButton.DailyQuiz(DailyQuizOptions.valueOf(answer))
+                    }
+                    QuizButton.Type.Skip -> {
+                        QuizButton.Skip()
                     }
                 }
 
@@ -455,7 +468,7 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswers> {
+private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswersContainer> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
@@ -481,7 +494,7 @@ private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswers> {
         val answers = (answersMap["answersList"] as List<*>).map {
             MmpiProcess.Answer.valueOf(it as String)
         }
-        MmpiAnswers(
+        MmpiAnswersContainer(
             user = user,
             date = date,
             gender = gender,
@@ -491,7 +504,7 @@ private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswers> {
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun parseLucherAnswers(snapshot: DataSnapshot?): List<LucherAnswers> {
+private fun parseLucherAnswers(snapshot: DataSnapshot?): List<LucherAnswersContainer> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
@@ -517,7 +530,7 @@ private fun parseLucherAnswers(snapshot: DataSnapshot?): List<LucherAnswers> {
         val secondRound = (answersMap["secondRound"] as List<*>).map {
             LucherColor.valueOf(it as String)
         }
-        LucherAnswers(
+        LucherAnswersContainer(
             user = user,
             date = date,
             firstRound = firstRound,
@@ -527,7 +540,7 @@ private fun parseLucherAnswers(snapshot: DataSnapshot?): List<LucherAnswers> {
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun parseDailyQuizAnswers(snapshot: DataSnapshot?): List<DailyQuizAnswers> {
+private fun parseDailyQuizAnswers(snapshot: DataSnapshot?): List<DailyQuizAnswersContainer> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
@@ -547,16 +560,16 @@ private fun parseDailyQuizAnswers(snapshot: DataSnapshot?): List<DailyQuizAnswer
         val date: DateTimeTz = (answersMap["date"] as String).let {
             DateFormat.DEFAULT_FORMAT.parse(it)
         }
-        val answers = (answersMap["answersList"] as List<*>).map {
+        val answers: List<DailyQuizAnswer> = (answersMap["answersList"] as List<*>).map {
             it as HashMap<*, *>
 
-            DailyQuizAnswers.Answer(
+            DailyQuizAnswer.Option(
                 questionIndex = (it["questionIndex"] as Long).toInt(),
                 questionText = it["questionText"] as String,
-                option = DailyQuizAnswers.Option.valueOf(it["option"] as String)
+                option = DailyQuizOptions.valueOf(it["option"] as String)
             )
         }
-        DailyQuizAnswers(
+        DailyQuizAnswersContainer(
             user = user,
             date = date,
             answers = answers

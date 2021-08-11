@@ -3,14 +3,14 @@ package lucher.telegram
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import lucher.LucherColor
-import models.Answers
+import models.AnswersContainer
 import models.User
 
 import storage.CentralDataStorage
 
 import Result
 import com.soywiz.klock.DateTimeTz
-import lucher.LucherAnswers
+import lucher.LucherAnswersContainer
 import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
@@ -43,7 +43,7 @@ internal class LucherSessionTest {
     }
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 60, unit = TimeUnit.SECONDS)
     fun `basic case`() = runBlocking {
 
         val resultChannel = Channel<Unit>(1)
@@ -51,7 +51,7 @@ internal class LucherSessionTest {
 
         lucherSession.start()
 
-        val testAnswers = LucherAnswers(
+        val testAnswers = LucherAnswersContainer(
             user = testUser,
             date = DateTimeTz.nowLocal(),
             firstRound = LucherColor.values().toList(),
@@ -118,16 +118,16 @@ private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
 
 private fun checkAnswersSavedToDatabase(
     user: User,
-    expectedAnswers: LucherAnswers
+    expectedAnswers: LucherAnswersContainer
 ) = runBlocking {
 
     val answersResult = CentralDataStorage.usersStorage.getUserAnswers(user)
     assertTrue(answersResult is Result.Success)
 
-    val allAnswersFromDatabase: List<Answers> = (answersResult as Result.Success).data
-    assertFalse(allAnswersFromDatabase.isEmpty())
+    val allAnswersContainerFromDatabase: List<AnswersContainer> = (answersResult as Result.Success).data
+    assertFalse(allAnswersContainerFromDatabase.isEmpty())
 
-    val databaseAnswers = allAnswersFromDatabase.first() as LucherAnswers
+    val databaseAnswers = allAnswersContainerFromDatabase.first() as LucherAnswersContainer
 
     assertEquals(expectedAnswers.user, databaseAnswers.user)
 

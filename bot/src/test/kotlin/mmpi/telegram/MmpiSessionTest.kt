@@ -6,9 +6,9 @@ import models.TypeOfTest
 import storage.CentralDataStorage
 
 import Result
-import mmpi.MmpiAnswers
+import mmpi.MmpiAnswersContainer
 import mmpi.MmpiProcess
-import models.Answers
+import models.AnswersContainer
 import models.User
 import models.size
 import org.junit.jupiter.api.*
@@ -161,10 +161,10 @@ internal class MmpiSessionTest {
         val answersResult = CentralDataStorage.usersStorage.getUserAnswers(testUser)
         assertTrue(answersResult is Result.Success)
 
-        val answersFromDatabase: List<Answers> = (answersResult as Result.Success).data
-        assertFalse(answersFromDatabase.isEmpty())
+        val answersContainerFromDatabase: List<AnswersContainer> = (answersResult as Result.Success).data
+        assertFalse(answersContainerFromDatabase.isEmpty())
 
-        val lastAvailableAnswers = (answersFromDatabase.first() as MmpiAnswers).answersList
+        val lastAvailableAnswers = (answersContainerFromDatabase.first() as MmpiAnswersContainer).answersList
 
         assertArrayEquals(answers.toTypedArray(), lastAvailableAnswers.toTypedArray())
 

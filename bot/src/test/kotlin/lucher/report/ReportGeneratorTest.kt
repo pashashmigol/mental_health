@@ -1,7 +1,7 @@
 package lucher.report
 
 import com.soywiz.klock.DateTimeTz
-import lucher.LucherAnswers
+import lucher.LucherAnswersContainer
 import lucher.LucherColor
 import lucher.calculateLucher
 import org.junit.jupiter.api.BeforeAll
@@ -24,7 +24,7 @@ internal class ReportGeneratorTest {
 
     @Test
     fun generateReport() {
-        val answers = LucherAnswers(
+        val answers = LucherAnswersContainer(
             user = User(
                 id = 0,
                 name = "ReportGeneratorTest",

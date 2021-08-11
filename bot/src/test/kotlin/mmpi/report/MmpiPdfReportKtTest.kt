@@ -2,7 +2,7 @@ package mmpi.report
 
 import Gender
 import com.soywiz.klock.DateTimeTz
-import mmpi.MmpiAnswers
+import mmpi.MmpiAnswersContainer
 import mmpi.agreeTo
 import mmpi.calculateMmpi
 import models.User
@@ -58,7 +58,7 @@ internal class MmpiPdfReportKtTest {
                 googleDriveFolderId = ""
             )
 
-            val mmpiAnswers = MmpiAnswers(
+            val mmpiAnswers = MmpiAnswersContainer(
                 user = user,
                 answersList = answers,
                 date = DateTimeTz.nowLocal(),

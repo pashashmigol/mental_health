@@ -69,4 +69,10 @@ internal class QuizButtonTest {
             newTestRequest.typeOfTest
         )
     }
+
+    @Test
+    fun `fromString Skip`() {
+        val newTestRequest = QuizButton.fromString("Skip::")
+        assertTrue(newTestRequest is QuizButton.Skip)
+    }
 }

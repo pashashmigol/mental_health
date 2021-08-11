@@ -48,7 +48,7 @@ class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
 
     fun hasNextQuestion(): Boolean = hasNextQuestion(state, typeOfTest)
 
-    fun isItLastAskedQuestion(index: Int): Boolean {
+    fun itLastAskedQuestion(index: Int): Boolean {
         return index == state.currentQuestionIndex
     }
 

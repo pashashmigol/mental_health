@@ -12,7 +12,7 @@ import java.io.ByteArrayOutputStream
 
 
 fun pdfReportLucher(
-    answers: LucherAnswers,
+    answers: LucherAnswersContainer,
     result: LucherResult
 ): ByteArray {
     val document = Document()

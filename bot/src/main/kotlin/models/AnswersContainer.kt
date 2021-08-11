@@ -3,7 +3,7 @@ package models
 import com.soywiz.klock.DateFormat
 import com.soywiz.klock.DateTimeTz
 
-abstract class Answers(
+abstract class AnswersContainer(
     val user: User,
     val date: DateTimeTz
 ) {

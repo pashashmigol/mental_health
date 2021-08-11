@@ -1,7 +1,7 @@
 package storage
 
 import Gender
-import mmpi.MmpiAnswers
+import mmpi.MmpiAnswersContainer
 import mmpi.calculateMmpi
 import models.TypeOfTest
 import Result
@@ -15,7 +15,7 @@ suspend fun regenerateReports(userid: Long, gender: Gender): Result<Folder> {
 
         result as Result.Success
 
-        val mmpiAnswers = result.data.first() as MmpiAnswers
+        val mmpiAnswers = result.data.first() as MmpiAnswersContainer
         val mmpiResult = calculateMmpi(
             answers = mmpiAnswers.answersList,
             scales = mmpi377Data.scales(Gender.Female)

@@ -3,6 +3,8 @@ package quiz
 import models.Question
 
 class DailyQuizData(
-    val morningQuestions: List<Question>,
-    val eveningQuestions: List<Question>
+    val morningQuestionsClosed: List<Question>,
+    val eveningQuestionsClosed: List<Question>,
+    val morningQuestionsOpen: List<Question>,
+    val eveningQuestionsOpen: List<Question>
 )

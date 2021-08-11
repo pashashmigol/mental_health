@@ -8,7 +8,7 @@ import storage.CentralDataStorage.string
 //todo remove hardcode
 fun generateReport(
     userId: String,
-    answers: LucherAnswers,
+    answers: LucherAnswersContainer,
     result: LucherResult
 ): String = StringBuilder().appendHTML().apply {
     h1 { text(userId) }
@@ -17,7 +17,7 @@ fun generateReport(
 }.finalize().toString()
 
 private fun TagConsumer<StringBuilder>.createAnswersTable(
-    answers: LucherAnswers,
+    answers: LucherAnswersContainer,
     result: LucherResult
 ) {
     caption {
@@ -36,7 +36,7 @@ private fun TagConsumer<StringBuilder>.createAnswersTable(
     }
 }
 
-private fun BODY.showAnswers(answers: LucherAnswers) {
+private fun BODY.showAnswers(answers: LucherAnswersContainer) {
     table {
         tr {
             title("I")
