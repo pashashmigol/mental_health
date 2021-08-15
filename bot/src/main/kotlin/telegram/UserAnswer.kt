@@ -6,15 +6,15 @@ import mmpi.MmpiProcess
 import models.TypeOfTest
 import quiz.DailyQuizOptions
 
-sealed class QuizButton(val type: Type) {
+sealed class UserAnswer(val type: Type) {
     enum class Type {
-        Gender, Mmpi, Lucher, NewTestRequest, DailyQuiz, Skip
+        Gender, Mmpi, Lucher, NewTestRequest, DailyQuiz, Skip, Text
     }
 
     abstract fun makeString(): String
 
     companion object {
-        fun fromString(data: String): QuizButton {
+        fun fromString(data: String): UserAnswer {
 
             val (typeStr, valueStr, indexStr) = data.split(":")
 
@@ -25,11 +25,12 @@ sealed class QuizButton(val type: Type) {
                 Type.Lucher -> Lucher(LucherColor.valueOf(valueStr))
                 Type.DailyQuiz -> DailyQuiz(DailyQuizOptions.valueOf(valueStr))
                 Type.Skip -> Skip()
+                Type.Text -> Text(data)
             }
         }
     }
 
-    class GenderAnswer(val answer: Gender) : QuizButton(Type.Gender) {
+    class GenderAnswer(val answer: Gender) : UserAnswer(Type.Gender) {
         override fun makeString() = "${Type.Gender}:$answer:"
 
         override fun equals(other: Any?): Boolean {
@@ -50,7 +51,7 @@ sealed class QuizButton(val type: Type) {
         }
     }
 
-    class Mmpi(val index: Int, val answer: MmpiProcess.Answer) : QuizButton(Type.Mmpi) {
+    class Mmpi(val index: Int, val answer: MmpiProcess.Answer) : UserAnswer(Type.Mmpi) {
         override fun makeString() = "${Type.Mmpi}:$answer:$index"
 
         override fun equals(other: Any?): Boolean {
@@ -71,7 +72,7 @@ sealed class QuizButton(val type: Type) {
         }
     }
 
-    class Lucher(val answer: LucherColor) : QuizButton(Type.Lucher) {
+    class Lucher(val answer: LucherColor) : UserAnswer(Type.Lucher) {
         override fun makeString() = "${Type.Lucher}:$answer:"
 
         override fun equals(other: Any?): Boolean {
@@ -92,7 +93,7 @@ sealed class QuizButton(val type: Type) {
         }
     }
 
-    class NewTest(val typeOfTest: TypeOfTest) : QuizButton(Type.NewTestRequest) {
+    class NewTest(val typeOfTest: TypeOfTest) : UserAnswer(Type.NewTestRequest) {
         override fun makeString() = "${Type.NewTestRequest}:$typeOfTest:"
 
         override fun equals(other: Any?): Boolean {
@@ -113,11 +114,15 @@ sealed class QuizButton(val type: Type) {
         }
     }
 
-    class DailyQuiz(val answer: DailyQuizOptions) : QuizButton(Type.DailyQuiz) {
+    class DailyQuiz(val answer: DailyQuizOptions) : UserAnswer(Type.DailyQuiz) {
         override fun makeString() = "${Type.DailyQuiz}:$answer:"
     }
 
-    class Skip : QuizButton(Type.DailyQuiz) {
+    class Skip : UserAnswer(Type.DailyQuiz) {
         override fun makeString() = "${Type.Skip}::"
+    }
+
+    class Text(val text: String) : UserAnswer(Type.Text){
+        override fun makeString() = "${Type.Text}:text:"
     }
 }

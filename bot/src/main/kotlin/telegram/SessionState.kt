@@ -10,22 +10,22 @@ class SessionState(
     val userId: Long,
     val chatId: Long
 ) {
-    val answers: List<QuizButton> = mutableListOf()
-    fun addAnswer(quizButton: QuizButton) {
-        (answers as MutableList).add(quizButton)
+    val answers: List<UserAnswer> = mutableListOf()
+    fun addAnswer(userAnswer: UserAnswer) {
+        (answers as MutableList).add(userAnswer)
     }
 
     suspend fun addToStorage(){
         CentralDataStorage.usersStorage.addSession(this)
     }
 
-    suspend fun saveAnswer(quizButton: QuizButton) {
+    suspend fun saveAnswer(userAnswer: UserAnswer) {
         CentralDataStorage.usersStorage.addAnswer(
             sessionId = this.sessionId,
-            quizButton = quizButton,
+            userAnswer = userAnswer,
             index = answers.size
         )
-        (answers as MutableList).add(quizButton)
+        (answers as MutableList).add(userAnswer)
     }
 
     val messageIds: List<MessageId> = mutableListOf()

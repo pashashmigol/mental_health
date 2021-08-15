@@ -61,7 +61,7 @@ internal class LucherSessionTest {
         //complete first round
         LucherColor.values().forEachIndexed { i: Int, color: LucherColor ->
             lucherSession.sendAnswer(
-                QuizButton.Lucher(answer = color),
+                UserAnswer.Lucher(answer = color),
                 messageId = i.toLong()
             )
         }
@@ -69,7 +69,7 @@ internal class LucherSessionTest {
         //complete second round
         LucherColor.values().forEachIndexed { i: Int, color: LucherColor ->
             lucherSession.sendAnswer(
-                quizButton = QuizButton.Lucher(color),
+                userAnswer = UserAnswer.Lucher(color),
                 messageId = i.toLong()
             )
         }

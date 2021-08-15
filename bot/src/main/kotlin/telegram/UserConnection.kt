@@ -73,5 +73,5 @@ data class ChatInfo(
 
 data class Button(
     val text: String,
-    val quizButton: QuizButton
+    val userAnswer: UserAnswer
 )

@@ -87,7 +87,7 @@ class LucherSession(
 
         while (!allColorsChosen(answers)) {
             val quizButtonClick = waitForAnswer()
-            val quizButton = quizButtonClick.quizButton as QuizButton.Lucher
+            val quizButton = quizButtonClick.userAnswer as UserAnswer.Lucher
 
             val answer = quizButton.answer.name
             shownOptions.removeIf { it.name == answer }

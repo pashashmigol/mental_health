@@ -58,7 +58,7 @@ internal class MmpiSessionTest {
         session.start()
 
         val res = session.sendAnswer(
-            quizButton = QuizButton.GenderAnswer(
+            userAnswer = UserAnswer.GenderAnswer(
                 answer = Gender.Male
             ),
             messageId = NOT_SENT
@@ -73,7 +73,7 @@ internal class MmpiSessionTest {
 
         repeat(TypeOfTest.Mmpi566.size) {
             val answerResult = session.sendAnswer(
-                quizButton = QuizButton.Mmpi(
+                userAnswer = UserAnswer.Mmpi(
                     index = it,
                     answer = MmpiProcess.Answer.Agree
                 ),
@@ -108,7 +108,7 @@ internal class MmpiSessionTest {
 
         do {
             val res = session.sendAnswer(
-                quizButton = QuizButton.GenderAnswer(
+                userAnswer = UserAnswer.GenderAnswer(
                     answer = Gender.Male
                 ),
                 messageId = NOT_SENT
@@ -129,7 +129,7 @@ internal class MmpiSessionTest {
         val index = answersIds.next()
 
         val res = session.sendAnswer(
-            quizButton = QuizButton.Mmpi(
+            userAnswer = UserAnswer.Mmpi(
                 index = index,
                 answer = MmpiProcess.Answer.Agree
             ),
@@ -139,7 +139,7 @@ internal class MmpiSessionTest {
 
         if (it % 2 == 0) {//edit given answer
             session.sendAnswer(
-                quizButton = QuizButton.Mmpi(
+                userAnswer = UserAnswer.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Disagree
                 ), messageId = NOT_SENT

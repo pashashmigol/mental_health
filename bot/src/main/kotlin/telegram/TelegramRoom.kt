@@ -105,10 +105,10 @@ class TelegramRoom(
                 )
             }
 
-            val lucher = QuizButton.NewTest(typeOfTest = Lucher)
-            val mmpi566 = QuizButton.NewTest(typeOfTest = Mmpi566)
-            val mmpi377 = QuizButton.NewTest(typeOfTest = Mmpi377)
-            val dailyQuiz = QuizButton.NewTest(typeOfTest = DailyQuiz)
+            val lucher = UserAnswer.NewTest(typeOfTest = Lucher)
+            val mmpi566 = UserAnswer.NewTest(typeOfTest = Mmpi566)
+            val mmpi377 = UserAnswer.NewTest(typeOfTest = Mmpi377)
+            val dailyQuiz = UserAnswer.NewTest(typeOfTest = DailyQuiz)
 
             userConnection.sendMessageWithButtons(
                 chatId = chatInfo.chatId,
@@ -215,7 +215,7 @@ class TelegramRoom(
         sessions[userId]!!.start()
     }
 
-    fun callbackQuery(
+    fun onCallbackQuery(
         chatInfo: ChatInfo,
         data: String
     ) = scope.launch(exceptionHandler) {
@@ -225,11 +225,14 @@ class TelegramRoom(
         val messageId = chatInfo.messageId
 
         try {
-            when (val callback = QuizButton.fromString(data)) {
-                is QuizButton.GenderAnswer, is QuizButton.Lucher, is QuizButton.Mmpi, is QuizButton.DailyQuiz -> {
+            when (val callback: UserAnswer = UserAnswer.fromString(data)) {
+                is UserAnswer.GenderAnswer,
+                is UserAnswer.Lucher,
+                is UserAnswer.Mmpi,
+                is UserAnswer.DailyQuiz -> {
                     session?.sendAnswer(callback, messageId)
                 }
-                is QuizButton.NewTest -> {
+                is UserAnswer.NewTest -> {
                     userConnection.notifyAdmin("no session with id $userId, just ${formatSessionsList()}")
                     launchTest(
                         chatInfo = chatInfo,
@@ -242,6 +245,18 @@ class TelegramRoom(
             removeSession(chatInfo.userId)
             userConnection.cleanUp(charId, session?.state?.messageIds)
         }
+    }
+
+    fun onMessage(
+        chatInfo: ChatInfo,
+        message: String?
+    ) = scope.launch(exceptionHandler) {
+        val userId: UserId = chatInfo.userId
+        val session = sessions[userId]
+        val messageId = chatInfo.messageId
+        val answer = UserAnswer.Text(message ?: "")
+
+        session?.sendAnswer(answer, messageId)
     }
 
     private fun formatSessionsList(): String {

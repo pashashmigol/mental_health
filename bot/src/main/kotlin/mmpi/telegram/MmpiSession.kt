@@ -49,7 +49,7 @@ class MmpiSession(
     }
 
     private suspend fun waitForGenderChosen(): Gender {
-        return (waitForAnswer().quizButton as QuizButton.GenderAnswer).answer
+        return (waitForAnswer().userAnswer as UserAnswer.GenderAnswer).answer
     }
 
     private suspend fun collectAllAnswers(
@@ -62,7 +62,7 @@ class MmpiSession(
 
         while (ongoingProcess.hasNextQuestion()) {
             val quizButtonClick = waitForAnswer()
-            val mmpiButton = quizButtonClick.quizButton as QuizButton.Mmpi
+            val mmpiButton = quizButtonClick.userAnswer as UserAnswer.Mmpi
 
             ongoingProcess.submitAnswer(
                 mmpiButton.index, mmpiButton.answer
@@ -91,7 +91,7 @@ class MmpiSession(
         super.applyState(state)
 
         val index: Int = state.answers
-            .filterIsInstance(QuizButton.Mmpi::class.java)
+            .filterIsInstance(UserAnswer.Mmpi::class.java)
             .maxOfOrNull { it.index } ?: 0
 
         ongoingProcess?.setNextQuestionIndex(index + 1)

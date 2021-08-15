@@ -55,29 +55,77 @@ class DailyQuizSession(
     private suspend fun collectAnswers(questions: List<Question>): List<DailyQuizAnswer> {
         val questionsQueue: Queue<Question> = LinkedList(questions)
 
-        val sentQuestions = mutableMapOf<MessageId, Question>()
-        val answers = mutableMapOf<MessageId, DailyQuizAnswer>()
+        val sentQuestions = sortedMapOf<MessageId, Question>()
+        val answers = mutableMapOf<MessageId, DailyQuizAnswer?>()
 
         askNextQuestion(questionsQueue, sentQuestions)
 
         while (answers.size < questions.size) {
-            val buttonClick: QuizButtonClick = waitForAnswer()
 
-            if (buttonClick.quizButton is QuizButton.DailyQuiz) {
-                val buttonQuestion = sentQuestions[buttonClick.messageId]!!
-                highLightAnswer(buttonClick, buttonQuestion)
+            val answerEvent: AnswerEvent = waitForAnswer()
 
-                answers[buttonClick.messageId] = DailyQuizAnswer.Option(
-                    questionIndex = buttonQuestion.index,
-                    questionText = buttonQuestion.text,
-                    option = buttonClick.quizButton.answer
+            answers[answerEvent.messageId] = when (answerEvent.userAnswer) {
+                is UserAnswer.DailyQuiz -> handleClosedAnswer(
+                    sentQuestions = sentQuestions,
+                    answerEvent = answerEvent,
+                    questionsQueue = questionsQueue
                 )
-            }
-            if (isLastAsked(buttonClick.messageId)) {
-                askNextQuestion(questionsQueue, sentQuestions)
+                is UserAnswer.Text -> handleOpenAnswer(
+                    sentQuestions = sentQuestions,
+                    answerEvent = answerEvent,
+                    questionsQueue = questionsQueue
+                )
+                is UserAnswer.Skip -> handleSkipButton(
+                    questionsQueue = questionsQueue,
+                    sentQuestions = sentQuestions
+                )
+                else -> null
             }
         }
-        return answers.values.toList()
+        return answers.values.filterNotNull().toList()
+    }
+
+    private fun handleSkipButton(
+        questionsQueue: Queue<Question>,
+        sentQuestions: SortedMap<MessageId, Question>
+    ): Nothing? {
+        askNextQuestion(questionsQueue, sentQuestions)
+        return null
+    }
+
+    private fun handleOpenAnswer(
+        sentQuestions: SortedMap<MessageId, Question>,
+        answerEvent: AnswerEvent,
+        questionsQueue: Queue<Question>
+    ): DailyQuizAnswer {
+        askNextQuestion(questionsQueue, sentQuestions)
+
+        state.addMessageId(answerEvent.messageId)
+
+        return DailyQuizAnswer.Text(
+            questionIndex = sentQuestions.values.last().index,
+            questionText = sentQuestions.values.last().text,
+            text = (answerEvent.userAnswer as UserAnswer.Text).text
+        )
+    }
+
+    private fun handleClosedAnswer(
+        sentQuestions: MutableMap<MessageId, Question>,
+        answerEvent: AnswerEvent,
+        questionsQueue: Queue<Question>
+    ): DailyQuizAnswer {
+
+        val buttonQuestion = sentQuestions[answerEvent.messageId]!!
+        highLightAnswer(answerEvent, buttonQuestion)
+
+        if (isLastAsked(answerEvent.messageId)) {
+            askNextQuestion(questionsQueue, sentQuestions)
+        }
+        return DailyQuizAnswer.Option(
+            questionIndex = buttonQuestion.index,
+            questionText = buttonQuestion.text,
+            option = (answerEvent.userAnswer as UserAnswer.DailyQuiz).answer
+        )
     }
 
     private fun askNextQuestion(
@@ -90,11 +138,11 @@ class DailyQuizSession(
         }
     }
 
-    private fun highLightAnswer(buttonClick: QuizButtonClick, question: Question) {
-        buttonClick.quizButton as QuizButton.DailyQuiz
+    private fun highLightAnswer(buttonClick: AnswerEvent, question: Question) {
+        buttonClick.userAnswer as UserAnswer.DailyQuiz
 
         val index = question.options.indexOfFirst {
-            it.tag == buttonClick.quizButton.answer.name
+            it.tag == buttonClick.userAnswer.answer.name
         }
         userConnection.highlightAnswer(
             messageId = buttonClick.messageId,
@@ -132,7 +180,7 @@ class DailyQuizSession(
         val buttons = options.map { option ->
             Button(
                 text = option.text,
-                quizButton = QuizButton.DailyQuiz(DailyQuizOptions.valueOf(option.tag))
+                userAnswer = UserAnswer.DailyQuiz(DailyQuizOptions.valueOf(option.tag))
             )
         }
         return buttons

@@ -5,6 +5,7 @@ import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.command
+import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.webhook
 import io.ktor.util.*
 import telegram.helpers.chatInfo
@@ -59,9 +60,15 @@ fun launchClientBot(
                 telegramRoom.restoreState()
             }
             callbackQuery {
-                telegramRoom.callbackQuery(
+                telegramRoom.onCallbackQuery(
                     chatInfo = chatInfo(),
                     data = this.callbackQuery.data
+                )
+            }
+            message {
+                telegramRoom.onMessage(
+                    chatInfo = chatInfo(),
+                    message = this.message.text
                 )
             }
         }

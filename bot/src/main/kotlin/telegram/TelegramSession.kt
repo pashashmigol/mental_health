@@ -49,15 +49,15 @@ abstract class TelegramSession<out T>(
 
     internal abstract suspend fun executeTesting(user: User, chatId: Long)
 
-    private val answers = Channel<QuizButtonClick>(10)
+    private val answers = Channel<AnswerEvent>(10)
 
-    suspend fun sendAnswer(quizButton: QuizButton, messageId: MessageId): Result<Unit> {
-        state.saveAnswer(quizButton)
-        answers.offer(QuizButtonClick(quizButton, messageId))
+    suspend fun sendAnswer(userAnswer: UserAnswer, messageId: MessageId): Result<Unit> {
+        state.saveAnswer(userAnswer)
+        answers.offer(AnswerEvent(userAnswer, messageId))
         return Result.Success(Unit)
     }
 
-    suspend fun waitForAnswer(): QuizButtonClick {
+    suspend fun waitForAnswer(): AnswerEvent {
         return answers.receive()
     }
 

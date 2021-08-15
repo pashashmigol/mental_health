@@ -3,6 +3,7 @@ package telegram.helpers
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.handlers.CallbackQueryHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
+import com.github.kotlintelegrambot.dispatcher.handlers.MessageHandlerEnvironment
 import models.User
 import org.apache.poi.util.StringUtil
 import storage.CentralDataStorage
@@ -40,9 +41,17 @@ fun formatName(
 
 fun CallbackQueryHandlerEnvironment.chatInfo() = ChatInfo(
     userId = callbackQuery.from.id,
-    userName = callbackQuery.from.firstName + " " + callbackQuery.from.lastName,
+    userName = formatName(callbackQuery.from.firstName, callbackQuery.from.lastName),
     chatId = callbackQuery.message!!.chat.id,
     messageId = callbackQuery.message!!.messageId
+)
+
+
+fun MessageHandlerEnvironment.chatInfo() = ChatInfo(
+    userId = message.from?.id ?: 0L,
+    userName = formatName(message.from?.firstName, message.from?.lastName),
+    chatId = message.chat.id,
+    messageId = message.messageId
 )
 
 fun showUsersList(

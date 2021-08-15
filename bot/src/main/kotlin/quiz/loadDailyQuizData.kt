@@ -25,7 +25,7 @@ private fun loadOpenQuestions(
         throw IllegalStateException(it.message)
     }.mapIndexed { index, map ->
         map.toQuestion(index, emptyList(), columnId)
-    }
+    }.filterNotNull()
 
     val size = questions.size
     return questions.mapIndexed { i: Int, question: Question ->
@@ -61,7 +61,7 @@ private fun loadClosedQuestions(
         throw IllegalStateException(it.message)
     }.mapIndexed { index, map ->
         map.toQuestion(index, answerOptions, columnId)
-    }
+    }.filterNotNull()
 
     val size = questions.size
     return questions.mapIndexed { i: Int, question: Question ->
@@ -73,12 +73,14 @@ private fun Map<String, Any>.toQuestion(
     index: Int,
     answerOptions: List<Question.Option>,
     columnId: String
-): Question {
-    return Question(
-        index = index,
-        text = stringFor(columnId),
-        options = answerOptions
-    )
+): Question? {
+    return stringFor(columnId)?.let {
+        Question(
+            index = index,
+            text = it,
+            options = answerOptions
+        )
+    }
 }
 
-private fun Map<String, Any>.stringFor(key: String) = (this[key] as? String) ?: ""
+private fun Map<String, Any>.stringFor(key: String) = (this[key] as? String)

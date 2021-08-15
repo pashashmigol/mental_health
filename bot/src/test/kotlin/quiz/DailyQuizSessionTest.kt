@@ -1,18 +1,13 @@
 package quiz
 
 import kotlinx.coroutines.runBlocking
-import models.User
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.Timeout
 import storage.CentralDataStorage
-import telegram.Button
-import telegram.QuizButton
 import telegram.LaunchMode
-import telegram.UserConnection
 import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

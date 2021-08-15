@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Assertions.fail
 import quiz.DailyQuizAnswer
 import quiz.DailyQuizAnswersContainer
 import quiz.DailyQuizOptions
-import telegram.QuizButton
+import telegram.UserAnswer
 import telegram.SessionState
 import java.util.concurrent.TimeUnit
 
@@ -209,21 +209,21 @@ internal class UsersStorageTest {
         for (index in 0..20) {
             mmpi566.saveMessageId(index + 1L)
             mmpi566.saveAnswer(
-                QuizButton.Mmpi(
+                UserAnswer.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 )
             )
             mmpi377.saveMessageId(index * 2 + 1L)
             mmpi377.saveAnswer(
-                QuizButton.Mmpi(
+                UserAnswer.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 )
             )
             lucher.saveMessageId(index * 3 + 1L)
             lucher.saveAnswer(
-                QuizButton.Lucher(
+                UserAnswer.Lucher(
                     answer = LucherColor.Gray
                 )
             )

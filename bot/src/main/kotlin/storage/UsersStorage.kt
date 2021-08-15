@@ -103,7 +103,7 @@ class UsersStorage(database: FirebaseDatabase) {
 
     suspend fun addAnswer(
         sessionId: SessionId,
-        quizButton: QuizButton,
+        userAnswer: UserAnswer,
         index: Int
     ): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
@@ -112,8 +112,8 @@ class UsersStorage(database: FirebaseDatabase) {
             .child(sessionId.toString())
             .child("answers")
             .child(index.toString())
-            .setValue(quizButton) { error: DatabaseError?, _: DatabaseReference ->
-                println("addAnswer(); callback $quizButton")
+            .setValue(userAnswer) { error: DatabaseError?, _: DatabaseReference ->
+                println("addAnswer(); callback $userAnswer")
 
                 val result = when (error == null) {
                     true -> Result.Success(Unit)
@@ -419,7 +419,6 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
         object : GenericTypeIndicator<HashMap<String, Any>>() {}
 
-
     return snapshot?.children?.map { dataSnapshot ->
         val sessionMap = dataSnapshot.getValue(typeIndicator)
 
@@ -436,28 +435,31 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
 
         (sessionMap["answers"] as? ArrayList<HashMap<String, Any>>)
             ?.forEach {
-                val type = QuizButton.Type.valueOf(it["type"] as String)
+                val type = UserAnswer.Type.valueOf(it["type"] as String)
                 val index = (it["index"] as? Long)?.toInt()
                 val answer = it["answer"] as String
 
                 val callback = when (type) {
-                    QuizButton.Type.Gender -> {
-                        QuizButton.GenderAnswer(Gender.valueOf(answer))
+                    UserAnswer.Type.Gender -> {
+                        UserAnswer.GenderAnswer(Gender.valueOf(answer))
                     }
-                    QuizButton.Type.Mmpi -> {
-                        QuizButton.Mmpi(index!!, MmpiProcess.Answer.valueOf(answer))
+                    UserAnswer.Type.Mmpi -> {
+                        UserAnswer.Mmpi(index!!, MmpiProcess.Answer.valueOf(answer))
                     }
-                    QuizButton.Type.Lucher -> {
-                        QuizButton.Lucher(LucherColor.valueOf(answer))
+                    UserAnswer.Type.Lucher -> {
+                        UserAnswer.Lucher(LucherColor.valueOf(answer))
                     }
-                    QuizButton.Type.NewTestRequest -> {
-                        QuizButton.NewTest(TypeOfTest.valueOf(answer))
+                    UserAnswer.Type.NewTestRequest -> {
+                        UserAnswer.NewTest(TypeOfTest.valueOf(answer))
                     }
-                    QuizButton.Type.DailyQuiz -> {
-                        QuizButton.DailyQuiz(DailyQuizOptions.valueOf(answer))
+                    UserAnswer.Type.DailyQuiz -> {
+                        UserAnswer.DailyQuiz(DailyQuizOptions.valueOf(answer))
                     }
-                    QuizButton.Type.Skip -> {
-                        QuizButton.Skip()
+                    UserAnswer.Type.Skip -> {
+                        UserAnswer.Skip()
+                    }
+                    UserAnswer.Type.Text -> {
+                        UserAnswer.Text(answer)
                     }
                 }
 

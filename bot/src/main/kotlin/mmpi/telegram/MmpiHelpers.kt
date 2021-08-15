@@ -4,7 +4,7 @@ import mmpi.MmpiProcess
 import models.Question
 import storage.CentralDataStorage.string
 import telegram.Button
-import telegram.QuizButton
+import telegram.UserAnswer
 import telegram.UserConnection
 import telegram.UserId
 
@@ -24,7 +24,7 @@ fun mmpiButtons(question: Question): List<Button> {
     return question.options.map {
         Button(
             text = it.text,
-            quizButton = QuizButton.Mmpi(
+            userAnswer = UserAnswer.Mmpi(
                 index = question.index,
                 answer = MmpiProcess.Answer.valueOf(it.tag)
             )
@@ -36,7 +36,7 @@ fun genderButtons(): List<Button> {
     return Gender.values().map {
         Button(
             text = it.title,
-            quizButton = QuizButton.GenderAnswer(
+            userAnswer = UserAnswer.GenderAnswer(
                 answer = it
             )
         )
