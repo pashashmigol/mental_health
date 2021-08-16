@@ -8,6 +8,7 @@ import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.webhook
 import io.ktor.util.*
+import quiz.DailyQuizSession
 import telegram.helpers.chatInfo
 
 @InternalAPI
@@ -48,7 +49,7 @@ fun launchClientBot(
             }
             command("quiz") {
                 println("quiz")
-                telegramRoom.launchDailyQuiz(chatInfo())
+                telegramRoom.launchDailyQuiz(chatInfo(), DailyQuizSession.Time.MORNING)
             }
             command("start") {
                 telegramRoom.welcomeUser(

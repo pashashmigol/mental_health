@@ -35,7 +35,8 @@ internal class LucherPdfReportKtTest {
             id = -1,
             name = "Test User",
             googleDriveFolderUrl = "",
-            googleDriveFolderId = ""
+            googleDriveFolderId = "",
+            runDailyQuiz = false
         )
 
         val answers = LucherAnswersContainer(

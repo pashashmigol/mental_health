@@ -7,4 +7,5 @@ data class User(
     val name: String = "",
     val googleDriveFolderUrl: String = "",
     val googleDriveFolderId: String = "",
+    val runDailyQuiz: Boolean = false
 )

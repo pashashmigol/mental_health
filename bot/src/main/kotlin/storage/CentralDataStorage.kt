@@ -88,11 +88,11 @@ object CentralDataStorage {
             id = userId,
             name = userName,
             googleDriveFolderUrl = folder.link,
-            googleDriveFolderId = folder.id
+            googleDriveFolderId = folder.id,
+            runDailyQuiz = false
         )
         return users.saveUser(user)
     }
-
 
     suspend fun deleteUser(user: User): Result<Unit> {
         deleteFolder(user.googleDriveFolderId, connection)

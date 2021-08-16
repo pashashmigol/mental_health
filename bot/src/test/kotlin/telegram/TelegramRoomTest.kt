@@ -4,6 +4,7 @@ import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import quiz.DailyQuizSession
 import storage.CentralDataStorage
 import java.util.concurrent.TimeUnit
 
@@ -43,7 +44,8 @@ internal class TelegramRoomTest {
                 launchSession(id + 2, originalRoom)
             ).join()
             originalRoom.launchDailyQuiz(
-                launchSession(id + 3, originalRoom)
+                launchSession(id + 3, originalRoom),
+                DailyQuizSession.Time.MORNING
             ).join()
         }
 

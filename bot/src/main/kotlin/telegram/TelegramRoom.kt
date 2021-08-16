@@ -193,8 +193,39 @@ class TelegramRoom(
         sessions[userId]!!.start()
     }
 
+    fun onMorningChron() {
+        CentralDataStorage.usersStorage.allUsers().forEach { user ->
+            val chatInfo = ChatInfo(
+                userId = user.id,
+                userName = user.name,
+                chatId = user.id,
+                messageId = NOT_SENT,
+            )
+            launchDailyQuiz(chatInfo = chatInfo, dayTime = DailyQuizSession.Time.MORNING)
+        }
+    }
+
+    fun onEveningChron() {
+        CentralDataStorage.usersStorage.allUsers()
+            .filter {
+                it.runDailyQuiz
+            }.forEach { user ->
+                val chatInfo = ChatInfo(
+                    userId = user.id,
+                    userName = user.name,
+                    chatId = user.id,
+                    messageId = NOT_SENT,
+                )
+                launchDailyQuiz(
+                    chatInfo = chatInfo,
+                    dayTime = DailyQuizSession.Time.EVENING
+                )
+            }
+    }
+
     fun launchDailyQuiz(
-        chatInfo: ChatInfo
+        chatInfo: ChatInfo,
+        dayTime: DailyQuizSession.Time
     ) = scope.launch(exceptionHandler) {
         println("$TAG: launchLucherTest();")
         val userId = chatInfo.userId
@@ -207,7 +238,7 @@ class TelegramRoom(
         sessions[userId] = DailyQuizSession(
             user = user,
             chatId = chatId,
-            dayTime = DailyQuizSession.Time.MORNING,
+            dayTime = dayTime,
             roomId = roomId,
             userConnection = userConnection,
         ) { removeSession(it.sessionId) }

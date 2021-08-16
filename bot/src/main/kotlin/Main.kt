@@ -27,6 +27,7 @@ fun Application.main() {
     bindToServerEvents(botsKeepers)
     bindTelegramWebhooks(botsKeepers)
     bindTToStartStopEvents(botsKeepers)
+    bindTToChronEvents(botsKeepers)
 }
 
 
@@ -87,6 +88,28 @@ private fun Application.bindToServerEvents(keepers: List<BotsKeeper>) {
         }
         LifecycleManager.getInstance().setShutdownHook {
             notifyAdmins(keepers, "LifecycleManager.getInstance().setShutdownHook")
+        }
+    }
+}
+
+@InternalAPI
+private fun Application.bindTToChronEvents(keepers: List<BotsKeeper>) {
+
+    routing {
+        post("/morning") {
+            call.respond("ok")
+            notifyAdmins(keepers, "/morning is called")
+
+            keepers.forEach{
+                it.room.onMorningChron()
+            }
+        }
+        post("/evening") {
+            call.respond("ok")
+            notifyAdmins(keepers, "/evening is called")
+            keepers.forEach{
+                it.room.onEveningChron()
+            }
         }
     }
 }

@@ -484,7 +484,8 @@ private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswersContainer
                 id = it["id"] as Long,
                 name = it["name"] as String,
                 googleDriveFolderId = it["googleDriveFolderId"] as String,
-                googleDriveFolderUrl = it["googleDriveFolder"] as String
+                googleDriveFolderUrl = it["googleDriveFolder"] as String,
+                runDailyQuiz = it["runDailyQuiz"] as? Boolean ?: false
             )
         }
         val date: DateTimeTz = (answersMap["date"] as String).let {
@@ -520,7 +521,8 @@ private fun parseLucherAnswers(snapshot: DataSnapshot?): List<LucherAnswersConta
                 id = it["id"] as Long,
                 name = it["name"] as String,
                 googleDriveFolderId = it["googleDriveFolderId"] as String,
-                googleDriveFolderUrl = it["googleDriveFolder"] as String
+                googleDriveFolderUrl = it["googleDriveFolder"] as String,
+                runDailyQuiz = it["runDailyQuiz"] as? Boolean ?: false
             )
         }
         val date: DateTimeTz = (answersMap["date"] as String).let {
@@ -556,7 +558,8 @@ private fun parseDailyQuizAnswers(snapshot: DataSnapshot?): List<DailyQuizAnswer
                 id = it["id"] as Long,
                 name = it["name"] as String,
                 googleDriveFolderId = it["googleDriveFolderId"] as String,
-                googleDriveFolderUrl = it["googleDriveFolderUrl"] as String
+                googleDriveFolderUrl = it["googleDriveFolderUrl"] as String,
+                runDailyQuiz = it["runDailyQuiz"] as? Boolean ?: false
             )
         }
         val date: DateTimeTz = (answersMap["date"] as String).let {

@@ -35,7 +35,8 @@ internal class LenaTest {
             id = 111,
             name = "LenaTest",
             googleDriveFolderUrl = "",
-            googleDriveFolderId = ""
+            googleDriveFolderId = "",
+            runDailyQuiz = false
         )
         val result = calculateMmpi(
             answers = answersList,

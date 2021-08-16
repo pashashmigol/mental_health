@@ -29,7 +29,8 @@ internal class ReportGeneratorTest {
                 id = 0,
                 name = "ReportGeneratorTest",
                 googleDriveFolderUrl = "",
-                googleDriveFolderId = ""
+                googleDriveFolderId = "",
+                runDailyQuiz = false
             ),
             date = DateTimeTz.nowLocal(),
             firstRound = listOf(

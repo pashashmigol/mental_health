@@ -186,7 +186,8 @@ private fun checkState(answers: List<MmpiProcess.Answer>, session: MmpiSession?)
             id = 0,
             name = "",
             googleDriveFolderUrl = "",
-            googleDriveFolderId = ""
+            googleDriveFolderId = "",
+            runDailyQuiz = false
         ),
         chatId = 1L,
         roomId = sessionState.sessionId,

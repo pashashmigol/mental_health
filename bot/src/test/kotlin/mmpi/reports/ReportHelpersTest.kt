@@ -32,7 +32,8 @@ internal class ReportHelpersTest {
                 id = 0,
                 name = "Pasha Shmyhol",
                 googleDriveFolderUrl = "",
-                googleDriveFolderId = ""
+                googleDriveFolderId = "",
+                runDailyQuiz = false
             ),
             questions = listOf(),
             answers = listOf(),
