@@ -461,6 +461,9 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
                     UserAnswer.Type.Text -> {
                         UserAnswer.Text(answer)
                     }
+                    UserAnswer.Type.Switch ->  {
+                        UserAnswer.Switch(answer.toBoolean())
+                    }
                 }
 
                 sessionState.addAnswer(callback)

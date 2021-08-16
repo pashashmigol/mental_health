@@ -11,6 +11,7 @@ import io.ktor.util.collections.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import models.TypeOfTest
+import models.User
 import quiz.DailyQuizSession
 
 
@@ -88,17 +89,16 @@ class TelegramRoom(
     ): Job {
         return scope.launch {
             val userId = chatInfo.userId
+            val user: User
 
             if (CentralDataStorage.usersStorage.hasUserWithId(userId)) {
-                val user = CentralDataStorage.usersStorage.getUser(userId)
-
+                user = CentralDataStorage.usersStorage.getUser(userId)!!
                 userConnection.notifyAdmin(
                     "user already exists: $user"
                 )
             } else {
                 CentralDataStorage.createUser(userId, chatInfo.userName)
-                val user = CentralDataStorage.usersStorage.getUser(userId)
-                assert(user != null)
+                user = CentralDataStorage.usersStorage.getUser(userId)!!
 
                 userConnection.notifyAdmin(
                     "user created: $user"
@@ -108,7 +108,14 @@ class TelegramRoom(
             val lucher = UserAnswer.NewTest(typeOfTest = Lucher)
             val mmpi566 = UserAnswer.NewTest(typeOfTest = Mmpi566)
             val mmpi377 = UserAnswer.NewTest(typeOfTest = Mmpi377)
-            val dailyQuiz = UserAnswer.NewTest(typeOfTest = DailyQuiz)
+
+            val (dailyQuizSwitchText, dailyQuizSwitch) = if (user.runDailyQuiz) {
+                Pair(string("daily_quiz_off"), UserAnswer.Switch(on = false))
+            } else {
+                Pair(string("daily_quiz_on"), UserAnswer.Switch(on = true))
+            }
+
+            val dailyQuizButton = Button(dailyQuizSwitchText, dailyQuizSwitch)
 
             userConnection.sendMessageWithButtons(
                 chatId = chatInfo.chatId,
@@ -117,7 +124,7 @@ class TelegramRoom(
                     Button(string("lucher"), lucher),
                     Button(string("mmpi_566"), mmpi566),
                     Button(string("mmpi_377"), mmpi377),
-                    Button(string("daily_quiz_on"), dailyQuiz)
+                    dailyQuizButton
                 )
             )
         }
@@ -256,26 +263,65 @@ class TelegramRoom(
         val messageId = chatInfo.messageId
 
         try {
-            when (val callback: UserAnswer = UserAnswer.fromString(data)) {
+            when (val userAnswer: UserAnswer = UserAnswer.fromString(data)) {
                 is UserAnswer.GenderAnswer,
                 is UserAnswer.Lucher,
                 is UserAnswer.Mmpi,
                 is UserAnswer.DailyQuiz -> {
-                    session?.sendAnswer(callback, messageId)
+                    session?.sendAnswer(userAnswer, messageId)
                 }
                 is UserAnswer.NewTest -> {
                     userConnection.notifyAdmin("no session with id $userId, just ${formatSessionsList()}")
                     launchTest(
                         chatInfo = chatInfo,
-                        type = callback.typeOfTest
+                        type = userAnswer.typeOfTest
                     )
                 }
+                is UserAnswer.Switch -> onSwitch(chatInfo, userConnection, userAnswer)
             }
         } catch (e: Exception) {
             userConnection.notifyAdmin("callbackQuery()", exception = e)
             removeSession(chatInfo.userId)
             userConnection.cleanUp(charId, session?.state?.messageIds)
         }
+    }
+
+    private fun onSwitch(
+        chatInfo: ChatInfo,
+        userConnection: UserConnection,
+        switch: UserAnswer.Switch
+    ) {
+        val lucher = UserAnswer.NewTest(typeOfTest = Lucher)
+        val mmpi566 = UserAnswer.NewTest(typeOfTest = Mmpi566)
+        val mmpi377 = UserAnswer.NewTest(typeOfTest = Mmpi377)
+
+        val user = CentralDataStorage.usersStorage.getUser(chatInfo.userId)!!
+
+        val (dailyQuizSwitchText, dailyQuizSwitch) = if (switch.on) {
+            Pair(string("daily_quiz_off"), UserAnswer.Switch(on = false))
+        } else {
+            Pair(string("daily_quiz_on"), UserAnswer.Switch(on = true))
+        }
+
+        val dailyQuizButton = Button(dailyQuizSwitchText, dailyQuizSwitch)
+
+        val updatedUser = user.copy(runDailyQuiz = switch.on)
+
+        scope.launch(exceptionHandler) {
+            CentralDataStorage.usersStorage.saveUser(updatedUser)
+        }
+
+        userConnection.updateMessage(
+            chatId = chatInfo.chatId,
+            messageId = chatInfo.messageId,
+            text = string("choose_test"),
+            buttons = listOf(
+                Button(string("lucher"), lucher),
+                Button(string("mmpi_566"), mmpi566),
+                Button(string("mmpi_377"), mmpi377),
+                dailyQuizButton
+            )
+        )
     }
 
     fun onMessage(

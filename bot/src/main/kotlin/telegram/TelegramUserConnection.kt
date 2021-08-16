@@ -190,7 +190,7 @@ class TelegramUserConnection(
             return NOT_SENT
         }
         val markup = buttons.map {
-            InlineKeyboardButton.CallbackData(it.text, it.userAnswer.makeString())
+            listOf(InlineKeyboardButton.CallbackData(it.text, it.userAnswer.makeString()))
         }
         val result = botKeeper().clientBot.editMessageText(
             chatId = chatId,

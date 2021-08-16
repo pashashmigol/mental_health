@@ -8,7 +8,7 @@ import quiz.DailyQuizOptions
 
 sealed class UserAnswer(val type: Type) {
     enum class Type {
-        Gender, Mmpi, Lucher, NewTestRequest, DailyQuiz, Skip, Text
+        Gender, Mmpi, Lucher, NewTestRequest, DailyQuiz, Skip, Text, Switch
     }
 
     abstract fun makeString(): String
@@ -18,7 +18,7 @@ sealed class UserAnswer(val type: Type) {
 
             val (typeStr, valueStr, indexStr) = data.split(":")
 
-            return when (Type.valueOf(typeStr)) {
+             return when (Type.valueOf(typeStr)) {
                 Type.NewTestRequest -> NewTest(TypeOfTest.valueOf(valueStr))
                 Type.Gender -> GenderAnswer(Gender.valueOf(valueStr))
                 Type.Mmpi -> Mmpi(indexStr.toInt(), MmpiProcess.Answer.valueOf(valueStr))
@@ -26,6 +26,7 @@ sealed class UserAnswer(val type: Type) {
                 Type.DailyQuiz -> DailyQuiz(DailyQuizOptions.valueOf(valueStr))
                 Type.Skip -> Skip()
                 Type.Text -> Text(data)
+                Type.Switch -> Switch(valueStr.toBoolean())
             }
         }
     }
@@ -124,5 +125,9 @@ sealed class UserAnswer(val type: Type) {
 
     class Text(val text: String) : UserAnswer(Type.Text){
         override fun makeString() = "${Type.Text}:text:"
+    }
+
+    class Switch(val on: Boolean) : UserAnswer(Type.Switch){
+        override fun makeString() = "${Type.Switch}:$on:"
     }
 }
