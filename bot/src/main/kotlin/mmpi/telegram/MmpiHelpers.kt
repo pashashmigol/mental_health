@@ -2,7 +2,7 @@ package mmpi.telegram
 
 import mmpi.MmpiProcess
 import models.Question
-import storage.CentralDataStorage.string
+import storage.R
 import telegram.Button
 import telegram.UserAnswer
 import telegram.UserConnection
@@ -15,7 +15,7 @@ fun askGender(
 ): Long {
     return connection.sendMessageWithButtons(
         chatId = userId,
-        text = string("choose_your_sex"),
+        text = R.string("choose_your_sex"),
         buttons = genderButtons()
     )
 }

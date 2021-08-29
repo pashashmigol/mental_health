@@ -3,7 +3,7 @@ package lucher.telegram
 import kotlinx.coroutines.delay
 import lucher.LucherColor
 import lucher.callbackData
-import storage.CentralDataStorage.string
+import storage.R
 import telegram.Button
 import telegram.MessageId
 import telegram.SessionState
@@ -30,7 +30,7 @@ fun askUserToWait(
 ): MessageId {
     return userConnection.sendMessage(
         chatId = chatId,
-        text = string("lucher_timeout", minutes)
+        text = R.string("lucher_timeout", minutes)
     )
 }
 

@@ -5,7 +5,6 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
-import storage.CentralDataStorage
 import telegram.*
 
 /**
@@ -15,11 +14,9 @@ import telegram.*
 @KtorExperimentalAPI
 @InternalAPI
 fun Application.main() {
-    val launchMode = LaunchMode.APP_ENGINE
-    CentralDataStorage.init(launchMode)
+    LaunchMode.current = LaunchMode.APP_ENGINE
 
     val botLauncher = BotLauncher(
-        mode = LaunchMode.APP_ENGINE,
         tokens = PRODUCTION_TOKENS
     )
     val botsKeepers = botLauncher.launchBots()
@@ -46,7 +43,7 @@ private fun Application.bindTToStartStopEvents(keepers: List<BotsKeeper>) {
             call.respond("Server is starting!")
             notifyAdmins(keepers, "/_ah/start is called")
 
-            keepers.forEach{
+            keepers.forEach {
                 it.room.restoreState()
             }
         }
@@ -100,14 +97,14 @@ private fun Application.bindTToChronEvents(keepers: List<BotsKeeper>) {
             call.respond("ok")
             notifyAdmins(keepers, "/morning is called")
 
-            keepers.forEach{
+            keepers.forEach {
                 it.room.onMorningChron()
             }
         }
         post("/evening") {
             call.respond("ok")
             notifyAdmins(keepers, "/evening is called")
-            keepers.forEach{
+            keepers.forEach {
                 it.room.onEveningChron()
             }
         }

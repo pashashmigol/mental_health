@@ -1,6 +1,6 @@
 package quiz
 
-import storage.CentralDataStorage
+import storage.R
 
 sealed class DailyQuizAnswer(
     open val questionIndex: Int,
@@ -24,10 +24,10 @@ enum class DailyQuizOptions {
 
     val title: String
         get() = when (this) {
-            AWFUL -> CentralDataStorage.string("awful")
-            BAD -> CentralDataStorage.string("bad")
-            NORMAL -> CentralDataStorage.string("normal")
-            GOOD -> CentralDataStorage.string("good")
-            EXCELLENT -> CentralDataStorage.string("excellent")
+            AWFUL -> R.string("awful")
+            BAD -> R.string("bad")
+            NORMAL -> R.string("normal")
+            GOOD -> R.string("good")
+            EXCELLENT -> R.string("excellent")
         }
 }

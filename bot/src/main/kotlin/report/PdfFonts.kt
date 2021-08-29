@@ -4,11 +4,11 @@ import com.itextpdf.text.Font
 import com.itextpdf.text.pdf.BaseFont
 import telegram.LaunchMode
 
-class PdfFonts(launchMode: LaunchMode) {
-
-    private val path = when(launchMode){
-        LaunchMode.LOCAL,LaunchMode.TESTS -> "${launchMode.rootPath}/resources/FreeSans.ttf"
+class PdfFonts {
+    private val path = when (val launchMode = LaunchMode.current) {
+        LaunchMode.LOCAL, LaunchMode.TESTS -> "${launchMode.rootPath}/resources/FreeSans.ttf"
         LaunchMode.APP_ENGINE -> "${launchMode.rootPath}FreeSans.ttf"
+        else -> throw IllegalStateException()
     }
 
     val base: BaseFont = BaseFont.createFont(

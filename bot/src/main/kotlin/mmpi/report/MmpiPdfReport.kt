@@ -11,7 +11,7 @@ import models.Question
 import org.apache.batik.transcoder.TranscoderInput
 import org.apache.batik.transcoder.TranscoderOutput
 import org.apache.batik.transcoder.image.JPEGTranscoder
-import storage.CentralDataStorage.pdfFonts
+import storage.Fonts
 
 
 fun pdfReportMmpi(
@@ -27,17 +27,17 @@ fun pdfReportMmpi(
     document.isMarginMirroring = true
     document.open()
 
-    document.add(Paragraph(answers.user.name, pdfFonts().big))
+    document.add(Paragraph(answers.user.name, Fonts.big))
     addChart(result, document)
 
     result.scalesToShow.forEach {
         val scaleParagraph = Paragraph()
         scaleParagraph.spacingAfter = 16f
-        scaleParagraph.add(Chunk("    ${it.name} - ${it.score}", pdfFonts().bold))
+        scaleParagraph.add(Chunk("    ${it.name} - ${it.score}", Fonts.bold))
 
         if (it.description.isNotEmpty()) {
-            scaleParagraph.add(Chunk(": ", pdfFonts().bold))
-            scaleParagraph.add(Chunk(it.description, pdfFonts().normal))
+            scaleParagraph.add(Chunk(": ", Fonts.bold))
+            scaleParagraph.add(Chunk(it.description, Fonts.normal))
         }
         document.add(scaleParagraph)
     }
@@ -59,7 +59,7 @@ fun pdfReportMmpi(
 }
 
 private fun createCell(text: String): PdfPCell {
-    val phrase = Phrase(text, pdfFonts().normal)
+    val phrase = Phrase(text, Fonts.normal)
 
     return PdfPCell(phrase).apply {
         horizontalAlignment = Element.ALIGN_LEFT

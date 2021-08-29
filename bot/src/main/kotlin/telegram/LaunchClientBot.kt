@@ -8,26 +8,43 @@ import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.webhook
 import io.ktor.util.*
+import lucher.LucherData
+import mmpi.MmpiData
+import quiz.DailyQuizData
 import quiz.DailyQuizSession
+import storage.ReportStorage
+import storage.users.UserStorage
 import telegram.helpers.chatInfo
 
 @InternalAPI
 fun launchClientBot(
-    mode: LaunchMode,
     adminId: Long,
     token: String,
+    userConnection: UserConnection,
+    userStorage: UserStorage,
+    reportStorage: ReportStorage,
+    lusherData: LucherData,
+    mmpiData566: MmpiData,
+    mmpiData377: MmpiData,
+    dailyQuizData: DailyQuizData,
     botsKeeper: () -> BotsKeeper
 ): Pair<Bot, TelegramRoom> {
 
     val telegramRoom = TelegramRoom(
         roomId = adminId,
-        userConnection = TelegramUserConnection(adminId) { botsKeeper() },
+        userConnection = userConnection,
+        reportStorage = reportStorage,
+        userStorage = userStorage,
+        lusherData = lusherData,
+        mmpiData566 = mmpiData566,
+        mmpiData377 = mmpiData377,
+        dailyQuizData = dailyQuizData,
     )
 
     val clientBot = bot {
         this.token = token
 
-        if (mode == LaunchMode.APP_ENGINE) {
+        if (LaunchMode.current == LaunchMode.APP_ENGINE) {
             webhook {
                 url = "${Settings.SERVER_HOSTNAME}/$token"
                 maxConnections = 50
@@ -74,7 +91,7 @@ fun launchClientBot(
             }
         }
     }.apply {
-        when (mode) {
+        when (LaunchMode.current) {
             LaunchMode.LOCAL -> startPolling()
             LaunchMode.APP_ENGINE -> startWebhook()
             else -> throw IllegalArgumentException("Illegal mode value")

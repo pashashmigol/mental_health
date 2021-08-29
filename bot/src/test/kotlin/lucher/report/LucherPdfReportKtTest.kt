@@ -3,28 +3,21 @@ package lucher.report
 import com.soywiz.klock.DateTimeTz
 import lucher.LucherAnswersContainer
 import lucher.LucherColor
+import lucher.LucherData
 import lucher.calculateLucher
 import models.User
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
-import storage.CentralDataStorage
-import telegram.LaunchMode
+import org.kodein.di.instance
+import testDI
 import java.io.File
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LucherPdfReportKtTest {
-
-    @BeforeAll
-    fun setup() {
-        CentralDataStorage.init(
-            launchMode = LaunchMode.TESTS,
-            testingMode = true
-        )
-    }
+    private val lucherData: LucherData by testDI.instance()
 
     @Test
     fun pdfReportLucher() {
@@ -48,7 +41,7 @@ internal class LucherPdfReportKtTest {
 
         val result = calculateLucher(
             answers = answers,
-            meanings = CentralDataStorage.lucherData.meanings
+            meanings = lucherData.meanings
         )
 
         try {
@@ -58,7 +51,7 @@ internal class LucherPdfReportKtTest {
 
             val bytes = pdfReportLucher(
                 answers = answers,
-                result = result
+                result = result,
             )
             pdfFile.writeBytes(bytes)
 

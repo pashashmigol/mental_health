@@ -5,16 +5,16 @@ import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.webhook
-import storage.CentralDataStorage
+import storage.users.UserStorage
 import telegram.helpers.showUsersList
 
 fun launchAdminBot(
-    mode: LaunchMode,
     token: String,
+    userStorage: UserStorage
 ): Bot {
     return bot {
         this.token = token
-        if (mode == LaunchMode.APP_ENGINE) {
+        if (LaunchMode.current == LaunchMode.APP_ENGINE) {
             webhook {
                 url = "${Settings.SERVER_HOSTNAME}/$token"
                 maxConnections = 50
@@ -23,14 +23,18 @@ fun launchAdminBot(
         }
         dispatch {
             command("users") {
-                showUsersList(bot, message.from!!.id)
+                showUsersList(
+                    bot = bot,
+                    userId = message.from!!.id,
+                    userStorage = userStorage
+                )
             }
             command("reload") {
-                CentralDataStorage.reload()
+//                CentralDataStorage.reload(connection)
             }
         }
     }.apply {
-        when (mode) {
+        when (LaunchMode.current) {
             LaunchMode.LOCAL -> startPolling()
             LaunchMode.APP_ENGINE -> startWebhook()
             else -> throw IllegalArgumentException("Illegal mode value")

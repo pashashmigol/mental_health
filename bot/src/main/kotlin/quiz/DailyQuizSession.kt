@@ -4,7 +4,8 @@ import com.soywiz.klock.DateTimeTz
 import models.Question
 import models.TypeOfTest
 import models.User
-import storage.CentralDataStorage
+import storage.ReportStorage
+import storage.users.UserStorage
 import telegram.*
 import java.util.*
 
@@ -15,6 +16,9 @@ class DailyQuizSession(
     chatId: ChatId,
     val dayTime: Time,
     userConnection: UserConnection,
+    userStorage: UserStorage,
+    reportStorage: ReportStorage,
+    private val dailyQuizData: DailyQuizData,
     onEndedCallback: OnEnded
 ) : TelegramSession<Unit>(
     user = user,
@@ -22,12 +26,14 @@ class DailyQuizSession(
     chatId = chatId,
     type = TypeOfTest.DailyQuiz,
     userConnection = userConnection,
+    userStorage = userStorage,
+    reportStorage = reportStorage,
     onEndedCallback = onEndedCallback
 ) {
     enum class Time { MORNING, EVENING }
 
     override suspend fun executeTesting(user: User, chatId: Long) {
-        val data: DailyQuizData = CentralDataStorage.dailyQuizData
+        val data: DailyQuizData = dailyQuizData
 
         val questions: List<Question> = when (dayTime) {
             Time.MORNING -> data.morningQuestionsClosed + data.morningQuestionsOpen
@@ -41,7 +47,7 @@ class DailyQuizSession(
             date = DateTimeTz.nowLocal(),
             answers = answers
         )
-        CentralDataStorage.usersStorage.saveDailyQuizAnswers(
+        userStorage.saveDailyQuizAnswers(
             user = user,
             answers = dailyQuizAnswers,
         )

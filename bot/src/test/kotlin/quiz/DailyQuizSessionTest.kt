@@ -3,20 +3,12 @@ package quiz
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.Timeout
-import storage.CentralDataStorage
-import telegram.LaunchMode
 import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DailyQuizSessionTest {
-
-    @BeforeAll
-    fun init() {
-        CentralDataStorage.init(LaunchMode.TESTS)
-    }
 
     @Test
     @Timeout(value = 10, unit = TimeUnit.SECONDS)

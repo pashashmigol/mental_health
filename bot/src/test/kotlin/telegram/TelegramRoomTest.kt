@@ -2,36 +2,54 @@ package telegram
 
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
+import lucher.LucherData
+import mmpi.MmpiData
+import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.kodein.di.instance
+import quiz.DailyQuizData
 import quiz.DailyQuizSession
-import storage.CentralDataStorage
+import storage.ReportStorage
+import storage.users.UserStorage
+import testDI
 import java.util.concurrent.TimeUnit
 
 @InternalAPI
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TelegramRoomTest {
 
+    private val userStorage: UserStorage by testDI.instance()
+    private val reportStorage: ReportStorage by testDI.instance()
+
+
+    private val mmpi566Data: MmpiData by testDI.instance(TypeOfTest.Mmpi566)
+    private val mmpi377Data: MmpiData by testDI.instance(TypeOfTest.Mmpi377)
+    private val lucherData: LucherData by testDI.instance()
+    private val dailyQuizData: DailyQuizData by testDI.instance()
+
     @BeforeAll
     fun setup() {
-        CentralDataStorage.init(
-            launchMode = LaunchMode.TESTS,
-            testingMode = true
-        )
-        CentralDataStorage.usersStorage.clear()
+        userStorage.clear()
     }
 
     @AfterAll
     @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun clear() {
-        CentralDataStorage.usersStorage.clear()
+        userStorage.clear()
     }
 
     @Test
     fun `sessions saving`() = runBlocking {
         val originalRoom = TelegramRoom(
             roomId = 0,
-            userConnection = MockUserConnection
+            userConnection = MockUserConnection,
+            reportStorage = reportStorage,
+            userStorage = userStorage,
+            lusherData = lucherData,
+            mmpiData566 = mmpi566Data,
+            mmpiData377 = mmpi377Data,
+            dailyQuizData = dailyQuizData,
         )
         for (id in 0..36L step 4) {
             originalRoom.launchMmpi377(
@@ -53,7 +71,13 @@ internal class TelegramRoomTest {
 
         val restoredRoom = TelegramRoom(
             roomId = 0,
-            userConnection = MockUserConnection
+            userConnection = MockUserConnection,
+            reportStorage = reportStorage,
+            userStorage = userStorage,
+            lusherData = lucherData,
+            mmpiData566 = mmpi566Data,
+            mmpiData377 = mmpi377Data,
+            dailyQuizData = dailyQuizData
         )
 
         restoredRoom.restoreState()

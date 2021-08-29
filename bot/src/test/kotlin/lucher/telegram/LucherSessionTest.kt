@@ -6,15 +6,22 @@ import lucher.LucherColor
 import models.AnswersContainer
 import models.User
 
-import storage.CentralDataStorage
-
 import Result
 import com.soywiz.klock.DateTimeTz
 import lucher.LucherAnswersContainer
+import lucher.LucherData
 import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import org.kodein.di.instance
+import storage.GoogleDriveConnection
+import storage.Fonts
+import storage.ReportStorage
+import storage.users.UserStorage
+import storage.users.createUser
+import storage.users.deleteUser
 import telegram.*
+import testDI
 import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 444L
@@ -23,31 +30,40 @@ const val LUCHER_SESSION_TEST_USER_ID = 444L
 internal class LucherSessionTest {
     private lateinit var testUser: User
 
+    private val userStorage: UserStorage by testDI.instance()
+    private val reportStorage: ReportStorage by testDI.instance()
+    private val connection: GoogleDriveConnection by testDI.instance()
+    private val lucherData: LucherData by testDI.instance()
+
     @BeforeAll
     fun init() = runBlocking {
-        CentralDataStorage.init(
-            launchMode = LaunchMode.TESTS,
-            testingMode = true
-        )
 
-        val res = CentralDataStorage.createUser(LUCHER_SESSION_TEST_USER_ID, "LucherSessionTest User")
+        val res = createUser(
+            LUCHER_SESSION_TEST_USER_ID,
+            "LucherSessionTest User",
+            userStorage = userStorage,
+            reportStorage = reportStorage
+        )
         assertTrue(res is Result.Success<Unit>)
 
-        testUser = CentralDataStorage.usersStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!
+        testUser = userStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!
     }
 
     @AfterAll
     fun cleanUp() = runBlocking {
-        CentralDataStorage.deleteUser(testUser)
+        deleteUser(
+            testUser,
+            userStorage = userStorage,
+            connection = connection
+        )
         Unit
     }
 
     @Test
     @Timeout(value = 60, unit = TimeUnit.SECONDS)
     fun `basic case`() = runBlocking {
-
         val resultChannel = Channel<Unit>(1)
-        val lucherSession = createMockSession(resultChannel)
+        val lucherSession = createMockSession(resultChannel, userStorage, reportStorage, lucherData)
 
         lucherSession.start()
 
@@ -75,7 +91,11 @@ internal class LucherSessionTest {
         }
         resultChannel.receive()
 
-        checkAnswersSavedToDatabase(testUser, testAnswers)
+        checkAnswersSavedToDatabase(
+            user = testUser,
+            expectedAnswers = testAnswers,
+            userStorage = userStorage,
+        )
         checkState(lucherSession)
     }
 }
@@ -90,7 +110,12 @@ private fun checkState(session: LucherSession) {
     assertEquals(16, sessionState.answers.size)
 }
 
-private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
+private fun createMockSession(
+    resultChannel: Channel<Unit>,
+    userStorage: UserStorage,
+    reportStorage: ReportStorage,
+    lucherData: LucherData
+) = LucherSession(
     roomId = 0L,
     userConnection = object : UserConnection {
         override fun sendMessageWithButtons(
@@ -112,16 +137,20 @@ private fun createMockSession(resultChannel: Channel<Unit>) = LucherSession(
         resultChannel.offer(Unit)
     },
     minutesBetweenRounds = 0,
-    user = CentralDataStorage.usersStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!,
-    chatId = 0
+    user = userStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!,
+    chatId = 0,
+    userStorage = userStorage,
+    reportStorage = reportStorage,
+    lucherData = lucherData
 )
 
 private fun checkAnswersSavedToDatabase(
     user: User,
-    expectedAnswers: LucherAnswersContainer
+    expectedAnswers: LucherAnswersContainer,
+    userStorage: UserStorage
 ) = runBlocking {
 
-    val answersResult = CentralDataStorage.usersStorage.getUserAnswers(user)
+    val answersResult = userStorage.getUserAnswers(user)
     assertTrue(answersResult is Result.Success)
 
     val allAnswersContainerFromDatabase: List<AnswersContainer> = (answersResult as Result.Success).data

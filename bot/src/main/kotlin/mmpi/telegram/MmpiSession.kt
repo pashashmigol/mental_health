@@ -4,11 +4,13 @@ import Gender
 import mmpi.*
 import models.TypeOfTest
 import models.User
-import storage.CentralDataStorage
 import telegram.helpers.showResult
 import Result
 import com.soywiz.klock.DateTimeTz
-import kotlinx.coroutines.*
+import storage.Fonts
+import storage.ReportStorage
+import storage.users.UserStorage
+import storage.users.saveMmpi
 import telegram.*
 
 /**For testing only*/
@@ -20,6 +22,9 @@ class MmpiSession(
     chatId: ChatId,
     type: TypeOfTest,
     userConnection: UserConnection,
+    userStorage: UserStorage,
+    reportStorage: ReportStorage,
+    private val mmpiData: MmpiData,
     onEndedCallback: OnEnded
 ) : TelegramSession<Long>(
     user = user,
@@ -27,12 +32,10 @@ class MmpiSession(
     chatId = chatId,
     type = type,
     userConnection = userConnection,
+    userStorage = userStorage,
+    reportStorage = reportStorage,
     onEndedCallback = onEndedCallback
 ) {
-    companion object {
-        val scope = GlobalScope
-    }
-
     internal var testingCallback: OnFinished = null
     private var ongoingProcess: MmpiProcess? = null
 
@@ -43,7 +46,7 @@ class MmpiSession(
         ).apply { state.addMessageId(this) }
 
         val gender = waitForGenderChosen()
-        ongoingProcess = MmpiProcess(gender, type)
+        ongoingProcess = MmpiProcess(gender, type, mmpiData)
 
         collectAllAnswers(ongoingProcess!!, user, gender)
     }
@@ -101,7 +104,7 @@ class MmpiSession(
         ongoingProcess: MmpiProcess,
         user: User,
         gender: Gender,
-        userConnection: UserConnection,
+        userConnection: UserConnection
     ): Result<Unit> {
         val result = ongoingProcess.calculateResult()
 
@@ -111,13 +114,15 @@ class MmpiSession(
             gender = gender,
             answersList = ongoingProcess.answers.values.toList()
         )
-        val parentFolder = CentralDataStorage.saveMmpi(
+        val parentFolder = saveMmpi(
             user = user,
             typeOfTest = type,
             questions = ongoingProcess.questions,
             answers = answers,
             result = result,
-            saveAnswers = true
+            saveAnswers = true,
+            userStorage = userStorage,
+            reportStorage = reportStorage
         ).dealWithError { return it }
 
         showResult(

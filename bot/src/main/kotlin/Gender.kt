@@ -1,12 +1,12 @@
-import storage.CentralDataStorage.string
+import storage.R
 
 enum class Gender {
     Male, Female;
 
     val title:String
         get() = when(this){
-            Male -> string("male")
-            Female -> string("female")
+            Male -> R.string("male")
+            Female -> R.string("female")
         }
 
     companion object{

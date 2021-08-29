@@ -3,7 +3,7 @@ package lucher.report
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 import lucher.*
-import storage.CentralDataStorage.string
+import storage.R
 
 //todo remove hardcode
 fun generateReport(
@@ -23,7 +23,7 @@ private fun TagConsumer<StringBuilder>.createAnswersTable(
     caption {
         b {
             style = "font-size:24px; text-align:center; margin:64px"
-            text(string("answers"))
+            text(R.string("answers"))
         }
     }
     body {

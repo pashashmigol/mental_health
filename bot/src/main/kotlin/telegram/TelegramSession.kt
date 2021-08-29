@@ -7,7 +7,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import lucher.telegram.LucherSession
 import models.TypeOfTest
-import storage.CentralDataStorage
+import storage.R
+import storage.ReportStorage
+import storage.users.UserStorage
 
 typealias OnEnded = (TelegramSession<Any>) -> Unit
 typealias MessageId = Long
@@ -23,9 +25,12 @@ abstract class TelegramSession<out T>(
     val chatId: ChatId,
     val type: TypeOfTest,
     val userConnection: UserConnection,
+    val userStorage: UserStorage,
+    val reportStorage: ReportStorage,
     val onEndedCallback: OnEnded
 ) {
     val sessionId by lazy { user.id }
+//    val usersStorage: UsersStorage by di.instance()
 
     val state by lazy {
         SessionState(
@@ -33,7 +38,7 @@ abstract class TelegramSession<out T>(
             sessionId = user.id,
             chatId = chatId,
             roomId = roomId,
-            type = type,
+            type = type
         )
     }
 
@@ -41,9 +46,9 @@ abstract class TelegramSession<out T>(
         val handler = CoroutineExceptionHandler { _, exception ->
             userConnection.notifyAdmin("Session $type error: ${exception.stackTraceToString()}", exception)
             userConnection.sendMessage(chatId, "Session $type error: ${exception.stackTraceToString()}")
-            userConnection.sendMessage(chatId, CentralDataStorage.string("start_again"))
+            userConnection.sendMessage(chatId, R.string("start_again"))
         }
-        state.addToStorage()
+        state.addToStorage(userStorage)
         LucherSession.scope.launch(handler) { executeTesting(user, chatId) }
     }
 
@@ -52,7 +57,7 @@ abstract class TelegramSession<out T>(
     private val answers = Channel<AnswerEvent>(10)
 
     suspend fun sendAnswer(userAnswer: UserAnswer, messageId: MessageId): Result<Unit> {
-        state.saveAnswer(userAnswer)
+        state.saveAnswer(userAnswer, userStorage)
         answers.offer(AnswerEvent(userAnswer, messageId))
         return Result.Success(Unit)
     }

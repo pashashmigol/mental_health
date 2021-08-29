@@ -8,7 +8,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import models.User
 
-import telegram.LaunchMode
 import Result
 import com.soywiz.klock.DateTimeSpan
 import lucher.LucherAnswersContainer
@@ -22,23 +21,28 @@ import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assertions.fail
+import org.kodein.di.instance
 import quiz.DailyQuizAnswer
 import quiz.DailyQuizAnswersContainer
 import quiz.DailyQuizOptions
+import storage.users.UserStorage
+import storage.users.createUser
+import storage.users.deleteUser
 import telegram.UserAnswer
 import telegram.SessionState
+import testDI
 import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class UsersStorageTest {
 
+    private val userStorage: UserStorage by testDI.instance()
+    private val reportStorage: ReportStorage by testDI.instance()
+    private val connection: GoogleDriveConnection by testDI.instance()
+
     @BeforeAll
     fun init() {
-        CentralDataStorage.init(
-            launchMode = LaunchMode.TESTS,
-            testingMode = true
-        )
-        CentralDataStorage.usersStorage.clear()
+        userStorage.clear()
     }
 
     @Test
@@ -47,10 +51,10 @@ internal class UsersStorageTest {
         val user = createUser(333L, "mmpi answers saving")
 
         val mockAnswers = createMmpiAnswers(user, Gender.Female)
-        val saveResult = CentralDataStorage.usersStorage.saveMmpiAnswers(mockAnswers)
+        val saveResult = userStorage.saveMmpiAnswers(mockAnswers)
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers = CentralDataStorage.usersStorage
+        val receivedAnswers = userStorage
             .getUserAnswers(user = user)
             .dealWithError {
                 fail(it.exception)
@@ -58,7 +62,11 @@ internal class UsersStorageTest {
             .first()
 
         assertEquals(mockAnswers, receivedAnswers)
-        CentralDataStorage.deleteUser(user)
+        deleteUser(
+            user = user,
+            userStorage = userStorage,
+            connection = connection
+        )
         Unit
     }
 
@@ -68,10 +76,10 @@ internal class UsersStorageTest {
         val user = createUser(222L, "Lucher answers saving")
 
         val mockAnswers = createLucherAnswers(user)
-        val saveResult = CentralDataStorage.usersStorage.saveLucherAnswers(mockAnswers)
+        val saveResult = userStorage.saveLucherAnswers(mockAnswers)
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers = CentralDataStorage.usersStorage
+        val receivedAnswers = userStorage
             .getUserAnswers(user)
             .dealWithError {
                 fail(it.exception)
@@ -79,7 +87,11 @@ internal class UsersStorageTest {
             .first()
 
         assertEquals(mockAnswers, receivedAnswers)
-        CentralDataStorage.deleteUser(user)
+        deleteUser(
+            user = user,
+            userStorage = userStorage,
+            connection = connection
+        )
         Unit
     }
 
@@ -89,10 +101,10 @@ internal class UsersStorageTest {
         val originalSessions: List<SessionState> = createSessions()
 
         originalSessions.forEach {
-            it.addToStorage()
+            it.addToStorage(userStorage)
         }
 
-        val storageResult = CentralDataStorage.usersStorage.takeAllSessions()
+        val storageResult = userStorage.takeAllSessions()
 
         if (storageResult is Result.Error) {
             fail<Exception>(storageResult.exception)
@@ -107,14 +119,14 @@ internal class UsersStorageTest {
         val user = createUser(334L, "daily quiz answers saving")
 
         val mockAnswers = createDailyQuizAnswers(user)
-        val saveResult = CentralDataStorage.usersStorage.saveDailyQuizAnswers(
+        val saveResult = userStorage.saveDailyQuizAnswers(
             user = user,
             answers = mockAnswers
         )
 
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers: AnswersContainer = CentralDataStorage.usersStorage
+        val receivedAnswers: AnswersContainer = userStorage
             .getUserAnswers(user = user)
             .dealWithError {
                 fail(it.exception)
@@ -122,13 +134,16 @@ internal class UsersStorageTest {
             .first()
 
         assertEquals(mockAnswers, receivedAnswers)
-        CentralDataStorage.deleteUser(user)
-
+        deleteUser(
+            user = user,
+            userStorage = userStorage,
+            connection = connection
+        )
         Unit
     }
 
     private suspend fun createUser(userId: Long, userName: String): User {
-        CentralDataStorage.createUser(userId, userName)
+        createUser(userId, userName, reportStorage, userStorage)
         checkUser(userId, userName)
 
         delay(1000)
@@ -136,7 +151,7 @@ internal class UsersStorageTest {
     }
 
     private fun checkUser(userId: Long, userName: String): User {
-        val user = CentralDataStorage.usersStorage.getUser(userId)
+        val user = userStorage.getUser(userId)
 
         assert(user != null)
         assertEquals(userId, user?.id)
@@ -207,25 +222,37 @@ internal class UsersStorageTest {
         )
 
         for (index in 0..20) {
-            mmpi566.saveMessageId(index + 1L)
+            mmpi566.saveMessageId(
+                messageId = index + 1L,
+                userStorage = userStorage
+            )
             mmpi566.saveAnswer(
-                UserAnswer.Mmpi(
+                userAnswer = UserAnswer.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
-                )
+                ),
+                userStorage = userStorage
             )
-            mmpi377.saveMessageId(index * 2 + 1L)
+            mmpi377.saveMessageId(
+                messageId = index * 2 + 1L,
+                userStorage = userStorage
+            )
             mmpi377.saveAnswer(
-                UserAnswer.Mmpi(
+                userAnswer = UserAnswer.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
-                )
+                ),
+                userStorage = userStorage
             )
-            lucher.saveMessageId(index * 3 + 1L)
+            lucher.saveMessageId(
+                messageId = index * 3 + 1L,
+                userStorage = userStorage
+            )
             lucher.saveAnswer(
-                UserAnswer.Lucher(
+                userAnswer = UserAnswer.Lucher(
                     answer = LucherColor.Gray
-                )
+                ),
+                userStorage = userStorage
             )
         }
         return listOf(mmpi566, mmpi377, lucher)

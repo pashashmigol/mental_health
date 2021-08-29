@@ -1,7 +1,7 @@
 package telegram
 
 import models.TypeOfTest
-import storage.CentralDataStorage
+import storage.users.UserStorage
 
 class SessionState(
     val roomId: Long,
@@ -15,12 +15,12 @@ class SessionState(
         (answers as MutableList).add(userAnswer)
     }
 
-    suspend fun addToStorage(){
-        CentralDataStorage.usersStorage.addSession(this)
+    suspend fun addToStorage(userStorage: UserStorage) {
+        userStorage.addSession(this)
     }
 
-    suspend fun saveAnswer(userAnswer: UserAnswer) {
-        CentralDataStorage.usersStorage.addAnswer(
+    suspend fun saveAnswer(userAnswer: UserAnswer, userStorage: UserStorage) {
+        userStorage.addAnswer(
             sessionId = this.sessionId,
             userAnswer = userAnswer,
             index = answers.size
@@ -37,13 +37,13 @@ class SessionState(
             }
     }
 
-    suspend fun saveMessageId(messageId: MessageId?) {
+    suspend fun saveMessageId(messageId: MessageId?, userStorage: UserStorage) {
         messageId
             ?.takeIf { messageId != NOT_SENT }
             ?.let {
                 (messageIds as MutableList).add(messageId)
 
-                CentralDataStorage.usersStorage.addMessageId(
+                userStorage.addMessageId(
                     sessionId = this.sessionId,
                     messageId = messageId,
                     index = answers.size

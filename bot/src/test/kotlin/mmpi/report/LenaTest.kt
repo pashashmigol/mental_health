@@ -2,25 +2,19 @@ package mmpi.report
 
 import kotlinx.coroutines.runBlocking
 import mmpi.*
+import models.TypeOfTest
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
-import storage.CentralDataStorage
 
 import models.User
-import telegram.LaunchMode
+import org.kodein.di.instance
+import testDI
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LenaTest {
 
-    @BeforeAll
-    fun setup() {
-        CentralDataStorage.init(
-            launchMode = LaunchMode.TESTS,
-            testingMode = true
-        )
-    }
+    private val mmpi377Data: MmpiData by testDI.instance(TypeOfTest.Mmpi377)
 
     @Test
     fun generateReport() = runBlocking {
@@ -40,11 +34,11 @@ internal class LenaTest {
         )
         val result = calculateMmpi(
             answers = answersList,
-            scales = CentralDataStorage.mmpi377Data.scales(Gender.Female)
+            scales = mmpi377Data.scales(Gender.Female)
         )
         val report = generateHtml(
             user = lena,
-            questions = CentralDataStorage.mmpi377Data.questions(Gender.Female),
+            questions = mmpi377Data.questions(Gender.Female),
             answers = answersList,
             result = result
         )

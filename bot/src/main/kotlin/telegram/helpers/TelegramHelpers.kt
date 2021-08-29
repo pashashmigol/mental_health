@@ -6,8 +6,8 @@ import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironmen
 import com.github.kotlintelegrambot.dispatcher.handlers.MessageHandlerEnvironment
 import models.User
 import org.apache.poi.util.StringUtil
-import storage.CentralDataStorage
-import storage.CentralDataStorage.string
+import storage.R
+import storage.users.UserStorage
 import telegram.ChatInfo
 import telegram.UserConnection
 
@@ -18,10 +18,10 @@ fun showResult(
 ) {
     userConnection.sendMessage(
         chatId = user.id,
-        text = string("your_results", resultLink)
+        text = R.string("your_results", resultLink)
     )
     userConnection.notifyAdmin(
-        text = string("user_completed_test", user.name, resultLink)
+        text =  R.string("user_completed_test", user.name, resultLink)
     )
 }
 
@@ -57,8 +57,9 @@ fun MessageHandlerEnvironment.chatInfo() = ChatInfo(
 fun showUsersList(
     bot: Bot,
     userId: Long,
+    userStorage: UserStorage
 ) {
-    val text = CentralDataStorage.usersStorage
+    val text = userStorage
         .allUsers()
         .joinToString("\n\n") {
             "${it.name}: ${it.googleDriveFolderUrl}"

@@ -15,21 +15,21 @@ internal fun List<List<Any>>.toRawEntries(): List<Map<String, String>> {
     }
 }
 
-internal fun giveAccess(folderId: String, connection: GoogleDriveConnection) {
-    val permission = Permission()
-
-    val details = Permission.PermissionDetails()
-    permission.role = "reader"
-    permission.type = "anyone"
-
-    permission.permissionDetails = listOf(details)
-
-    val result: Permission = connection.driveService.permissions()
-        .create(folderId, permission)
-        .execute()
-
-    println("result : $result")
-}
+//internal fun giveAccess(folderId: String, connection: GoogleDriveConnection) {
+//    val permission = Permission()
+//
+//    val details = Permission.PermissionDetails()
+//    permission.role = "reader"
+//    permission.type = "anyone"
+//
+//    permission.permissionDetails = listOf(details)
+//
+//    val result: Permission = connection.driveService.permissions()
+//        .create(folderId, permission)
+//        .execute()
+//
+//    println("result : $result")
+//}
 
 internal fun deleteFolder(folderId: String, connection: GoogleDriveConnection){
     connection.driveService

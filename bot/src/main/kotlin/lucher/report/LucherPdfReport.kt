@@ -6,8 +6,8 @@ import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
 import lucher.*
 import lucher.LucherElement
-import storage.CentralDataStorage.pdfFonts
-import storage.CentralDataStorage.string
+import storage.Fonts
+import storage.R
 import java.io.ByteArrayOutputStream
 
 
@@ -22,14 +22,14 @@ fun pdfReportLucher(
     document.isMarginMirroring = true
     document.open()
 
-    Paragraph(answers.user.name, pdfFonts().big).let { document.add(it) }
+    Paragraph(answers.user.name, Fonts.big).let { document.add(it) }
 
-    createNumbersRow(string("first_round"), answers.firstRound).let { document.add(it) }
-    createNumbersRow(string("second_round"), answers.secondRound).let { document.add(it) }
+    createNumbersRow(R.string("first_round"), answers.firstRound).let { document.add(it) }
+    createNumbersRow(R.string("second_round"), answers.secondRound).let { document.add(it) }
 
-    descriptionForPairs(string("stable_pairs"), result.stablePairs).let { document.add(it) }
-    descriptionForPairs(string("broken_pairs"), result.brokenPairs).let { document.add(it) }
-    descriptionForPairs(string("contraversed_pairs"), result.contraversedPairs).let { document.add(it) }
+    descriptionForPairs(R.string("stable_pairs"), result.stablePairs).let { document.add(it) }
+    descriptionForPairs(R.string("broken_pairs"), result.brokenPairs).let { document.add(it) }
+    descriptionForPairs(R.string("contraversed_pairs"), result.contraversedPairs).let { document.add(it) }
 
     anxietyDescription(result).let { document.add(it) }
 
@@ -45,7 +45,7 @@ private fun createNumbersRow(header: String, colors: List<LucherColor>): Paragra
 
         add(
             Phrase().apply {
-                add(Chunk(header, pdfFonts().bold))
+                add(Chunk(header, Fonts.bold))
                 add(Chunk.TABBING)
                 colors.forEach { color ->
                     add(Chunk.TABBING)
@@ -62,16 +62,16 @@ private fun anxietyDescription(
     spacingBefore = 24f
     keepTogether = true
 
-    add(Chunk(string("anxiety"), pdfFonts().big))
+    add(Chunk(R.string("anxiety"), Fonts.big))
     add(Chunk.NEWLINE)
 
     add(
-        Chunk("${string("first_round")}: ${result.firstRoundAnxiety}", pdfFonts().normal)
+        Chunk("${R.string("first_round")}: ${result.firstRoundAnxiety}", Fonts.normal)
     )
     add(Chunk.NEWLINE)
 
     add(
-        Chunk("${string("second_round")}: ${result.secondRoundAnxiety}", pdfFonts().normal)
+        Chunk("${R.string("second_round")}: ${result.secondRoundAnxiety}", Fonts.normal)
     )
 }
 
@@ -85,7 +85,7 @@ private fun descriptionForPairs(
     val paragraph = Paragraph().apply {
         keepTogether = true
     }
-    Paragraph(header, pdfFonts().big).let {
+    Paragraph(header, Fonts.big).let {
         paragraph.add(Chunk.NEWLINE)
         paragraph.add(Chunk.NEWLINE)
         paragraph.add(it)
@@ -107,7 +107,9 @@ private fun descriptionForPairs(
     return paragraph
 }
 
-private fun createNumberCell(element: LucherElement): PdfPCell {
+private fun createNumberCell(
+    element: LucherElement
+): PdfPCell {
     val pdfPCell = PdfPCell().apply {
         horizontalAlignment = Element.ALIGN_LEFT
         verticalAlignment = Element.ALIGN_TOP
@@ -140,8 +142,10 @@ private fun createNumberCell(element: LucherElement): PdfPCell {
     return pdfPCell
 }
 
-private fun createColorBox(color: LucherColor): Chunk {
-    val font = Font(pdfFonts().base, 25.0f, Font.BOLD, BaseColor.WHITE)
+private fun createColorBox(
+    color: LucherColor
+): Chunk {
+    val font = Font(Fonts.base, 25.0f, Font.BOLD, BaseColor.WHITE)
     val chunk = Chunk(color.index.toString(), font)
     chunk.setBackground(
         BaseColor(color.toARGB()), 10f, 5f, 10f, 5f
@@ -149,8 +153,10 @@ private fun createColorBox(color: LucherColor): Chunk {
     return chunk
 }
 
-private fun createDescriptionCell(description: String): PdfPCell {
-    val phrase = Phrase(description, pdfFonts().normal)
+private fun createDescriptionCell(
+    description: String
+): PdfPCell {
+    val phrase = Phrase(description, Fonts.normal)
 
     return PdfPCell(phrase).apply {
         horizontalAlignment = Element.ALIGN_LEFT

@@ -3,28 +3,22 @@ package mmpi.report
 import Gender
 import com.soywiz.klock.DateTimeTz
 import mmpi.MmpiAnswersContainer
+import mmpi.MmpiData
 import mmpi.agreeTo
 import mmpi.calculateMmpi
+import models.TypeOfTest
 import models.User
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import storage.CentralDataStorage
-import telegram.LaunchMode
+import org.kodein.di.instance
+import testDI
 import java.io.*
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MmpiPdfReportKtTest {
-
-    @BeforeAll
-    fun setup() {
-        CentralDataStorage.init(
-            launchMode = LaunchMode.TESTS,
-            testingMode = true
-        )
-    }
+    private val mmpi377Data: MmpiData by testDI.instance(TypeOfTest.Mmpi377)
 
     @Test
     fun `generate pdf`() {
@@ -43,7 +37,7 @@ internal class MmpiPdfReportKtTest {
         val gender = Gender.Female
         val result = calculateMmpi(
             answers = answers,
-            scales = CentralDataStorage.mmpi377Data.scales(gender)
+            scales = mmpi377Data.scales(gender)
         )
 
         try {
@@ -66,7 +60,7 @@ internal class MmpiPdfReportKtTest {
                 gender = gender,
             )
             val bytes = pdfReportMmpi(
-                questions = CentralDataStorage.mmpi377Data.questions(gender),
+                questions = mmpi377Data.questions(gender),
                 answers = mmpiAnswers,
                 result = result
             )

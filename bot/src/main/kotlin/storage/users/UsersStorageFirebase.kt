@@ -1,11 +1,9 @@
-package storage
+package storage.users
 
 import Gender
 import Result
 import com.google.firebase.database.*
 import com.soywiz.klock.DateFormat
-import com.soywiz.klock.DateTimeTz
-import com.soywiz.klock.parse
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.runBlocking
@@ -16,7 +14,6 @@ import mmpi.MmpiProcess
 import models.AnswersContainer
 import models.TypeOfTest
 import models.User
-import quiz.DailyQuizAnswer
 import quiz.DailyQuizAnswersContainer
 import quiz.DailyQuizOptions
 import telegram.*
@@ -30,7 +27,7 @@ private const val LUCHER_ANSWERS = "lucher_answers"
 private const val DAILY_QUIZ_ANSWERS = "daily_quiz_answers"
 private const val ACTIVE_SESSIONS = "active_sessions"
 
-class UsersStorage(database: FirebaseDatabase) {
+class UsersStorageFirebase(database: FirebaseDatabase) : UserStorage {
 
     private val usersInfoRef: DatabaseReference = database.reference.child(USERS)
     private val mmpiAnswersRef: DatabaseReference = database.reference.child(MMPI_ANSWERS)
@@ -56,7 +53,7 @@ class UsersStorage(database: FirebaseDatabase) {
         })
     }
 
-    suspend fun saveDailyQuizAnswers(
+    override suspend fun saveDailyQuizAnswers(
         user: User,
         answers: DailyQuizAnswersContainer
     ): Result<Unit> {
@@ -83,7 +80,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun addSession(
+    override suspend fun addSession(
         session: SessionState
     ): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
@@ -101,7 +98,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun addAnswer(
+    override suspend fun addAnswer(
         sessionId: SessionId,
         userAnswer: UserAnswer,
         index: Int
@@ -124,7 +121,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun addMessageId(
+    override suspend fun addMessageId(
         sessionId: SessionId,
         messageId: MessageId,
         index: Int
@@ -147,7 +144,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun takeAllSessions(): Result<List<SessionState>> {
+    override suspend fun takeAllSessions(): Result<List<SessionState>> {
         val resultChannel = Channel<Result<List<SessionState>>>(1)
 
         activeSessionsRef.addValueEventListener(object : ValueEventListener {
@@ -172,7 +169,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    fun clear() {
+    override fun clear() {
         val resultChannel = Channel<Result<Unit>>(5)
         activeSessionsRef
             .removeValue { error, _ ->
@@ -216,7 +213,7 @@ class UsersStorage(database: FirebaseDatabase) {
             }
     }
 
-    fun removeSession(sessionId: SessionId): Result<Unit> = runBlocking {
+    override fun removeSession(sessionId: SessionId): Result<Unit> = runBlocking {
         val resultChannel = Channel<Result<Unit>>(1)
         activeSessionsRef
             .child(sessionId.toString())
@@ -232,13 +229,13 @@ class UsersStorage(database: FirebaseDatabase) {
         return@runBlocking resultChannel.receive()
     }
 
-    fun getUser(userId: Long) = users[userId]
+    override fun getUser(userId: Long) = users[userId]
 
-    fun allUsers(): List<User> = users.values.toList()
+    override fun allUsers(): List<User> = users.values.toList()
 
-    fun hasUserWithId(userId: Long) = users.containsKey(userId)
+    override fun hasUserWithId(userId: Long) = users.containsKey(userId)
 
-    suspend fun saveUser(user: User): Result<Unit> {
+    override suspend fun saveUser(user: User): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
         users[user.id] = user
 
@@ -257,7 +254,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun saveMmpiAnswers(answers: MmpiAnswersContainer): Result<Unit> {
+    override suspend fun saveMmpiAnswers(answers: MmpiAnswersContainer): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
 
         val hashMap = HashMap<String, Any>().apply {
@@ -288,7 +285,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun saveLucherAnswers(answers: LucherAnswersContainer): Result<Unit> {
+    override suspend fun saveLucherAnswers(answers: LucherAnswersContainer): Result<Unit> {
         val resultChannel = Channel<Result<Unit>>(1)
 
         val hashMap = HashMap<String, Any>().apply {
@@ -318,7 +315,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return resultChannel.receive()
     }
 
-    suspend fun clearUser(user: User): Result<Unit> {
+    override suspend fun clearUser(user: User): Result<Unit> {
         val resultChannel = Channel<Unit>(3)
         mmpiAnswersRef
             .child(user.id.toString())
@@ -343,7 +340,7 @@ class UsersStorage(database: FirebaseDatabase) {
         return Result.Success(Unit)
     }
 
-    suspend fun getUserAnswers(user: User): Result<List<AnswersContainer>> {
+    override suspend fun getUserAnswers(user: User): Result<List<AnswersContainer>> {
         val resultChannel = Channel<List<AnswersContainer>>(3)
 
         mmpiAnswersRef
@@ -465,129 +462,8 @@ private fun parseSessions(snapshot: DataSnapshot?): List<SessionState> {
                         UserAnswer.Switch(answer.toBoolean())
                     }
                 }
-
                 sessionState.addAnswer(callback)
             }
         sessionState
     } ?: emptyList()
-}
-
-@Suppress("UNCHECKED_CAST")
-private fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswersContainer> {
-    val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
-        object : GenericTypeIndicator<HashMap<String, Any>>() {}
-
-    return snapshot?.getValue(typeIndicator)?.map { entry ->
-        val answersMap: HashMap<String, Any> = entry.value as HashMap<String, Any>
-
-        val user: User = answersMap["user"].let {
-            it as HashMap<*, *>
-
-            User(
-                id = it["id"] as Long,
-                name = it["name"] as String,
-                googleDriveFolderId = it["googleDriveFolderId"] as String,
-                googleDriveFolderUrl = it["googleDriveFolder"] as String,
-                runDailyQuiz = it["runDailyQuiz"] as? Boolean ?: false
-            )
-        }
-        val date: DateTimeTz = (answersMap["date"] as String).let {
-            DateFormat.DEFAULT_FORMAT.parse(it)
-        }
-        val gender = (answersMap["gender"] as String).let {
-            Gender.valueOf(it)
-        }
-        val answers = (answersMap["answersList"] as List<*>).map {
-            MmpiProcess.Answer.valueOf(it as String)
-        }
-        MmpiAnswersContainer(
-            user = user,
-            date = date,
-            gender = gender,
-            answersList = answers
-        )
-    } ?: emptyList()
-}
-
-@Suppress("UNCHECKED_CAST")
-private fun parseLucherAnswers(snapshot: DataSnapshot?): List<LucherAnswersContainer> {
-    val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
-        object : GenericTypeIndicator<HashMap<String, Any>>() {}
-
-    return snapshot?.getValue(typeIndicator)?.map { entry ->
-        val answersMap: HashMap<String, Any> = entry.value as HashMap<String, Any>
-
-        val user: User = answersMap["user"].let {
-            it as HashMap<*, *>
-
-            User(
-                id = it["id"] as Long,
-                name = it["name"] as String,
-                googleDriveFolderId = it["googleDriveFolderId"] as String,
-                googleDriveFolderUrl = it["googleDriveFolder"] as String,
-                runDailyQuiz = it["runDailyQuiz"] as? Boolean ?: false
-            )
-        }
-        val date: DateTimeTz = (answersMap["date"] as String).let {
-            DateFormat.DEFAULT_FORMAT.parse(it)
-        }
-        val firstRound = (answersMap["firstRound"] as List<*>).map {
-            LucherColor.valueOf(it as String)
-        }
-        val secondRound = (answersMap["secondRound"] as List<*>).map {
-            LucherColor.valueOf(it as String)
-        }
-        LucherAnswersContainer(
-            user = user,
-            date = date,
-            firstRound = firstRound,
-            secondRound = secondRound
-        )
-    } ?: return emptyList()
-}
-
-@Suppress("UNCHECKED_CAST")
-private fun parseDailyQuizAnswers(snapshot: DataSnapshot?): List<DailyQuizAnswersContainer> {
-    val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =
-        object : GenericTypeIndicator<HashMap<String, Any>>() {}
-
-    return snapshot?.getValue(typeIndicator)?.map { entry ->
-        val answersMap: HashMap<String, Any> = entry.value as HashMap<String, Any>
-
-        val user: User = answersMap["user"].let {
-            it as HashMap<*, *>
-
-            User(
-                id = it["id"] as Long,
-                name = it["name"] as String,
-                googleDriveFolderId = it["googleDriveFolderId"] as String,
-                googleDriveFolderUrl = it["googleDriveFolderUrl"] as String,
-                runDailyQuiz = it["runDailyQuiz"] as? Boolean ?: false
-            )
-        }
-        val date: DateTimeTz = (answersMap["date"] as String).let {
-            DateFormat.DEFAULT_FORMAT.parse(it)
-        }
-        val answers: List<DailyQuizAnswer> = (answersMap["answersList"] as List<*>).map {
-            it as HashMap<*, *>
-
-            DailyQuizAnswer.Option(
-                questionIndex = (it["questionIndex"] as Long).toInt(),
-                questionText = it["questionText"] as String,
-                option = DailyQuizOptions.valueOf(it["option"] as String)
-            )
-        }
-        DailyQuizAnswersContainer(
-            user = user,
-            date = date,
-            answers = answers
-        )
-    } ?: emptyList()
-}
-
-private fun parseUsers(snapshot: DataSnapshot?): Map<Long, User> {
-    return snapshot!!.children.associate {
-        val user = it.getValue(User::class.java)
-        Pair(user.id, user)
-    }
 }

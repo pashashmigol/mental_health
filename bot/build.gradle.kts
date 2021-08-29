@@ -60,6 +60,8 @@ dependencies {
     implementation("org.xhtmlrenderer:flying-saucer-pdf:9.1.22")
     implementation("org.apache.xmlgraphics:batik-transcoder:1.14")
 
+    implementation("org.kodein.di:kodein-di:7.6.0")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
 }

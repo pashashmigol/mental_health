@@ -5,29 +5,33 @@ import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import storage.CentralDataStorage
-import telegram.LaunchMode
+import org.kodein.di.instance
+import testDI
 import kotlin.math.roundToInt
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CalculateResultKtTest {
-    private lateinit var scalesM: MmpiProcess.Scales
-    private lateinit var scalesF: MmpiProcess.Scales
+
+    private val mmpi566Data: MmpiData by testDI.instance(TypeOfTest.Mmpi566)
+    private val mmpi377Data: MmpiData by testDI.instance(TypeOfTest.Mmpi377)
+
+    private val scalesM = mmpi566Data.scales(Gender.Male)
+    private val scalesF = mmpi566Data.scales(Gender.Female)
 
     @BeforeAll
     fun setup() {
-        CentralDataStorage.init(
-            launchMode = LaunchMode.TESTS,
-            testingMode = true
-        )
+//        CentralDataStorage.init(
+//            launchMode = LaunchMode.TESTS,
+//            testingMode = true
+//        )
 
-        scalesM = CentralDataStorage.mmpi566Data.scales(Gender.Male)
-        scalesF = CentralDataStorage.mmpi566Data.scales(Gender.Female)
+//        scalesM = mmpi566Data.scales(Gender.Male)
+//        scalesF = mmpi566Data.scales(Gender.Female)
     }
 
     @Test
     fun agree_with_everything() {
-        val test = MmpiProcess(Gender.Male, TypeOfTest.Mmpi566)
+        val test = MmpiProcess(Gender.Male, TypeOfTest.Mmpi566, mmpi566Data)
 
         allAgree566.forEachIndexed { index, answer ->
             test.submitAnswer(index, answer)
@@ -38,7 +42,7 @@ internal class CalculateResultKtTest {
 
     @Test
     fun notCompletedTest() {
-        val test = MmpiProcess(Gender.Male, TypeOfTest.Mmpi566)
+        val test = MmpiProcess(Gender.Male, TypeOfTest.Mmpi566, mmpi566Data)
 
         Assertions.assertThrows(RuntimeException::class.java) {
             justFewAnswers.forEachIndexed { index, answer ->
@@ -50,7 +54,7 @@ internal class CalculateResultKtTest {
 
     @Test
     fun oneAfterOneTest() {
-        val test = MmpiProcess(Gender.Male, TypeOfTest.Mmpi377)
+        val test = MmpiProcess(Gender.Male, TypeOfTest.Mmpi377, mmpi377Data)
 
         oneAfterOne377.forEachIndexed { index, answer ->
             test.submitAnswer(index, answer)
@@ -105,7 +109,7 @@ internal class CalculateResultKtTest {
 
     @Test
     fun checkScales() {
-        val scales: MmpiProcess.Scales = CentralDataStorage.mmpi566Data.scales(Gender.Female)
+        val scales: MmpiProcess.Scales = mmpi566Data.scales(Gender.Female)
         assertEquals(15, scaleSum(scales.liesScaleL))
         assertEquals(64, scaleSum(scales.credibilityScaleF))
         assertEquals(30, scaleSum(scales.correctionScaleK))
@@ -128,11 +132,11 @@ internal class CalculateResultKtTest {
             30, 39, 71, 89, 124, 129, 134, 138, 142, 148, 160, 170, 171, 180,
             183, 217, 234, 267, 272, 296, 316, 322, 374, 383, 397, 398, 406, 461, 502
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(30, resM.correctionScaleK.raw)
         assertEquals(84, resM.correctionScaleK.score)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(30, resF.correctionScaleK.raw)
         assertEquals(84, resF.correctionScaleK.score)
 
@@ -150,14 +154,14 @@ internal class CalculateResultKtTest {
             2, 3, 7, 9, 18, 51, 55, 63, 68, 103, 130, 153,
             155, 163, 175, 188, 190, 192, 230, 243, 274, 281
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
 
         assertEquals(
             33 + (resM.correctionScaleK.raw * 0.5).roundToInt(),
             resM.overControlScale1.raw
         )
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(
             33 + (resF.correctionScaleK.raw * 0.5).roundToInt(),
             resF.overControlScale1.raw
@@ -182,11 +186,11 @@ internal class CalculateResultKtTest {
             89, 95, 98, 107, 122, 131, 145, 152, 153, 154, 155, 160, 178,
             191, 207, 208, 233, 241, 242, 248, 263, 270, 271, 272, 285, 296
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(60, resM.passivityScale2.raw)
         assertEquals(155, resM.passivityScale2.score)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(60, resF.passivityScale2.raw)
         assertEquals(128, resF.passivityScale2.score)
 
@@ -208,11 +212,11 @@ internal class CalculateResultKtTest {
             170, 172, 174, 175, 180, 188, 190, 192, 201, 213, 230, 234, 243,
             265, 267, 274, 279, 289, 292
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(60, resM.labilityScale3.raw)
         assertEquals(129, resM.labilityScale3.score)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(60, resF.labilityScale3.raw)
         assertEquals(122, resF.labilityScale3.score)
 
@@ -234,11 +238,11 @@ internal class CalculateResultKtTest {
             171, 173, 180, 183, 201, 231, 235, 237, 248, 267, 287, 289, 294,
             296
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(50 + (resM.correctionScaleK.raw * 0.4).roundToInt(), resM.impulsivenessScale4.raw)
         assertEquals(151, resM.impulsivenessScale4.score)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(50 + (resF.correctionScaleK.raw * 0.4).roundToInt(), resF.impulsivenessScale4.raw)
         assertEquals(151, resF.impulsivenessScale4.score)
 
@@ -262,7 +266,8 @@ internal class CalculateResultKtTest {
                 144, 176, 198, 213, 214, 219, 221, 223, 229, 249, 254, 260, 262,
                 264, 280, 283, 300
             ),
-            gender = Gender.Male
+            gender = Gender.Male,
+            mmpiData = mmpi566Data
         )
         assertEquals(60, resM.masculinityScale5.raw)
         assertEquals(127, resM.masculinityScale5.score)
@@ -277,7 +282,8 @@ internal class CalculateResultKtTest {
                 117, 120, 144, 176, 179, 198, 213, 214, 219, 221, 223, 229, 231,
                 249, 254, 260, 262, 264, 280, 283, 297, 300
             ),
-            gender = Gender.Female
+            gender = Gender.Female,
+            mmpiData = mmpi566Data
         )
         assertEquals(60, resF.masculinityScale5.raw)
         assertEquals(2, resF.masculinityScale5.score)
@@ -299,11 +305,11 @@ internal class CalculateResultKtTest {
             93, 107, 109, 111, 117, 124, 268, 281, 294, 313, 316,
             319, 327, 347, 348
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(40, resM.rigidityScale6.raw)
         assertEquals(143, resM.rigidityScale6.score)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(40, resF.rigidityScale6.raw)
         assertEquals(143, resF.rigidityScale6.score)
 
@@ -324,11 +330,11 @@ internal class CalculateResultKtTest {
         val disagree = setOf(
             3, 8, 36, 122, 152, 164, 178, 329, 353
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(48 + resM.correctionScaleK.raw, resM.anxietyScale7.raw)
         assertEquals(157, resM.anxietyScale7.score)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(48 + resF.correctionScaleK.raw, resF.anxietyScale7.raw)
         assertEquals(132, resF.anxietyScale7.score)
 
@@ -352,11 +358,11 @@ internal class CalculateResultKtTest {
             8, 17, 20, 37, 65, 103, 119, 177, 178, 187,
             192, 196, 220, 276, 281, 306, 309, 322, 330
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(78 + resM.correctionScaleK.raw, resM.individualismScale8.raw)
         assertEquals(213, resM.individualismScale8.score)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(78 + resF.correctionScaleK.raw, resF.individualismScale8.raw)
         assertEquals(178, resF.individualismScale8.score)
 
@@ -377,10 +383,10 @@ internal class CalculateResultKtTest {
         val disagree = setOf(
             101, 105, 111, 119, 120, 148, 166, 171, 180, 267, 289
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(46 + (0.2 * resM.correctionScaleK.raw).roundToInt(), resM.optimismScale9.raw)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(46 + (0.2 * resF.correctionScaleK.raw).roundToInt(), resF.optimismScale9.raw)
 
         assertEquals(26, scalesM.individualismScale8.finalScore(10))
@@ -402,10 +408,10 @@ internal class CalculateResultKtTest {
             281, 296, 309, 353, 359, 371, 391, 400, 415, 440, 446, 449, 450,
             451, 462, 469, 479, 481, 482, 505, 521, 547
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(70, resM.introversionScale0.raw)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(70, resF.introversionScale0.raw)
 
         assertEquals(34, scalesM.introversionScale0.finalScore(10))
@@ -421,10 +427,10 @@ internal class CalculateResultKtTest {
         val disagree = setOf(
             15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 195, 225, 255, 285
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(15, resM.liesScaleL.raw)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(15, resF.liesScaleL.raw)
 
 
@@ -446,10 +452,10 @@ internal class CalculateResultKtTest {
             17, 20, 54, 65, 75, 83, 112, 113, 115, 164, 169, 177, 185, 196,
             199, 220, 257, 258, 272, 276
         )
-        val resM = calculateScale(agree, disagree, Gender.Male)
+        val resM = calculateScale(agree, disagree, Gender.Male, mmpi566Data)
         assertEquals(64, resM.credibilityScaleF.raw)
 
-        val resF = calculateScale(agree, disagree, Gender.Female)
+        val resF = calculateScale(agree, disagree, Gender.Female, mmpi566Data)
         assertEquals(64, resF.credibilityScaleF.raw)
 
 
@@ -466,11 +472,12 @@ private fun scaleSum(scale: Scale) = scale.yes.size + scale.no.size
 private fun calculateScale(
     agree: Set<Int>,
     disagree: Set<Int>,
-    gender: Gender = Gender.Male
+    gender: Gender = Gender.Male,
+    mmpiData: MmpiData
 ): MmpiProcess.Result {
     val size = 566
     val answers = answers(size, agree, disagree)
-    val test = MmpiProcess(gender, TypeOfTest.Mmpi566)
+    val test = MmpiProcess(gender, TypeOfTest.Mmpi566, mmpiData)
 
     answers.forEachIndexed { index, answer ->
         test.submitAnswer(index, answer)

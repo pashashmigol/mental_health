@@ -10,10 +10,11 @@ import java.io.InputStream
 import Result
 import Settings.ROOT_DIRECTORY_ID
 import Settings.TEST_ROOT_DIRECTORY_ID
+import com.google.api.services.drive.model.Permission
 import models.User
 
 
-class ReportsStorage(
+class ReportStorage(
     private val connection: GoogleDriveConnection,
     private val testingMode: Boolean
 ) {
@@ -23,7 +24,7 @@ class ReportsStorage(
         bytes: ByteArray,
     ): Result<Folder> {
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
-        val fileName = CentralDataStorage.string("lusher_result_filename", date)
+        val fileName = R.string("lusher_result_filename", date)
 
         val folderResult = saveFile(
             fileName = fileName,
@@ -42,8 +43,8 @@ class ReportsStorage(
         val date = DateTime.now().format(DateFormat.DEFAULT_FORMAT)
 
         val fileName = when (typeOfTest) {
-            TypeOfTest.Mmpi566 -> CentralDataStorage.string("mmpi_566_result_filename", date)
-            TypeOfTest.Mmpi377 -> CentralDataStorage.string("mmpi_377_result_filename", date)
+            TypeOfTest.Mmpi566 -> R.string("mmpi_566_result_filename", date)
+            TypeOfTest.Mmpi377 -> R.string("mmpi_377_result_filename", date)
             else -> throw IllegalStateException()
         }
 
@@ -72,7 +73,7 @@ class ReportsStorage(
             folderId = userFolder.id,
             contentStream = contentStream
         )
-        giveAccess(userFolder.id, connection)
+        giveAccess(userFolder.id)
         println("fileLink : $fileLink")
 
         Result.Success(userFolder)
@@ -82,11 +83,27 @@ class ReportsStorage(
         Result.Error("ReportsStorage.saveFile() ${e.message}", e)
     }
 
+    fun giveAccess(folderId: String) {
+        val permission = Permission()
+
+        val details = Permission.PermissionDetails()
+        permission.role = "reader"
+        permission.type = "anyone"
+
+        permission.permissionDetails = listOf(details)
+
+        val result: Permission = connection.driveService.permissions()
+            .create(folderId, permission)
+            .execute()
+
+        println("result : $result")
+    }
+
     fun createUserFolder(userName: String): Result<Folder> {
         val folderMetadata = File()
         folderMetadata.name = userName
         folderMetadata.mimeType = "application/vnd.google-apps.folder"
-        folderMetadata.parents = if(testingMode) listOf(TEST_ROOT_DIRECTORY_ID) else listOf(ROOT_DIRECTORY_ID)
+        folderMetadata.parents = if (testingMode) listOf(TEST_ROOT_DIRECTORY_ID) else listOf(ROOT_DIRECTORY_ID)
 
         val folder = connection.driveService.files()
             .create(folderMetadata)

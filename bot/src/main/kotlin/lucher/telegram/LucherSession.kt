@@ -4,19 +4,24 @@ import Settings.LUCHER_TEST_TIMEOUT
 import kotlinx.coroutines.GlobalScope
 import lucher.*
 import models.User
-import storage.CentralDataStorage
-import storage.CentralDataStorage.string
 import telegram.*
 import telegram.helpers.showResult
 import com.soywiz.klock.DateTimeTz
 import models.TypeOfTest
+import storage.R
+import storage.ReportStorage
+import storage.users.UserStorage
+import storage.users.saveLucher
 
 
 class LucherSession(
     user: User,
     chatId: Long,
     roomId: Long,
+    val lucherData: LucherData,
     userConnection: UserConnection,
+    userStorage: UserStorage,
+    reportStorage: ReportStorage,
     val minutesBetweenRounds: Int = LUCHER_TEST_TIMEOUT,
     onEndedCallback: OnEnded
 ) : TelegramSession<Unit>(
@@ -25,6 +30,8 @@ class LucherSession(
     chatId = chatId,
     type = TypeOfTest.Lucher,
     userConnection = userConnection,
+    userStorage = userStorage,
+    reportStorage = reportStorage,
     onEndedCallback = onEndedCallback
 ) {
     companion object {
@@ -48,13 +55,15 @@ class LucherSession(
             firstRound = firstRoundAnswers,
             secondRound = secondRoundAnswers
         )
-        val result = calculateLucher(answers, CentralDataStorage.lucherData.meanings)
+        val result = calculateLucher(answers, lucherData.meanings)
 
-        val folderLink = CentralDataStorage.saveLucher(
+        val folderLink = saveLucher(
             user = user,
             answers = answers,
             result = result,
-            saveAnswers = true
+            saveAnswers = true,
+            userStorage = userStorage,
+            reportStorage = reportStorage
         ).dealWithError { error ->
             throw error.exception ?: RuntimeException(error.message)
         }
@@ -79,7 +88,7 @@ class LucherSession(
 
         userConnection?.sendMessageWithButtons(
             chatId = chatId,
-            text = string("choose_color"),
+            text = R.string("choose_color"),
             buttons = createReplyOptions(shownOptions),
         ).let { state.addMessageId(it) }
 

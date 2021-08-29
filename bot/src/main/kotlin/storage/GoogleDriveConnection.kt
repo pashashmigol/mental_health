@@ -20,16 +20,17 @@ import telegram.LaunchMode
 import Result
 
 
-class GoogleDriveConnection(launchMode: LaunchMode, private val testingMode: Boolean) {
+class GoogleDriveConnection(private val testingMode: Boolean) {
 
     val driveService: Drive
     private val sheets: Sheets
     internal val database: FirebaseDatabase
 
     init {
-        val credentialsPath = when(launchMode){
+        val credentialsPath = when (val launchMode = LaunchMode.current) {
             LaunchMode.TESTS, LaunchMode.LOCAL -> "${launchMode.rootPath}webapp/$FIREBASE_CREDENTIALS_FILE_NAME"
             LaunchMode.APP_ENGINE -> "${launchMode.rootPath}$FIREBASE_CREDENTIALS_FILE_NAME"
+            else -> throw IllegalAccessException()
         }
         val serviceAccount = FileInputStream(credentialsPath)
         val credentials: GoogleCredentials = GoogleCredentials.fromStream(serviceAccount)

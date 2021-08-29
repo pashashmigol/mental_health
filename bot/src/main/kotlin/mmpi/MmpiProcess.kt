@@ -2,11 +2,14 @@ package mmpi
 
 import Gender
 import models.*
-import storage.CentralDataStorage
-import storage.CentralDataStorage.string
+import storage.R
 import java.util.*
 
-class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
+class MmpiProcess(
+    gender: Gender,
+    val typeOfTest: TypeOfTest,
+    data: MmpiData,
+) {
 
     internal data class State(
         val currentQuestionIndex: Int = -1,
@@ -17,14 +20,14 @@ class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
 
     private var state = when (typeOfTest) {
         TypeOfTest.Mmpi566 -> State(
-            questions = CentralDataStorage.mmpi566Data.questions(gender),
+            questions = data.questions(gender),
             answers = sortedMapOf(),
-            scales = CentralDataStorage.mmpi566Data.scales(gender)
+            scales = data.scales(gender)
         )
         TypeOfTest.Mmpi377 -> State(
-            questions = CentralDataStorage.mmpi377Data.questions(gender),
+            questions = data.questions(gender),
             answers = sortedMapOf(),
-            scales = CentralDataStorage.mmpi377Data.scales(gender)
+            scales = data.scales(gender)
         )
         else -> throw IllegalStateException()
     }
@@ -67,8 +70,8 @@ class MmpiProcess(gender: Gender, val typeOfTest: TypeOfTest) {
 
         val text
             get() = when (this) {
-                Agree -> string("agree")
-                Disagree -> string("disagree")
+                Agree -> R.string("agree")
+                Disagree -> R.string("disagree")
             }
     }
 
