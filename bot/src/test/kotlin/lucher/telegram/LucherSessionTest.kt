@@ -15,8 +15,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.kodein.di.instance
 import storage.GoogleDriveConnection
-import storage.Fonts
-import storage.ReportStorage
+import storage.GoogleDriveReportStorage
 import storage.users.UserStorage
 import storage.users.createUser
 import storage.users.deleteUser
@@ -31,7 +30,7 @@ internal class LucherSessionTest {
     private lateinit var testUser: User
 
     private val userStorage: UserStorage by testDI.instance()
-    private val reportStorage: ReportStorage by testDI.instance()
+    private val reportStorage: GoogleDriveReportStorage by testDI.instance()
     private val connection: GoogleDriveConnection by testDI.instance()
     private val lucherData: LucherData by testDI.instance()
 
@@ -113,7 +112,7 @@ private fun checkState(session: LucherSession) {
 private fun createMockSession(
     resultChannel: Channel<Unit>,
     userStorage: UserStorage,
-    reportStorage: ReportStorage,
+    reportStorage: GoogleDriveReportStorage,
     lucherData: LucherData
 ) = LucherSession(
     roomId = 0L,

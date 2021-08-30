@@ -14,4 +14,4 @@ fun loadUserStorage(
 fun loadReportsStorage(
     connection: GoogleDriveConnection,
     testingMode: Boolean
-): ReportStorage = ReportStorage(connection, testingMode)
+): GoogleDriveReportStorage = GoogleDriveReportStorage(connection, testingMode)

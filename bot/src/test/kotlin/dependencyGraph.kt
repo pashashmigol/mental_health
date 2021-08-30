@@ -11,7 +11,6 @@ import quiz.DailyQuizData
 import quiz.loadDailyQuizData
 import storage.*
 import storage.users.UserStorage
-import telegram.LaunchMode
 
 val testDI = DI {
     bind<GoogleDriveConnection>() with singleton {
@@ -23,7 +22,7 @@ val testDI = DI {
         loadUserStorage(instance())
     }
 
-    bind<ReportStorage>() with singleton {
+    bind<GoogleDriveReportStorage>() with singleton {
         loadReportsStorage(instance(), testingMode = true)
     }
 

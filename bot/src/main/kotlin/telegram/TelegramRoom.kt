@@ -1,5 +1,6 @@
 package telegram
 
+import DataPack
 import lucher.telegram.LucherSession
 import mmpi.telegram.MmpiSession
 import models.TypeOfTest.*
@@ -8,13 +9,9 @@ import io.ktor.util.*
 import io.ktor.util.collections.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
-import lucher.LucherData
-import mmpi.MmpiData
 import models.TypeOfTest
 import models.User
-import quiz.DailyQuizData
 import quiz.DailyQuizSession
-import storage.Fonts
 import storage.R
 import storage.ReportStorage
 import storage.users.UserStorage
@@ -29,10 +26,7 @@ class TelegramRoom(
     private val userConnection: UserConnection,
     private val reportStorage: ReportStorage,
     private val userStorage: UserStorage,
-    private val lusherData: LucherData,
-    private val mmpiData566: MmpiData,
-    private val mmpiData377: MmpiData,
-    private val dailyQuizData: DailyQuizData,
+    private val dataPack: DataPack
 ) {
     internal val sessions = ConcurrentMap<Long, TelegramSession<*>>()
     private val scope = GlobalScope
@@ -75,7 +69,7 @@ class TelegramRoom(
                 userConnection = userConnection,
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                mmpiData = mmpiData566,
+                mmpiData = dataPack.mmpi566Data,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
             Mmpi377 -> MmpiSession(
@@ -86,7 +80,7 @@ class TelegramRoom(
                 userConnection = userConnection,
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                mmpiData = mmpiData377,
+                mmpiData = dataPack.mmpi377Data,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
             Lucher -> LucherSession(
@@ -97,7 +91,7 @@ class TelegramRoom(
                 userStorage = userStorage,
                 reportStorage = reportStorage,
                 onEndedCallback = { removeSession(it.sessionId) },
-                lucherData = lusherData
+                lucherData = dataPack.lucherData
             )
             DailyQuiz -> DailyQuizSession(
                 user = user,
@@ -107,7 +101,7 @@ class TelegramRoom(
                 userConnection = userConnection,
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                dailyQuizData = dailyQuizData,
+                dailyQuizData = dataPack.dailyQuizData,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
         }
@@ -189,7 +183,7 @@ class TelegramRoom(
                 userConnection = userConnection,
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                mmpiData = mmpiData566,
+                mmpiData = dataPack.mmpi566Data,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
             sessions[userId]!!.start()
@@ -217,7 +211,7 @@ class TelegramRoom(
             userConnection = userConnection,
             userStorage = userStorage,
             reportStorage = reportStorage,
-            mmpiData = mmpiData377,
+            mmpiData = dataPack.mmpi377Data,
         ) { removeSession(it.sessionId) }
 
         sessions[userId]!!.start()
@@ -241,7 +235,7 @@ class TelegramRoom(
             userConnection = userConnection,
             userStorage = userStorage,
             reportStorage = reportStorage,
-            lucherData = lusherData,
+            lucherData = dataPack.lucherData,
         ) { removeSession(it.sessionId) }
 
         sessions[userId]!!.start()
@@ -297,7 +291,7 @@ class TelegramRoom(
             userConnection = userConnection,
             userStorage = userStorage,
             reportStorage = reportStorage,
-            dailyQuizData = dailyQuizData
+            dailyQuizData = dataPack.dailyQuizData
         ) { removeSession(it.sessionId) }
 
         sessions[userId]!!.start()
@@ -414,7 +408,7 @@ class TelegramRoom(
                 userConnection = userConnection,
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                mmpiData = mmpiData566,
+                mmpiData = dataPack.mmpi377Data,
             ) { removeSession(it.sessionId) }
 
             Mmpi377 -> MmpiSession(
@@ -425,7 +419,7 @@ class TelegramRoom(
                 userConnection = userConnection,
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                mmpiData = mmpiData377,
+                mmpiData = dataPack.mmpi377Data,
             ) { removeSession(it.sessionId) }
 
             Lucher -> LucherSession(
@@ -435,7 +429,7 @@ class TelegramRoom(
                 userConnection = userConnection,
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                lucherData = lusherData,
+                lucherData = dataPack.lucherData,
             ) { removeSession(it.sessionId) }
 
             DailyQuiz -> DailyQuizSession(
@@ -446,7 +440,7 @@ class TelegramRoom(
                 userConnection = userConnection,
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                dailyQuizData = dailyQuizData
+                dailyQuizData = dataPack.dailyQuizData
             ) { removeSession(it.sessionId) }
         }
         sessions[userId]!!.start()

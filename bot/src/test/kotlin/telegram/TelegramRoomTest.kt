@@ -1,5 +1,6 @@
 package telegram
 
+import DataPack
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import lucher.LucherData
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.kodein.di.instance
 import quiz.DailyQuizData
 import quiz.DailyQuizSession
-import storage.ReportStorage
+import storage.GoogleDriveReportStorage
 import storage.users.UserStorage
 import testDI
 import java.util.concurrent.TimeUnit
@@ -20,13 +21,14 @@ import java.util.concurrent.TimeUnit
 internal class TelegramRoomTest {
 
     private val userStorage: UserStorage by testDI.instance()
-    private val reportStorage: ReportStorage by testDI.instance()
+    private val reportStorage: GoogleDriveReportStorage by testDI.instance()
 
-
-    private val mmpi566Data: MmpiData by testDI.instance(TypeOfTest.Mmpi566)
-    private val mmpi377Data: MmpiData by testDI.instance(TypeOfTest.Mmpi377)
-    private val lucherData: LucherData by testDI.instance()
-    private val dailyQuizData: DailyQuizData by testDI.instance()
+    private val dataPack = object : DataPack {
+        override val mmpi566Data: MmpiData by testDI.instance(TypeOfTest.Mmpi566)
+        override val mmpi377Data: MmpiData by testDI.instance(TypeOfTest.Mmpi377)
+        override val lucherData: LucherData by testDI.instance()
+        override val dailyQuizData: DailyQuizData by testDI.instance()
+    }
 
     @BeforeAll
     fun setup() {
@@ -46,10 +48,7 @@ internal class TelegramRoomTest {
             userConnection = MockUserConnection,
             reportStorage = reportStorage,
             userStorage = userStorage,
-            lusherData = lucherData,
-            mmpiData566 = mmpi566Data,
-            mmpiData377 = mmpi377Data,
-            dailyQuizData = dailyQuizData,
+            dataPack = dataPack
         )
         for (id in 0..36L step 4) {
             originalRoom.launchMmpi377(
@@ -74,10 +73,7 @@ internal class TelegramRoomTest {
             userConnection = MockUserConnection,
             reportStorage = reportStorage,
             userStorage = userStorage,
-            lusherData = lucherData,
-            mmpiData566 = mmpi566Data,
-            mmpiData377 = mmpi377Data,
-            dailyQuizData = dailyQuizData
+            dataPack = dataPack
         )
 
         restoredRoom.restoreState()

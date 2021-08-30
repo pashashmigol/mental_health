@@ -1,5 +1,6 @@
 package telegram
 
+import DataPack
 import Tokens
 import io.ktor.util.*
 import lucher.LucherData
@@ -25,13 +26,14 @@ class BotLauncher(
             val di = createDependenciesContainer()
 
             val userStorage: UserStorage by di.instance()
-            val reportStorage: ReportStorage by di.instance()
+            val reportStorage: GoogleDriveReportStorage by di.instance()
 
-            val lucherData: LucherData by di.instance()
-            val mmpiData566: MmpiData by di.instance(TypeOfTest.Mmpi566)
-            val mmpiData377: MmpiData by di.instance(TypeOfTest.Mmpi377)
-            val dailyQuizData: DailyQuizData by di.instance()
-
+            val dataPack  = object  : DataPack{
+                override val lucherData: LucherData by di.instance()
+                override val mmpi566Data: MmpiData by di.instance(TypeOfTest.Mmpi566)
+                override val mmpi377Data: MmpiData by di.instance(TypeOfTest.Mmpi377)
+                override val dailyQuizData: DailyQuizData by di.instance()
+            }
 
             val adminBot = launchAdminBot(
                 token = it.ADMIN,
@@ -44,11 +46,8 @@ class BotLauncher(
                 userConnection = TelegramUserConnection(it.ADMIN_ID) { botsKeeper!! },
                 userStorage = userStorage,
                 reportStorage = reportStorage,
-                lusherData = lucherData,
-                botsKeeper = { botsKeeper!! },
-                mmpiData566 = mmpiData566,
-                mmpiData377 = mmpiData377,
-                dailyQuizData = dailyQuizData
+                dataPack = dataPack,
+                botsKeeper = { botsKeeper!! }
             )
 
             botsKeeper = BotsKeeper(
@@ -67,7 +66,6 @@ fun createDependenciesContainer(): DI {
         LaunchMode.LOCAL -> createDependenciesLocal()
         LaunchMode.TESTS -> createDependenciesProd()
         LaunchMode.APP_ENGINE -> throw NotImplementedError()
-        else -> throw IllegalStateException()
     }
 }
 
@@ -78,7 +76,7 @@ fun createDependenciesLocal() = DI {
         )
     }
     bind<UserStorage>() with singleton { loadUserStorage(instance()) }
-    bind<ReportStorage>() with singleton { loadReportsStorage(instance(), testingMode = true) }
+    bind<GoogleDriveReportStorage>() with singleton { loadReportsStorage(instance(), testingMode = true) }
 }
 
 fun createDependenciesProd() = DI {
@@ -88,5 +86,5 @@ fun createDependenciesProd() = DI {
         )
     }
     bind<UserStorage>() with singleton { loadUserStorage(instance()) }
-    bind<ReportStorage>() with singleton { loadReportsStorage(instance(), testingMode = false) }
+    bind<GoogleDriveReportStorage>() with singleton { loadReportsStorage(instance(), testingMode = false) }
 }

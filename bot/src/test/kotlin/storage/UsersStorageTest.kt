@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit
 internal class UsersStorageTest {
 
     private val userStorage: UserStorage by testDI.instance()
-    private val reportStorage: ReportStorage by testDI.instance()
+    private val reportStorage: GoogleDriveReportStorage by testDI.instance()
     private val connection: GoogleDriveConnection by testDI.instance()
 
     @BeforeAll

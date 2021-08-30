@@ -14,7 +14,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.kodein.di.instance
 import storage.GoogleDriveConnection
-import storage.ReportStorage
+import storage.GoogleDriveReportStorage
 import storage.users.UserStorage
 import storage.users.createUser
 import storage.users.deleteUser
@@ -29,7 +29,7 @@ internal class MmpiSessionTest {
     private lateinit var testUser: User
 
     private val userStorage: UserStorage by testDI.instance()
-    private val reportStorage: ReportStorage by testDI.instance()
+    private val reportStorage: GoogleDriveReportStorage by testDI.instance()
     private val connection: GoogleDriveConnection by testDI.instance()
     private val mmpi566Data: MmpiData by testDI.instance(TypeOfTest.Mmpi566)
 
@@ -199,7 +199,7 @@ private fun checkState(
     answers: List<MmpiProcess.Answer>,
     session: MmpiSession?,
     userStorage: UserStorage,
-    reportStorage: ReportStorage,
+    reportStorage: GoogleDriveReportStorage,
     mmpiData: MmpiData
 ) = runBlocking {
     val sessionState = session!!.state

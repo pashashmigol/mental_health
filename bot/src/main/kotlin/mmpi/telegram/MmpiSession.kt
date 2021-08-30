@@ -7,7 +7,7 @@ import models.User
 import telegram.helpers.showResult
 import Result
 import com.soywiz.klock.DateTimeTz
-import storage.Fonts
+import storage.GoogleDriveReportStorage
 import storage.ReportStorage
 import storage.users.UserStorage
 import storage.users.saveMmpi
