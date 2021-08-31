@@ -1,7 +1,6 @@
 package storage
 
-import storage.users.UserStorage
-import storage.users.UsersStorageFirebase
+import storage.users.*
 
 typealias Link = String
 
@@ -9,7 +8,15 @@ data class Folder(val id: String, val link: String)
 
 fun loadUserStorage(
     connection: GoogleDriveConnection
-): UserStorage = UsersStorageFirebase(connection.database)
+): UserStorageFirebase = UserStorageFirebase(connection.database)
+
+fun loadSessionsStorage(
+    connection: GoogleDriveConnection
+): SessionStorage = SessionStorageFirebase(connection.database)
+
+fun loadAnswersStorage(
+    connection: GoogleDriveConnection
+): AnswerStorage = AnswerStorageFirebase(connection.database)
 
 fun loadReportsStorage(
     connection: GoogleDriveConnection,

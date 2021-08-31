@@ -11,17 +11,13 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.kodein.di.instance
 import quiz.DailyQuizData
 import quiz.DailyQuizSession
-import storage.GoogleDriveReportStorage
-import storage.users.UserStorage
 import testDI
+import testStoragePack
 import java.util.concurrent.TimeUnit
 
 @InternalAPI
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TelegramRoomTest {
-
-    private val userStorage: UserStorage by testDI.instance()
-    private val reportStorage: GoogleDriveReportStorage by testDI.instance()
 
     private val dataPack = object : DataPack {
         override val mmpi566Data: MmpiData by testDI.instance(TypeOfTest.Mmpi566)
@@ -32,13 +28,13 @@ internal class TelegramRoomTest {
 
     @BeforeAll
     fun setup() {
-        userStorage.clear()
+        testStoragePack.userStorage.clear()
     }
 
     @AfterAll
     @Timeout(value = 20, unit = TimeUnit.SECONDS)
     fun clear() {
-        userStorage.clear()
+        testStoragePack.userStorage.clear()
     }
 
     @Test
@@ -46,9 +42,8 @@ internal class TelegramRoomTest {
         val originalRoom = TelegramRoom(
             roomId = 0,
             userConnection = MockUserConnection,
-            reportStorage = reportStorage,
-            userStorage = userStorage,
-            dataPack = dataPack
+            dataPack = dataPack,
+            storagePack = testStoragePack,
         )
         for (id in 0..36L step 4) {
             originalRoom.launchMmpi377(
@@ -71,9 +66,8 @@ internal class TelegramRoomTest {
         val restoredRoom = TelegramRoom(
             roomId = 0,
             userConnection = MockUserConnection,
-            reportStorage = reportStorage,
-            userStorage = userStorage,
-            dataPack = dataPack
+            storagePack = testStoragePack,
+            dataPack = dataPack,
         )
 
         restoredRoom.restoreState()

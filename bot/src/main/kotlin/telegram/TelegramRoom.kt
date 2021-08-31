@@ -1,6 +1,7 @@
 package telegram
 
 import DataPack
+import StoragePack
 import lucher.telegram.LucherSession
 import mmpi.telegram.MmpiSession
 import models.TypeOfTest.*
@@ -13,8 +14,6 @@ import models.TypeOfTest
 import models.User
 import quiz.DailyQuizSession
 import storage.R
-import storage.ReportStorage
-import storage.users.UserStorage
 import storage.users.createUser
 
 
@@ -24,8 +23,7 @@ private const val TAG = "telegram.WorkSpace"
 class TelegramRoom(
     val roomId: Long,
     private val userConnection: UserConnection,
-    private val reportStorage: ReportStorage,
-    private val userStorage: UserStorage,
+    private val storagePack: StoragePack,
     private val dataPack: DataPack
 ) {
     internal val sessions = ConcurrentMap<Long, TelegramSession<*>>()
@@ -38,7 +36,7 @@ class TelegramRoom(
     }
 
     fun restoreState() = runBlocking(exceptionHandler) {
-        val storedSessionStates = userStorage
+        val storedSessionStates = storagePack.sessionStorage
             .takeAllSessions()
             .dealWithError {
                 println("TelegramRoom error: ${it.message}")
@@ -58,7 +56,7 @@ class TelegramRoom(
 
     private suspend fun restoreSession(sessionState: SessionState): TelegramSession<Any> {
         val userId = sessionState.userId
-        val user = userStorage.getUser(userId)!!
+        val user = storagePack.userStorage.getUser(userId)!!
 
         val session = when (sessionState.type) {
             Mmpi566 -> MmpiSession(
@@ -67,8 +65,7 @@ class TelegramRoom(
                 chatId = sessionState.chatId,
                 type = sessionState.type,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
+                storagePack = storagePack,
                 mmpiData = dataPack.mmpi566Data,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
@@ -78,8 +75,7 @@ class TelegramRoom(
                 chatId = sessionState.chatId,
                 type = sessionState.type,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
+                storagePack = storagePack,
                 mmpiData = dataPack.mmpi377Data,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
@@ -88,10 +84,9 @@ class TelegramRoom(
                 roomId = roomId,
                 chatId = sessionState.chatId,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
-                onEndedCallback = { removeSession(it.sessionId) },
-                lucherData = dataPack.lucherData
+                storagePack = storagePack,
+                lucherData = dataPack.lucherData,
+                onEndedCallback = { removeSession(it.sessionId) }
             )
             DailyQuiz -> DailyQuizSession(
                 user = user,
@@ -99,8 +94,7 @@ class TelegramRoom(
                 chatId = sessionState.chatId,
                 dayTime = DailyQuizSession.Time.MORNING,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
+                storagePack = storagePack,
                 dailyQuizData = dataPack.dailyQuizData,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
@@ -118,8 +112,8 @@ class TelegramRoom(
             val userName = chatInfo.userName
             val user: User
 
-            if (userStorage.hasUserWithId(userId)) {
-                user = userStorage.getUser(userId)!!
+            if (storagePack.userStorage.hasUser(userId)) {
+                user = storagePack.userStorage.getUser(userId)!!
                 userConnection.notifyAdmin(
                     "user already exists: $user"
                 )
@@ -127,10 +121,10 @@ class TelegramRoom(
                 createUser(
                     userId = userId,
                     userName = userName,
-                    reportStorage = reportStorage,
-                    userStorage = userStorage
+                    reportStorage = storagePack.reportStorage,
+                    userStorage = storagePack.userStorage
                 )
-                user = userStorage.getUser(userId)!!
+                user = storagePack.userStorage.getUser(userId)!!
 
                 userConnection.notifyAdmin(
                     "user created: $user"
@@ -172,7 +166,7 @@ class TelegramRoom(
                 "launchMmpi566Test(); chatInfo = $chatInfo"
             )
             val userId = chatInfo.userId
-            val user = userStorage.getUser(userId)!!
+            val user = storagePack.userStorage.getUser(userId)!!
 
             removeSession(userId)
             sessions[userId] = MmpiSession(
@@ -181,8 +175,7 @@ class TelegramRoom(
                 chatId = chatInfo.chatId,
                 type = Mmpi566,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
+                storagePack = storagePack,
                 mmpiData = dataPack.mmpi566Data,
                 onEndedCallback = { removeSession(it.sessionId) }
             )
@@ -198,7 +191,7 @@ class TelegramRoom(
     ) = scope.launch(exceptionHandler) {
         println("$TAG: launchMmpi377Test();")
         val userId = chatInfo.userId
-        val user = userStorage.getUser(userId)!!
+        val user = storagePack.userStorage.getUser(userId)!!
 
         userConnection.notifyAdmin("launchMmpi377Test(); chatInfo = $chatInfo")
 
@@ -209,8 +202,7 @@ class TelegramRoom(
             chatId = chatInfo.chatId,
             type = Mmpi377,
             userConnection = userConnection,
-            userStorage = userStorage,
-            reportStorage = reportStorage,
+            storagePack = storagePack,
             mmpiData = dataPack.mmpi377Data,
         ) { removeSession(it.sessionId) }
 
@@ -223,7 +215,7 @@ class TelegramRoom(
         println("$TAG: launchLucherTest();")
         val userId = chatInfo.userId
         val chatId = chatInfo.chatId
-        val user = userStorage.getUser(userId)!!
+        val user = storagePack.userStorage.getUser(userId)!!
 
         userConnection.notifyAdmin("launchLucherTest(); chatInfo = $chatInfo")
 
@@ -233,8 +225,7 @@ class TelegramRoom(
             chatId = chatId,
             roomId = roomId,
             userConnection = userConnection,
-            userStorage = userStorage,
-            reportStorage = reportStorage,
+            storagePack = storagePack,
             lucherData = dataPack.lucherData,
         ) { removeSession(it.sessionId) }
 
@@ -242,7 +233,7 @@ class TelegramRoom(
     }
 
     fun onMorningChron() {
-        userStorage.allUsers().forEach { user ->
+        storagePack.userStorage.allUsers().forEach { user ->
             val chatInfo = ChatInfo(
                 userId = user.id,
                 userName = user.name,
@@ -254,7 +245,7 @@ class TelegramRoom(
     }
 
     fun onEveningChron() {
-        userStorage.allUsers()
+        storagePack.userStorage.allUsers()
             .filter {
                 it.runDailyQuiz
             }.forEach { user ->
@@ -278,7 +269,7 @@ class TelegramRoom(
         println("$TAG: launchLucherTest();")
         val userId = chatInfo.userId
         val chatId = chatInfo.chatId
-        val user = userStorage.getUser(userId)!!
+        val user = storagePack.userStorage.getUser(userId)!!
 
         userConnection.notifyAdmin("launchLucherTest(); chatInfo = $chatInfo")
 
@@ -289,9 +280,8 @@ class TelegramRoom(
             dayTime = dayTime,
             roomId = roomId,
             userConnection = userConnection,
-            userStorage = userStorage,
-            reportStorage = reportStorage,
-            dailyQuizData = dataPack.dailyQuizData
+            storagePack = storagePack,
+            dailyQuizData = dataPack.dailyQuizData,
         ) { removeSession(it.sessionId) }
 
         sessions[userId]!!.start()
@@ -339,7 +329,7 @@ class TelegramRoom(
         val mmpi566 = UserAnswer.NewTest(typeOfTest = Mmpi566)
         val mmpi377 = UserAnswer.NewTest(typeOfTest = Mmpi377)
 
-        val user = userStorage.getUser(chatInfo.userId)!!
+        val user = storagePack.userStorage.getUser(chatInfo.userId)!!
 
         val (dailyQuizSwitchText, dailyQuizSwitch) = if (switch.on) {
             Pair(R.string("daily_quiz_off"), UserAnswer.Switch(on = false))
@@ -352,7 +342,7 @@ class TelegramRoom(
         val updatedUser = user.copy(runDailyQuiz = switch.on)
 
         scope.launch(exceptionHandler) {
-            userStorage.saveUser(updatedUser)
+            storagePack.userStorage.saveUser(updatedUser)
         }
 
         userConnection.updateMessage(
@@ -394,7 +384,7 @@ class TelegramRoom(
         val userId = chatInfo.userId
         val chatId = chatInfo.chatId
         val messageId = chatInfo.messageId
-        val user = userStorage.getUser(userId)!!
+        val user = storagePack.userStorage.getUser(userId)!!
 
         userConnection.notifyAdmin("launchTest($type)")
         userConnection.removeMessage(chatId, messageId)
@@ -406,8 +396,7 @@ class TelegramRoom(
                 chatId = chatId,
                 type = type,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
+                storagePack = storagePack,
                 mmpiData = dataPack.mmpi377Data,
             ) { removeSession(it.sessionId) }
 
@@ -417,8 +406,7 @@ class TelegramRoom(
                 chatId = chatId,
                 type = type,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
+                storagePack = storagePack,
                 mmpiData = dataPack.mmpi377Data,
             ) { removeSession(it.sessionId) }
 
@@ -427,8 +415,7 @@ class TelegramRoom(
                 roomId = roomId,
                 chatId = chatId,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
+                storagePack = storagePack,
                 lucherData = dataPack.lucherData,
             ) { removeSession(it.sessionId) }
 
@@ -438,9 +425,8 @@ class TelegramRoom(
                 chatId = chatId,
                 dayTime = DailyQuizSession.Time.MORNING,
                 userConnection = userConnection,
-                userStorage = userStorage,
-                reportStorage = reportStorage,
-                dailyQuizData = dataPack.dailyQuizData
+                storagePack = storagePack,
+                dailyQuizData = dataPack.dailyQuizData,
             ) { removeSession(it.sessionId) }
         }
         sessions[userId]!!.start()
@@ -448,7 +434,7 @@ class TelegramRoom(
 
     private fun removeSession(userId: SessionId) {
         userConnection.notifyAdmin("removeSession($userId)")
-        userStorage.removeSession(userId)
+        storagePack.sessionStorage.removeSession(userId)
         sessions.remove(userId)
     }
 }

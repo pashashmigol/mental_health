@@ -14,6 +14,7 @@ import quiz.DailyQuizAnswer
 import quiz.DailyQuizAnswersContainer
 import quiz.DailyQuizOptions
 
+
 @Suppress("UNCHECKED_CAST")
  fun parseMmpiAnswers(snapshot: DataSnapshot?): List<MmpiAnswersContainer> {
     val typeIndicator: GenericTypeIndicator<HashMap<String, Any>> =

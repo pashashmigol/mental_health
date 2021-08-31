@@ -25,9 +25,7 @@ import org.kodein.di.instance
 import quiz.DailyQuizAnswer
 import quiz.DailyQuizAnswersContainer
 import quiz.DailyQuizOptions
-import storage.users.UserStorage
-import storage.users.createUser
-import storage.users.deleteUser
+import storage.users.*
 import telegram.UserAnswer
 import telegram.SessionState
 import testDI
@@ -35,10 +33,10 @@ import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class UsersStorageTest {
-
     private val userStorage: UserStorage by testDI.instance()
+    private val answerStorage: AnswerStorage by testDI.instance()
     private val reportStorage: GoogleDriveReportStorage by testDI.instance()
-    private val connection: GoogleDriveConnection by testDI.instance()
+    private val sessionStorage: SessionStorage by testDI.instance()
 
     @BeforeAll
     fun init() {
@@ -51,10 +49,10 @@ internal class UsersStorageTest {
         val user = createUser(333L, "mmpi answers saving")
 
         val mockAnswers = createMmpiAnswers(user, Gender.Female)
-        val saveResult = userStorage.saveMmpiAnswers(mockAnswers)
+        val saveResult = answerStorage.saveAnswers(mockAnswers)
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers = userStorage
+        val receivedAnswers = answerStorage
             .getUserAnswers(user = user)
             .dealWithError {
                 fail(it.exception)
@@ -62,12 +60,6 @@ internal class UsersStorageTest {
             .first()
 
         assertEquals(mockAnswers, receivedAnswers)
-        deleteUser(
-            user = user,
-            userStorage = userStorage,
-            connection = connection
-        )
-        Unit
     }
 
     @Test
@@ -76,10 +68,10 @@ internal class UsersStorageTest {
         val user = createUser(222L, "Lucher answers saving")
 
         val mockAnswers = createLucherAnswers(user)
-        val saveResult = userStorage.saveLucherAnswers(mockAnswers)
+        val saveResult = answerStorage.saveAnswers(mockAnswers)
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers = userStorage
+        val receivedAnswers = answerStorage
             .getUserAnswers(user)
             .dealWithError {
                 fail(it.exception)
@@ -87,12 +79,6 @@ internal class UsersStorageTest {
             .first()
 
         assertEquals(mockAnswers, receivedAnswers)
-        deleteUser(
-            user = user,
-            userStorage = userStorage,
-            connection = connection
-        )
-        Unit
     }
 
     @Test
@@ -101,10 +87,10 @@ internal class UsersStorageTest {
         val originalSessions: List<SessionState> = createSessions()
 
         originalSessions.forEach {
-            it.addToStorage(userStorage)
+            it.addToStorage(sessionStorage)
         }
 
-        val storageResult = userStorage.takeAllSessions()
+        val storageResult = sessionStorage.takeAllSessions()
 
         if (storageResult is Result.Error) {
             fail<Exception>(storageResult.exception)
@@ -119,14 +105,13 @@ internal class UsersStorageTest {
         val user = createUser(334L, "daily quiz answers saving")
 
         val mockAnswers = createDailyQuizAnswers(user)
-        val saveResult = userStorage.saveDailyQuizAnswers(
-            user = user,
+        val saveResult = answerStorage.saveAnswers(
             answers = mockAnswers
         )
 
         assertTrue(saveResult is Result.Success)
 
-        val receivedAnswers: AnswersContainer = userStorage
+        val receivedAnswers: AnswersContainer = answerStorage
             .getUserAnswers(user = user)
             .dealWithError {
                 fail(it.exception)
@@ -134,12 +119,6 @@ internal class UsersStorageTest {
             .first()
 
         assertEquals(mockAnswers, receivedAnswers)
-        deleteUser(
-            user = user,
-            userStorage = userStorage,
-            connection = connection
-        )
-        Unit
     }
 
     private suspend fun createUser(userId: Long, userName: String): User {
@@ -224,35 +203,35 @@ internal class UsersStorageTest {
         for (index in 0..20) {
             mmpi566.saveMessageId(
                 messageId = index + 1L,
-                userStorage = userStorage
+                sessionStorage = sessionStorage
             )
             mmpi566.saveAnswer(
                 userAnswer = UserAnswer.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 ),
-                userStorage = userStorage
+                sessionStorage = sessionStorage
             )
             mmpi377.saveMessageId(
                 messageId = index * 2 + 1L,
-                userStorage = userStorage
+                sessionStorage = sessionStorage
             )
             mmpi377.saveAnswer(
                 userAnswer = UserAnswer.Mmpi(
                     index = index,
                     answer = MmpiProcess.Answer.Agree
                 ),
-                userStorage = userStorage
+                sessionStorage = sessionStorage
             )
             lucher.saveMessageId(
                 messageId = index * 3 + 1L,
-                userStorage = userStorage
+                sessionStorage = sessionStorage
             )
             lucher.saveAnswer(
                 userAnswer = UserAnswer.Lucher(
                     answer = LucherColor.Gray
                 ),
-                userStorage = userStorage
+                sessionStorage = sessionStorage
             )
         }
         return listOf(mmpi566, mmpi377, lucher)

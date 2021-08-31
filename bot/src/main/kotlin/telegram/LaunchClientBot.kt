@@ -1,6 +1,7 @@
 package telegram
 
 import DataPack
+import StoragePack
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
@@ -10,8 +11,6 @@ import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.webhook
 import io.ktor.util.*
 import quiz.DailyQuizSession
-import storage.GoogleDriveReportStorage
-import storage.users.UserStorage
 import telegram.helpers.chatInfo
 
 
@@ -20,8 +19,7 @@ fun launchClientBot(
     adminId: Long,
     token: String,
     userConnection: UserConnection,
-    userStorage: UserStorage,
-    reportStorage: GoogleDriveReportStorage,
+    storagePack: StoragePack,
     dataPack: DataPack,
     botsKeeper: () -> BotsKeeper
 ): Pair<Bot, TelegramRoom> {
@@ -29,9 +27,8 @@ fun launchClientBot(
     val telegramRoom = TelegramRoom(
         roomId = adminId,
         userConnection = userConnection,
-        reportStorage = reportStorage,
-        userStorage = userStorage,
-        dataPack = dataPack
+        storagePack = storagePack,
+        dataPack = dataPack,
     )
 
     val clientBot = bot {

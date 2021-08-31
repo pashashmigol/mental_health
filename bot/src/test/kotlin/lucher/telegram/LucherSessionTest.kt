@@ -7,6 +7,7 @@ import models.AnswersContainer
 import models.User
 
 import Result
+import StoragePack
 import com.soywiz.klock.DateTimeTz
 import lucher.LucherAnswersContainer
 import lucher.LucherData
@@ -14,13 +15,10 @@ import models.TypeOfTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.kodein.di.instance
-import storage.GoogleDriveConnection
-import storage.GoogleDriveReportStorage
-import storage.users.UserStorage
-import storage.users.createUser
-import storage.users.deleteUser
+import storage.users.*
 import telegram.*
 import testDI
+import testStoragePack
 import java.util.concurrent.TimeUnit
 
 const val LUCHER_SESSION_TEST_USER_ID = 444L
@@ -28,41 +26,37 @@ const val LUCHER_SESSION_TEST_USER_ID = 444L
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LucherSessionTest {
     private lateinit var testUser: User
-
-    private val userStorage: UserStorage by testDI.instance()
-    private val reportStorage: GoogleDriveReportStorage by testDI.instance()
-    private val connection: GoogleDriveConnection by testDI.instance()
     private val lucherData: LucherData by testDI.instance()
 
     @BeforeAll
     fun init() = runBlocking {
-
         val res = createUser(
             LUCHER_SESSION_TEST_USER_ID,
             "LucherSessionTest User",
-            userStorage = userStorage,
-            reportStorage = reportStorage
+            userStorage = testStoragePack.userStorage,
+            reportStorage = testStoragePack.reportStorage
         )
         assertTrue(res is Result.Success<Unit>)
 
-        testUser = userStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!
+        testUser = testStoragePack.userStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!
     }
 
     @AfterAll
     fun cleanUp() = runBlocking {
-        deleteUser(
-            testUser,
-            userStorage = userStorage,
-            connection = connection
-        )
-        Unit
+        testStoragePack.userStorage.clear()
+        testStoragePack.answerStorage.clear()
+        testStoragePack.sessionStorage.clear()
     }
 
     @Test
     @Timeout(value = 60, unit = TimeUnit.SECONDS)
     fun `basic case`() = runBlocking {
         val resultChannel = Channel<Unit>(1)
-        val lucherSession = createMockSession(resultChannel, userStorage, reportStorage, lucherData)
+        val lucherSession = createMockSession(
+            resultChannel = resultChannel,
+            lucherData = lucherData,
+            storagePack = testStoragePack
+        )
 
         lucherSession.start()
 
@@ -93,7 +87,7 @@ internal class LucherSessionTest {
         checkAnswersSavedToDatabase(
             user = testUser,
             expectedAnswers = testAnswers,
-            userStorage = userStorage,
+            answerStorage = testStoragePack.answerStorage,
         )
         checkState(lucherSession)
     }
@@ -111,8 +105,7 @@ private fun checkState(session: LucherSession) {
 
 private fun createMockSession(
     resultChannel: Channel<Unit>,
-    userStorage: UserStorage,
-    reportStorage: GoogleDriveReportStorage,
+    storagePack: StoragePack,
     lucherData: LucherData
 ) = LucherSession(
     roomId = 0L,
@@ -136,20 +129,19 @@ private fun createMockSession(
         resultChannel.offer(Unit)
     },
     minutesBetweenRounds = 0,
-    user = userStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!,
+    user = storagePack.userStorage.getUser(LUCHER_SESSION_TEST_USER_ID)!!,
     chatId = 0,
-    userStorage = userStorage,
-    reportStorage = reportStorage,
-    lucherData = lucherData
+    storagePack = storagePack,
+    lucherData = lucherData,
 )
 
 private fun checkAnswersSavedToDatabase(
     user: User,
     expectedAnswers: LucherAnswersContainer,
-    userStorage: UserStorage
+    answerStorage: AnswerStorage
 ) = runBlocking {
 
-    val answersResult = userStorage.getUserAnswers(user)
+    val answersResult = answerStorage.getUserAnswers(user)
     assertTrue(answersResult is Result.Success)
 
     val allAnswersContainerFromDatabase: List<AnswersContainer> = (answersResult as Result.Success).data

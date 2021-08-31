@@ -6,10 +6,8 @@ import models.TypeOfTest
 import models.User
 import telegram.helpers.showResult
 import Result
+import StoragePack
 import com.soywiz.klock.DateTimeTz
-import storage.GoogleDriveReportStorage
-import storage.ReportStorage
-import storage.users.UserStorage
 import storage.users.saveMmpi
 import telegram.*
 
@@ -22,8 +20,7 @@ class MmpiSession(
     chatId: ChatId,
     type: TypeOfTest,
     userConnection: UserConnection,
-    userStorage: UserStorage,
-    reportStorage: ReportStorage,
+    storagePack: StoragePack,
     private val mmpiData: MmpiData,
     onEndedCallback: OnEnded
 ) : TelegramSession<Long>(
@@ -32,8 +29,7 @@ class MmpiSession(
     chatId = chatId,
     type = type,
     userConnection = userConnection,
-    userStorage = userStorage,
-    reportStorage = reportStorage,
+    storagePack = storagePack,
     onEndedCallback = onEndedCallback
 ) {
     internal var testingCallback: OnFinished = null
@@ -121,8 +117,8 @@ class MmpiSession(
             answers = answers,
             result = result,
             saveAnswers = true,
-            userStorage = userStorage,
-            reportStorage = reportStorage
+            answerStorage = storagePack.answerStorage,
+            reportStorage = storagePack.reportStorage
         ).dealWithError { return it }
 
         showResult(

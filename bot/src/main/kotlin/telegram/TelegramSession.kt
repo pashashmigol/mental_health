@@ -2,14 +2,13 @@ package telegram
 
 import models.User
 import Result
+import StoragePack
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import lucher.telegram.LucherSession
 import models.TypeOfTest
 import storage.R
-import storage.ReportStorage
-import storage.users.UserStorage
 
 typealias OnEnded = (TelegramSession<Any>) -> Unit
 typealias MessageId = Long
@@ -25,12 +24,10 @@ abstract class TelegramSession<out T>(
     val chatId: ChatId,
     val type: TypeOfTest,
     val userConnection: UserConnection,
-    val userStorage: UserStorage,
-    val reportStorage: ReportStorage,
+    val storagePack: StoragePack,
     val onEndedCallback: OnEnded
 ) {
     val sessionId by lazy { user.id }
-//    val usersStorage: UsersStorage by di.instance()
 
     val state by lazy {
         SessionState(
@@ -48,7 +45,7 @@ abstract class TelegramSession<out T>(
             userConnection.sendMessage(chatId, "Session $type error: ${exception.stackTraceToString()}")
             userConnection.sendMessage(chatId, R.string("start_again"))
         }
-        state.addToStorage(userStorage)
+        state.addToStorage(storagePack.sessionStorage)
         LucherSession.scope.launch(handler) { executeTesting(user, chatId) }
     }
 
@@ -57,7 +54,7 @@ abstract class TelegramSession<out T>(
     private val answers = Channel<AnswerEvent>(10)
 
     suspend fun sendAnswer(userAnswer: UserAnswer, messageId: MessageId): Result<Unit> {
-        state.saveAnswer(userAnswer, userStorage)
+        state.saveAnswer(userAnswer, storagePack.sessionStorage)
         answers.offer(AnswerEvent(userAnswer, messageId))
         return Result.Success(Unit)
     }

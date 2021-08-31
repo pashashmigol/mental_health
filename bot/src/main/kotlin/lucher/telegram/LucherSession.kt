@@ -1,6 +1,7 @@
 package lucher.telegram
 
 import Settings.LUCHER_TEST_TIMEOUT
+import StoragePack
 import kotlinx.coroutines.GlobalScope
 import lucher.*
 import models.User
@@ -9,8 +10,6 @@ import telegram.helpers.showResult
 import com.soywiz.klock.DateTimeTz
 import models.TypeOfTest
 import storage.R
-import storage.ReportStorage
-import storage.users.UserStorage
 import storage.users.saveLucher
 
 
@@ -20,8 +19,7 @@ class LucherSession(
     roomId: Long,
     val lucherData: LucherData,
     userConnection: UserConnection,
-    userStorage: UserStorage,
-    reportStorage: ReportStorage,
+    storagePack: StoragePack,
     val minutesBetweenRounds: Int = LUCHER_TEST_TIMEOUT,
     onEndedCallback: OnEnded
 ) : TelegramSession<Unit>(
@@ -30,8 +28,7 @@ class LucherSession(
     chatId = chatId,
     type = TypeOfTest.Lucher,
     userConnection = userConnection,
-    userStorage = userStorage,
-    reportStorage = reportStorage,
+    storagePack = storagePack,
     onEndedCallback = onEndedCallback
 ) {
     companion object {
@@ -62,8 +59,8 @@ class LucherSession(
             answers = answers,
             result = result,
             saveAnswers = true,
-            userStorage = userStorage,
-            reportStorage = reportStorage
+            answerStorage = storagePack.answerStorage,
+            reportStorage = storagePack.reportStorage
         ).dealWithError { error ->
             throw error.exception ?: RuntimeException(error.message)
         }

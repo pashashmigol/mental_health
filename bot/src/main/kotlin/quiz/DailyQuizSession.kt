@@ -1,12 +1,10 @@
 package quiz
 
+import StoragePack
 import com.soywiz.klock.DateTimeTz
 import models.Question
 import models.TypeOfTest
 import models.User
-import storage.GoogleDriveReportStorage
-import storage.ReportStorage
-import storage.users.UserStorage
 import telegram.*
 import java.util.*
 
@@ -17,8 +15,7 @@ class DailyQuizSession(
     chatId: ChatId,
     val dayTime: Time,
     userConnection: UserConnection,
-    userStorage: UserStorage,
-    reportStorage: ReportStorage,
+    storagePack: StoragePack,
     private val dailyQuizData: DailyQuizData,
     onEndedCallback: OnEnded
 ) : TelegramSession<Unit>(
@@ -27,8 +24,7 @@ class DailyQuizSession(
     chatId = chatId,
     type = TypeOfTest.DailyQuiz,
     userConnection = userConnection,
-    userStorage = userStorage,
-    reportStorage = reportStorage,
+    storagePack = storagePack,
     onEndedCallback = onEndedCallback
 ) {
     enum class Time { MORNING, EVENING }
@@ -48,9 +44,8 @@ class DailyQuizSession(
             date = DateTimeTz.nowLocal(),
             answers = answers
         )
-        userStorage.saveDailyQuizAnswers(
-            user = user,
-            answers = dailyQuizAnswers,
+        storagePack.answerStorage.saveAnswers(
+            answers = dailyQuizAnswers
         )
         userConnection.cleanUp(
             chatId = chatId,

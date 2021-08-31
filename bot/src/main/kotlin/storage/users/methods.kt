@@ -11,7 +11,7 @@ import mmpi.report.pdfReportMmpi
 import models.Question
 import models.TypeOfTest
 import storage.*
-import storage.deleteFolder
+
 
 suspend fun createUser(
     userId: Long,
@@ -19,7 +19,6 @@ suspend fun createUser(
     reportStorage: ReportStorage,
     userStorage: UserStorage,
 ): Result<Unit> {
-
     val folder = reportStorage.createUserFolder(userName)
         .dealWithError { return it }
 
@@ -35,19 +34,10 @@ suspend fun createUser(
     return userStorage.saveUser(user)
 }
 
-suspend fun deleteUser(
-    user: User,
-    userStorage: UserStorage,
-    connection: GoogleDriveConnection
-): Result<Unit> {
-    deleteFolder(user.googleDriveFolderId, connection)
-    return userStorage.clearUser(user)
-}
-
 suspend fun saveMmpi(
     user: User,
     typeOfTest: TypeOfTest,
-    userStorage: UserStorage,
+    answerStorage: AnswerStorage,
     reportStorage: ReportStorage,
     result: MmpiProcess.Result,
     questions: List<Question>,
@@ -55,7 +45,7 @@ suspend fun saveMmpi(
     saveAnswers: Boolean
 ): Result<Folder> {
     if (saveAnswers) {
-        userStorage.saveMmpiAnswers(answers).dealWithError {
+        answerStorage.saveAnswers(answers).dealWithError {
             return it
         }
     }
@@ -70,13 +60,13 @@ suspend fun saveMmpi(
 suspend fun saveLucher(
     user: User,
     answers: LucherAnswersContainer,
-    userStorage: UserStorage,
+    answerStorage: AnswerStorage,
     reportStorage: ReportStorage,
     result: LucherResult,
     saveAnswers: Boolean
 ): Result<Folder> {
     if (saveAnswers) {
-        userStorage.saveLucherAnswers(answers).dealWithError {
+        answerStorage.saveAnswers(answers).dealWithError {
             return it
         }
     }

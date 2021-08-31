@@ -13,13 +13,11 @@ import models.size
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.kodein.di.instance
-import storage.GoogleDriveConnection
 import storage.GoogleDriveReportStorage
-import storage.users.UserStorage
-import storage.users.createUser
-import storage.users.deleteUser
+import storage.users.*
 import telegram.*
 import testDI
+import testStoragePack
 import java.util.concurrent.TimeUnit
 
 const val MMPI_SESSION_TEST_USER_ID = 555L
@@ -30,8 +28,9 @@ internal class MmpiSessionTest {
 
     private val userStorage: UserStorage by testDI.instance()
     private val reportStorage: GoogleDriveReportStorage by testDI.instance()
-    private val connection: GoogleDriveConnection by testDI.instance()
     private val mmpi566Data: MmpiData by testDI.instance(TypeOfTest.Mmpi566)
+    private val sessionsStorage: SessionStorage by testDI.instance()
+    private val answerStorage: AnswerStorage by testDI.instance()
 
     @BeforeAll
     fun init() = runBlocking {
@@ -46,12 +45,9 @@ internal class MmpiSessionTest {
 
     @AfterAll
     fun cleanUp() = runBlocking {
-        deleteUser(
-            user = testUser,
-            userStorage = userStorage,
-            connection = connection
-        )
-        Unit
+        userStorage.clear()
+        sessionsStorage.clear()
+        answerStorage.clear()
     }
 
     @Test
@@ -67,11 +63,10 @@ internal class MmpiSessionTest {
             roomId = 0L,
             type = TypeOfTest.Mmpi566,
             userConnection = stubUserConnection(questionsIds),
-            userStorage = userStorage,
-            reportStorage = reportStorage,
-            mmpiData = mmpi566Data
+            storagePack = testStoragePack,
+            mmpiData = mmpi566Data,
         ) {
-            checkSessionResult(testUser, session, it, userStorage)
+            checkSessionResult(testUser, session, it, answerStorage = answerStorage)
         }
         session.start()
 
@@ -86,7 +81,11 @@ internal class MmpiSessionTest {
         session.testingCallback = { answers ->
             assertEquals(TypeOfTest.Mmpi566.size, answers.size)
             assertTrue(answers.all { it == MmpiProcess.Answer.Agree })
-            checkState(answers, session, userStorage, reportStorage, mmpi566Data)
+            checkState(
+                answers = answers,
+                session = session,
+                mmpiData = mmpi566Data,
+            )
         }
 
         repeat(TypeOfTest.Mmpi566.size) {
@@ -113,15 +112,18 @@ internal class MmpiSessionTest {
             roomId = 0L,
             type = TypeOfTest.Mmpi566,
             userConnection = stubUserConnection(questionsIds),
-            userStorage = userStorage,
-            reportStorage = reportStorage,
-            mmpiData = mmpi566Data
+            storagePack = testStoragePack,
+            mmpiData = mmpi566Data,
         ) {
             assertEquals(session, it)
         }
         session.testingCallback = { answers ->
             checkEditedAnswers(answers)
-            checkState(answers, session, userStorage, reportStorage, mmpi566Data)
+            checkState(
+                answers = answers,
+                session = session,
+                mmpiData = mmpi566Data
+            )
         }
 
         session.start()
@@ -179,7 +181,7 @@ internal class MmpiSessionTest {
             }
         }
 
-        val answersResult = userStorage.getUserAnswers(testUser)
+        val answersResult = answerStorage.getUserAnswers(testUser)
         assertTrue(answersResult is Result.Success)
 
         val answersContainerFromDatabase: List<AnswersContainer> = (answersResult as Result.Success).data
@@ -198,8 +200,6 @@ internal class MmpiSessionTest {
 private fun checkState(
     answers: List<MmpiProcess.Answer>,
     session: MmpiSession?,
-    userStorage: UserStorage,
-    reportStorage: GoogleDriveReportStorage,
     mmpiData: MmpiData
 ) = runBlocking {
     val sessionState = session!!.state
@@ -220,8 +220,7 @@ private fun checkState(
         roomId = sessionState.sessionId,
         type = sessionState.type,
         userConnection = object : UserConnection {},
-        userStorage = userStorage,
-        reportStorage = reportStorage,
+        storagePack = testStoragePack,
         mmpiData = mmpiData,
         onEndedCallback = {}
     )
@@ -236,11 +235,11 @@ private fun checkState(
 private fun checkSessionResult(
     user: User, session: MmpiSession?,
     telegramSession: TelegramSession<Any>,
-    userStorage: UserStorage
+    answerStorage: AnswerStorage
 ) = runBlocking {
     assertEquals(session, telegramSession)
 
-    val answersResult = userStorage.getUserAnswers(user)
+    val answersResult = answerStorage.getUserAnswers(user)
     assertTrue(answersResult is Result.Success)
 
     val answers = (answersResult as Result.Success).data

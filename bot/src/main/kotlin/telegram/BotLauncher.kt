@@ -1,6 +1,7 @@
 package telegram
 
 import DataPack
+import StoragePack
 import Tokens
 import io.ktor.util.*
 import lucher.LucherData
@@ -12,6 +13,8 @@ import org.kodein.di.instance
 import org.kodein.di.singleton
 import quiz.DailyQuizData
 import storage.*
+import storage.users.AnswerStorage
+import storage.users.SessionStorage
 import storage.users.UserStorage
 
 
@@ -25,10 +28,14 @@ class BotLauncher(
 
             val di = createDependenciesContainer()
 
-            val userStorage: UserStorage by di.instance()
-            val reportStorage: GoogleDriveReportStorage by di.instance()
+            val storagePack = object : StoragePack {
+                override val userStorage: UserStorage by di.instance()
+                override val answerStorage: AnswerStorage by di.instance()
+                override val sessionStorage: SessionStorage by di.instance()
+                override val reportStorage: GoogleDriveReportStorage by di.instance()
+            }
 
-            val dataPack  = object  : DataPack{
+            val dataPack = object : DataPack {
                 override val lucherData: LucherData by di.instance()
                 override val mmpi566Data: MmpiData by di.instance(TypeOfTest.Mmpi566)
                 override val mmpi377Data: MmpiData by di.instance(TypeOfTest.Mmpi377)
@@ -37,17 +44,16 @@ class BotLauncher(
 
             val adminBot = launchAdminBot(
                 token = it.ADMIN,
-                userStorage = userStorage
+                userStorage = storagePack.userStorage
             )
 
             val (clientBot, telegramRoom) = launchClientBot(
                 adminId = it.ADMIN_ID,
                 token = it.CLIENT,
                 userConnection = TelegramUserConnection(it.ADMIN_ID) { botsKeeper!! },
-                userStorage = userStorage,
-                reportStorage = reportStorage,
+                storagePack = storagePack,
                 dataPack = dataPack,
-                botsKeeper = { botsKeeper!! }
+                botsKeeper = { botsKeeper!! },
             )
 
             botsKeeper = BotsKeeper(
